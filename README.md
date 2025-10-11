@@ -5,7 +5,7 @@
 
 #2.Conectar frontend con backend.
 
-#3.Usar lo del profe para hacer un wizard.
+#3.Usar lo del profe para hacer un wizard para construir querys e integrar una consola para usar algun llm que te genere la query y que el usuario se logee con google para usarla.
 
 #4.Implementar funcionalidades de visualizacion de datos con plotly+dash.
 
