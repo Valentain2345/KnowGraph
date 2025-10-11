@@ -1,0 +1,154 @@
+# Vite + React + TypeScript Project
+# --------------------------------
+# Node.js / npm
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn.lock
+package-lock.json
+
+# Vite build output
+dist/
+dist-ssr/
+vite.config.ts.timestamp*
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing
+coverage/
+*.lcov
+
+# IDEs and editors (VS Code, etc.)
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# macOS
+.DS_Store
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Spring (Java) Project
+# --------------------------------
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradlew
+!gradlew.bat
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.hprof
+*.log
+
+# Spring Boot
+spring.log
+*.log.*
+
+# IntelliJ IDEA
+*.iml
+.idea/
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# macOS
+.DS_Store
+
+# Electron Project
+# --------------------------------
+# Node.js / npm (repeated for clarity, often shared with Vite)
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn.lock
+package-lock.json
+
+# Electron build output
+out/
+dist-electron/
+dist/
+release/
+*.exe
+*.dmg
+*.AppImage
+*.snap
+*.deb
+*.rpm
+
+# Electron-specific
+electron-builder.yml
+electron.main.js
+electron-renderer/
+
+# Development tools
+.devcontainer/
+.vscode/
+.eslintcache
+.prettierrc
+.stylelintrc
+
+# macOS
+.DS_Store
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# General
+# --------------------------------
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# OS-specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Sensitive files
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
