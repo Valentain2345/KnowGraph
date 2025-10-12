@@ -9,7 +9,19 @@ module.exports = {
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
-      config: {},
+      config: {
+        name: 'KnowGraph',
+        setupExe: 'KnowGraphInstaller.exe',
+
+      },
+    },
+    {
+      name: '@electron-forge/maker-dmg',
+      config: {
+        name: 'KnowGraph',
+        format: 'ULFO',
+
+      },
     },
     {
       name: '@electron-forge/maker-zip',
