@@ -1,7 +1,10 @@
 
 package org.aplication.backend.sparql;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.util.Map;
+import java.util.logging.Level;
 
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
@@ -12,6 +15,11 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
+import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.riot.RDFWriterRegistry;
 import org.aplication.sparqlQueryLogic.SparqlQueryExecutor;
 import org.aplication.sparqlQueryLogic.SparqlQueryExecutorFactory;
 import org.aplication.sparqlQueryLogic.SparqlQueryResult;
@@ -22,7 +30,7 @@ import org.springframework.stereotype.Component;
 public class SparqlService {
 
 	private final static String loggerName="Sparql service";
-	
+	private Dataset dataset;
 	@Value("${name:World}")
 	private String name;
 
@@ -30,28 +38,31 @@ public class SparqlService {
 		return "Hello " + this.name;
 	}
 	
-	public String runSparqlQuery(String queryString) {
+	
+	private boolean successfulExecution(SparqlQueryResult result) {
+		return result.getError() == null || result.getError().isEmpty();
+	}
+	public String runSparqlQuery(String queryString)throws Exception {
+		if(this.dataset==null|| dataset.isEmpty()) {
+			throw new Exception( "Error: No dataset loaded. Please load a dataset before executing queries.");
+		}
+		
 		SparqlQueryResult result = executeQuery(queryString);
-        java.util.logging.Logger.getLogger(loggerName).info("Hubo un error y es "+result.getError());
-        StringBuilder stringResult = new StringBuilder();
-        
-        for (Map<String, String> m : result.getRows()) {
-            for (String k : m.keySet()) {	
-                stringResult.append("Var ").append(k).append(" value: ").append(m.get(k)).append("\n");
-            }
-        }
-        java.util.logging.Logger.getLogger(loggerName).info("Esto es lo que se tendria que implimir "+stringResult.toString());
-        java.util.logging.Logger.getLogger(loggerName).info("Hubo un error y es "+result.getError());
-        stringResult.append(result.getError());
-        return stringResult.toString();
+		if(!successfulExecution(result)) {
+			java.util.logging.Logger.getLogger(loggerName).info("Hubo un error y es "+result.getError());
+			throw new Exception("Error executing query: " + result.getError());
+		}
+        return result.getResultAsStringObject();
         
 	}
 	 private SparqlQueryResult executeQuery(String queryStr) {
 			try {
 				Query query = QueryFactory.create(queryStr);
 				SparqlQueryExecutor executor = SparqlQueryExecutorFactory.getExecutor(query);
-				return executor.execute(query, getGraphDatasetMock());
+				
+				return executor.execute(query, dataset);
 			} catch (Exception e) {
+				java.util.logging.Logger.getLogger(loggerName).log(Level.SEVERE, "There was an error in the executing query "+e.getMessage());
 				return SparqlQueryResult.forBottomMsg("Error executing query: " + e.getMessage());
 			}
 		}
@@ -78,9 +89,74 @@ public class SparqlService {
 	        
 	        return dataset;
 	    }
-	  
+	    
+	    public SparqlQueryResult loadFromSource(String source) throws Exception {
+	        try {
+	            // Create a model to hold the RDF data
+	        	  Dataset dataset= DatasetFactory.create();
+	              RDFDataMgr.read(dataset,source);
+	              this.dataset=dataset;
+	            // Handles file paths or URLs
+	            return SparqlQueryResult.forBottomMsg("Grafo cargado correctamente desde " + source);
+	        } catch (Exception e) {
+	        	   java.util.logging.Logger.getLogger(loggerName).log(Level.SEVERE, "There was an error in the loading "+e.getMessage());
+	        	 throw new Exception("Error al cargar grafo desde " + source + ": " + e.getMessage());
+	        }
+	    }
+	    
+	    public SparqlQueryResult addToDatasetFromSource(String source) throws Exception {
+	        try {
+	            RDFDataMgr.read(dataset, source);
+
+	            return SparqlQueryResult.forBottomMsg("Grafo añadido correctamente desde " + source);
+	        } catch (Exception e) {
+	        	   java.util.logging.Logger.getLogger(loggerName).log(Level.SEVERE, "There was an error in the adding to dataset "+e.getMessage());
+	        	 throw new Exception("Error al añadir grafo desde " + source + ": " + e.getMessage());
+	        }
+	    }
+	    
 	
-	
+		public byte[] exportGraphToAnotherFormat(String format) {
+			Model model= dataset.getUnionModel();
+		    // Determine a RIOT Lang or RDFFormat from the “format” string.
+		    Lang lang = RDFLanguages.nameToLang(format);
+		    if (lang == null) {
+		        System.err.printf("Unknown RDF serialization format: '%s'%n", format);
+		        return null;
+		    }
+		    RDFFormat rdfFormat = RDFWriterRegistry.defaultSerialization(lang);
+		    if (rdfFormat == null) {
+		        // fallback (e.g. just use the Lang default write)
+		        System.err.printf("No RDFFormat registered for Lang '%s'. Using Lang-based write fallback.%n", lang);
+		    }
+		                          
+		    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+	            if (rdfFormat != null) {
+	                // Write using the specific RDFFormat
+	                RDFDataMgr.write(out, model, rdfFormat);
+	            } else {
+	                // Fallback: Write using Lang (default serialization for the Lang)
+	                RDFDataMgr.write(out, model, lang);
+	            }
+	            
+	            // Get the byte array data from the ByteArrayOutputStream
+	            byte[] fileData = out.toByteArray();
+	            return fileData;
+		    }catch (Exception e) {
+		    	java.util.logging.Logger.getLogger(loggerName).log(Level.SEVERE, "There was an error exporting file "+e.getMessage());
+		    	 SparqlQueryResult.forBottomMsg("Error exporting file: " + e.getMessage());
+		    	 return null;
+			}
+		}
+
+
+		public void clearDataset() {
+			if(this.dataset!=null) {
+				this.dataset.close();
+				this.dataset=null;
+			}
+		}
+
 	
 
 }

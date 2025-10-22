@@ -1,20 +1,24 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { VisualizationButton } from "./visualization-button"
-import { DataButton } from "./data-button"
-import { ReasoningButton } from "./reasoning-button"
-import { HelpButton } from "./help-button"
+import { useState } from "react";
+import { VisualizationButton } from "./visualization-button";
+import { DataButton } from "./data-button";
+import { HelpButton } from "./help-button";
+import { ModelsButton } from "./models-button";
 
 interface MenuBarProps {
-  onMenuAction: (action: string) => void
+  onMenuAction: (action: string) => void;
+  zIndex: number; // Accepting zIndex prop here
 }
 
-export function MenuBar({ onMenuAction }: MenuBarProps) {
-  const [openMenu, setOpenMenu] = useState<string | null>(null)
+export function MenuBar({ onMenuAction, zIndex }: MenuBarProps) {
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   return (
-    <div className="flex items-center gap-6 px-6 py-3 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur-sm">
+    <div
+      className="flex items-center gap-6 px-6 py-3 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur-sm"
+      style={{ zIndex }} // Applying zIndex prop to the MenuBar container
+    >
       <div className="flex items-center gap-2 mr-4">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
           <span className="text-white font-bold text-sm">KG</span>
@@ -27,23 +31,27 @@ export function MenuBar({ onMenuAction }: MenuBarProps) {
           onMenuAction={onMenuAction}
           open={openMenu === "visualization"}
           onOpenChange={(open) => setOpenMenu(open ? "visualization" : null)}
+          zIndex={zIndex + 1} // Ensure dropdowns are above the menu bar
         />
         <DataButton
           onMenuAction={onMenuAction}
           open={openMenu === "data"}
           onOpenChange={(open) => setOpenMenu(open ? "data" : null)}
+          zIndex={zIndex + 1}
         />
-        <ReasoningButton
+        <ModelsButton
           onMenuAction={onMenuAction}
-          open={openMenu === "reasoning"}
-          onOpenChange={(open) => setOpenMenu(open ? "reasoning" : null)}
+          open={openMenu === "Models"}
+          onOpenChange={(open) => setOpenMenu(open ? "Models" : null)}
+          zIndex={zIndex + 1}
         />
         <HelpButton
           onMenuAction={onMenuAction}
           open={openMenu === "help"}
           onOpenChange={(open) => setOpenMenu(open ? "help" : null)}
+          zIndex={zIndex + 1}
         />
       </div>
     </div>
-  )
+  );
 }

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>2D Force Graph</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      background-color: black;
+    }
+    #2d-graph {
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+
+  <!-- Load the 2D Force Graph library -->
+  <script src="https://cdn.jsdelivr.net/npm/force-graph"></script>
+</head>
+
+<body>
+  <div id="2d-graph"></div>
+
+  <script>
+    // Number of nodes
+    const N = 300;
+
+    // Generate graph data with fixed node sizes
+    const gData = {
+      nodes: [...Array(N).keys()].map(i => ({
+        id: i,
+        size: 4 + Math.random() * 8 // Fixed size assigned once
+      })),
+      links: [...Array(N).keys()]
+        .filter(id => id)
+        .map(id => ({
+          source: id,
+          target: Math.floor(Math.random() * id)
+        }))
+    };
+
+    // Initialize the 2D graph
+    const Graph = ForceGraph()
+      (document.getElementById('2d-graph'))
+      .graphData(gData)
+      .nodeAutoColorBy('id')                  // Color nodes by ID
+      .nodeLabel(node => `Node ${node.id}`)   // Show label on hover
+      .nodeVal(node => node.size)             // Use fixed size
+      .linkWidth(1.5)                         // Set link width
+      .linkAutoColorBy('source')
+      .width(window.innerWidth)              // Initial width
+      .height(window.innerHeight);      // Initial height
+
+    // On node click: focus and log
+    Graph.onNodeClick(node => {
+      Graph.centerAt(node.x, node.y, 1000);
+      Graph.zoom(4, 1000);
+      console.log(`Clicked on node ${node.id}`);
+    });
+
+    // Resize graph on window size change
+    function resizeGraph() {
+      Graph.width(window.innerWidth).height(window.innerHeight);
+    }
+
+    window.addEventListener('resize', resizeGraph);
+    resizeGraph(); // Initial call
+  </script>
+</body>
+</html>

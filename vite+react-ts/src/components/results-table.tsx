@@ -13,6 +13,8 @@ interface ResultsTableProps {
   onSave: (format: "json" | "csv") => void
 }
 
+
+
 export function ResultsTable({ results, columns, onClear, onSave }: ResultsTableProps) {
   if (results.length === 0) {
     return <TableEmptyState />

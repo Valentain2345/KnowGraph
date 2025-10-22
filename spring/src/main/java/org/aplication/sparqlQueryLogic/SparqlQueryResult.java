@@ -1,10 +1,15 @@
 package org.aplication.sparqlQueryLogic;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
+import org.apache.jena.query.ResultSetRewindable;
+import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
+import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.riot.RDFParser;
+
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 
 public class SparqlQueryResult {
     // Factory methods
@@ -35,16 +40,15 @@ public class SparqlQueryResult {
         return new SparqlQueryResult(data);
     }
 
-    public static SparqlQueryResult forSelect(List<String> variables, List<Map<String, String>> rows) {
+   
+
+    public static SparqlQueryResult forSelect(ResultSetRewindable rewindable) {
         SparqlQueryResultData data = new SparqlQueryResultData();
-        data.setVariables(variables);
-        data.setRows(rows);
+        data.setVariables(rewindable.getResultVars());
         data.setSelect(true);
-        return new SparqlQueryResult(data);
+        return new SparqlQueryResult(data, rewindable);
     }
 
-    private final List<String> variables;
-    private final List<Map<String, String>> rows;
     private final String bottomMsg;
     private final boolean isSelect;
     private final boolean isConstruct;
@@ -52,11 +56,10 @@ public class SparqlQueryResult {
     private final boolean isDescribe;
     private final Model modelResult;
     private final Boolean askResult;
+    private ResultSetRewindable rewindableResultSet;
 
     // Constructor now takes a single DTO
     public SparqlQueryResult(SparqlQueryResultData data) {
-        variables = data.getVariables() != null ? data.getVariables() : Collections.emptyList();
-        rows = data.getRows() != null ? data.getRows() : Collections.emptyList();
         modelResult = data.getModelResult();
         askResult = data.getAskResult();
         bottomMsg = data.getBottomMsg();
@@ -64,8 +67,65 @@ public class SparqlQueryResult {
         isConstruct = data.isConstruct();
         isAsk = data.isAsk();
         isDescribe = data.isDescribe();
+        this.rewindableResultSet = null;
     }
 
+    // New constructor for SELECT with ResultSetRewindable
+    public SparqlQueryResult(SparqlQueryResultData data, ResultSetRewindable rewindable) {
+        this(data);
+        this.rewindableResultSet = rewindable;
+    }
+
+    
+    public String getResultAsStringObject() {
+    	if(isSelect) {
+			return toCSV();
+		}else if(isAsk) {
+			return convertAskToCsvResult();
+		}else if(isConstruct || isDescribe) {
+			if(modelResult!=null && !modelResult.isEmpty()) {
+				return convertModelToCSV();
+			}else {
+				return "result\n "
+						+ "No model result";
+			}
+		}else if(hasError()) {
+			return bottomMsg;
+		}else {
+			return "No result";
+		}
+    }
+    
+    
+    private String convertModelToCSV() {
+        if (modelResult == null) {
+            return "No model result";
+        }
+
+        StringBuilder csvBuilder = new StringBuilder();
+
+        // Assuming we want to get all the triples (subject, predicate, object)
+        // and display them in CSV format (subject, predicate, object)
+        csvBuilder.append("subject,predicate,object\n");
+        modelResult.listStatements().forEachRemaining(statement -> {
+            String subject = statement.getSubject().toString();
+            String predicate = statement.getPredicate().toString();
+            String object = statement.getObject().toString();
+
+            // Append to CSV with a new line
+            csvBuilder.append(subject).append(",")
+                       .append(predicate).append(",")
+                       .append(object).append("\n");
+        });
+
+        return csvBuilder.toString();
+    }
+   
+    
+    private String convertAskToCsvResult() {
+		return "result\n"+askResult.toString();
+	}
+    
     public Boolean getAskResult() {
         return askResult;
     }
@@ -78,12 +138,8 @@ public class SparqlQueryResult {
         return modelResult;
     }
 
-    public List<Map<String, String>> getRows() {
-        return rows;
-    }
-
-    public List<String> getVariables() {
-        return variables;
+    public ResultSetRewindable getRewindableResultSet() {
+        return rewindableResultSet;
     }
 
     public boolean hasError() {
@@ -104,5 +160,21 @@ public class SparqlQueryResult {
 
     public boolean isSelect() {
         return isSelect;
+    }
+
+    public String toCSV() {
+        if (rewindableResultSet == null) return "";
+        rewindableResultSet.reset();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ResultSetFormatter.outputAsCSV(out, rewindableResultSet);
+        return out.toString();
+    }
+    
+    public String toJSON() {
+        if (rewindableResultSet == null) return "";
+        rewindableResultSet.reset();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ResultSetFormatter.outputAsJSON(out, rewindableResultSet);
+        return out.toString();
     }
 }
