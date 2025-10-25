@@ -43,15 +43,13 @@ public class SparqlService {
 		return result.getError() == null || result.getError().isEmpty();
 	}
 	public String runSparqlQuery(String queryString)throws Exception {
-		if(this.dataset==null|| dataset.isEmpty()) {
-			throw new Exception( "Error: No dataset loaded. Please load a dataset before executing queries.");
-		}
-		
 		SparqlQueryResult result = executeQuery(queryString);
 		if(!successfulExecution(result)) {
 			java.util.logging.Logger.getLogger(loggerName).info("Hubo un error y es "+result.getError());
 			throw new Exception("Error executing query: " + result.getError());
+
 		}
+		java.util.logging.Logger.getLogger(loggerName).info("La query se ejecuto correctamente y el resultado es "+result.getResultAsStringObject());
         return result.getResultAsStringObject();
         
 	}
@@ -106,8 +104,9 @@ public class SparqlService {
 	    
 	    public SparqlQueryResult addToDatasetFromSource(String source) throws Exception {
 	        try {
+				if(this.dataset==null)
+					this.dataset=DatasetFactory.create();
 	            RDFDataMgr.read(dataset, source);
-
 	            return SparqlQueryResult.forBottomMsg("Grafo añadido correctamente desde " + source);
 	        } catch (Exception e) {
 	        	   java.util.logging.Logger.getLogger(loggerName).log(Level.SEVERE, "There was an error in the adding to dataset "+e.getMessage());
@@ -116,9 +115,11 @@ public class SparqlService {
 	    }
 	    
 	
-		public byte[] exportGraphToAnotherFormat(String format) {
-			Model model= dataset.getUnionModel();
-		    // Determine a RIOT Lang or RDFFormat from the “format” string.
+	public byte[] exportGraphToAnotherFormat(String format) {
+			SparqlQueryResult res=executeQuery("construct {?s ?p ?o} where {?s ?p ?o}");
+			Model model=res.getModelResult();
+			java.util.logging.Logger.getLogger(loggerName).log(Level.FINE, "Union model created");
+			  // Determine a RIOT Lang or RDFFormat from the “format” string.
 		    Lang lang = RDFLanguages.nameToLang(format);
 		    if (lang == null) {
 		        System.err.printf("Unknown RDF serialization format: '%s'%n", format);
@@ -129,7 +130,7 @@ public class SparqlService {
 		        // fallback (e.g. just use the Lang default write)
 		        System.err.printf("No RDFFormat registered for Lang '%s'. Using Lang-based write fallback.%n", lang);
 		    }
-		                          
+			System.out.println("Iniciando export");
 		    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 	            if (rdfFormat != null) {
 	                // Write using the specific RDFFormat

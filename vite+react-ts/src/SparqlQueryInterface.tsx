@@ -5,85 +5,59 @@ import { MessagePanel } from "./components/message-panel";
 import { SparqlQueryWizard } from "./pages/sparql-query-wizard";
 import { QueryExecutor } from "./pages/query-executor";
 import { TripleBuilder } from "./pages/triple-builder";
-import ForceGraph from "./pages/graph-3d-view";
 import { AnimatePresence, motion } from "framer-motion";
+import ForceGraph3d from "./pages/graph-3d-view"
+import ForceGraph2d from "./pages/graph-2d-view"
 import styled from "styled-components";
 
 export function SparqlQueryInterface() {
+  const [query, setQuery] = useState("")
   const [message, setMessage] = useState<{ text: string; type: "info" | "success" | "error" }>({
     text: "Ready to execute queries",
     type: "info",
   });
-  const [showGraph, setShowGraph] = useState(false);
   const navigate = useNavigate();
-
+  const isGraphView = location.pathname === "/graph3d" || location.pathname==="/graph2d";
   return (
     <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100 relative">
       <MenuBar
         onMenuAction={(action: string) => setMessage({ text: `Menu action: ${action}`, type: "info" })}
         zIndex={1000}
       />
-
-      {!showGraph && (
-        <>
-          <StyledNavbar>
-            <div className="wrap">
-              <NavButton
-                label="Query Executor"
-                onClick={() => navigate("/executor")}
-                $active={window.location.pathname === "/executor"}
-              />
-              <NavButton
-                label="Query Wizard"
-                onClick={() => navigate("/wizard")}
-                $active={window.location.pathname === "/wizard"}
-              />
-              <NavButton
-                label="Triple Builder"
-                onClick={() => navigate("/builder")}
-                $active={window.location.pathname === "/builder"}
-              />
-              <NavButton
-                label={showGraph ? "Hide Graph" : "Show Graph 3d"}
-                onClick={() => navigate("/graph3d")}
-                $active={showGraph}
-              />
-            </div>
-          </StyledNavbar>
-          <div className="flex-1 overflow-auto relative z-10">
-            <AnimatePresence mode="wait">
-              <Routes>
-                <Route path="/" element={<PageTransition><QueryExecutor setMessage={setMessage} /></PageTransition>} />
-                <Route path="/executor" element={<PageTransition><QueryExecutor setMessage={setMessage} /></PageTransition>} />
-                <Route path="/wizard" element={<PageTransition><SparqlQueryWizard /></PageTransition>} />
-                <Route path="/builder" element={<PageTransition><TripleBuilder /></PageTransition>} />
-                <Route path="/graph3d" element={<PageTransition>
-                  <StyledGraphContainer>
-                    <ForceGraph />
-                    <StyledGoBackButton onClick={() => navigate("/executor")}>
-                      Go Back to Main Panel
-                    </StyledGoBackButton>
-                  </StyledGraphContainer>
-                </PageTransition>} />
-              </Routes>
-            </AnimatePresence>
-          </div>
-        </>
-      )}
-
-      {showGraph && (
-        <StyledGraphContainer>
-          <ForceGraph />
-          <StyledGoBackButton>
+         {!isGraphView && (
+        <StyledNavbar>
+          <div className="wrap">
             <NavButton
-              label={"Go back"}
-              onClick={() => setShowGraph(false)}
-              $active={false}
+              label="Query Executor"
+              onClick={() => navigate("/executor")}
+              $active={location.pathname === "/executor"}
             />
-          </StyledGoBackButton>
-        </StyledGraphContainer>
+            <NavButton
+              label="Query Wizard"
+              onClick={() => navigate("/wizard")}
+              $active={location.pathname === "/wizard"}
+            />
+            <NavButton
+              label="Triple Builder"
+              onClick={() => navigate("/builder")}
+              $active={location.pathname === "/builder"}
+            />
+          </div>
+        </StyledNavbar>
       )}
 
+      <div className="flex-1 overflow-auto relative z-10">
+        <AnimatePresence mode="wait">
+          <Routes>
+            <Route path="/" element={<PageTransition><QueryExecutor setQuery={setQuery} setMessage={setMessage} /></PageTransition>} />
+            <Route path="/executor" element={<PageTransition><QueryExecutor setMessage={setMessage} query={query} setQuery={setQuery} /></PageTransition>} />
+            <Route path="/wizard" element={<PageTransition><SparqlQueryWizard setQuery={setQuery} setMessage={setMessage}/></PageTransition>} />
+            <Route path="/builder" element={<PageTransition><TripleBuilder setQuery={setQuery} setMessage={setMessage} /></PageTransition>} />
+            <Route path="/graph3d" element={<PageTransition><ForceGraph3d/></PageTransition>} />
+             <Route path="/graph2d" element={<PageTransition><ForceGraph2d/></PageTransition>} />
+          </Routes>
+        </AnimatePresence>
+      </div>
       <MessagePanel
         message={message.text}
         type={message.type}

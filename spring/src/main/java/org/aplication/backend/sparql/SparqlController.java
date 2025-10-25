@@ -3,7 +3,8 @@ package org.aplication.backend.sparql;
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import java.util.List;
+import java.util.ArrayList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -37,12 +38,13 @@ public class SparqlController {
                 .body("Error: The SPARQL query cannot be empty or missing.");
         }
     	try {
-    		
-            return ResponseEntity.ok(this.sparqlService.runSparqlQuery(queryString));
+            String result=this.sparqlService.runSparqlQuery(queryString);
+            if(result.isEmpty())
+                return ResponseEntity.ok("No hay resultados para esa query");
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
-            // Log the error
             Logger.getLogger(loggerName).log(Level.parse("ERROR"), e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error executing query" );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error executing query "+e.getMessage());
         }
     }
 
@@ -117,6 +119,67 @@ public class SparqlController {
         }
     }
 
+
+ @PostMapping(value = "/addDataToDataset",consumes = "multipart/form-data",produces = "text/plain")
+ public ResponseEntity<String> addDataToDataset(
+        @RequestParam(value = "files", required = false) MultipartFile[] files,
+        @RequestParam(value = "urls", required = false) String[] urls) {
+
+    Logger logger = Logger.getLogger("DatasetUploadLogger");
+    List<File> tempFiles = new ArrayList<>();
+
+    try {
+        // Handle uploaded files
+        if (files != null && files.length > 0) {
+            for (MultipartFile file : files) {
+                if (file != null && !file.isEmpty()) {
+                    File tempFile = File.createTempFile("uploaded_dataset_", "_" + file.getOriginalFilename());
+                    file.transferTo(tempFile);
+                    tempFiles.add(tempFile);
+                    sparqlService.addToDatasetFromSource(tempFile.getAbsolutePath());
+                    logger.log(Level.INFO, "Loaded dataset from file: " + file.getOriginalFilename());
+                }
+            }
+        }
+
+        // Handle URLs
+        if (urls != null && urls.length > 0) {
+            for (String url : urls) {
+                if (url != null && !url.trim().isEmpty()) {
+                    sparqlService.addToDatasetFromSource(url.trim());
+                    logger.log(Level.INFO, "Loaded dataset from URL: " + url);
+                }
+            }
+        }
+
+        // If nothing was provided
+        if ((files == null || files.length == 0) && (urls == null || urls.length == 0)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error: No files or URLs provided.");
+        }
+
+        return ResponseEntity.ok("Datasets uploaded and loaded successfully.");
+
+    } catch (Exception e) {
+        logger.log(Level.SEVERE, "Error loading dataset: " + e.getMessage(), e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error processing uploaded files or URLs.");
+
+    } finally {
+        // Clean up temporary files
+        for (File tempFile : tempFiles) {
+            if (tempFile.exists()) {
+                if (tempFile.delete()) {
+                    logger.log(Level.FINE, "Deleted temp file: " + tempFile.getName());
+                } else {
+                    logger.log(Level.WARNING, "Could not delete temp file: " + tempFile.getName());
+                }
+            }
+        }
+    }
+}
+
+
     // Return 400 for incorrect HTTP methods on /loadDatasetFromFile
     @GetMapping("/loadDatasetFromFile")
     @PutMapping("/loadDatasetFromFile")
@@ -127,22 +190,26 @@ public class SparqlController {
     }
 
     
-    @GetMapping(value="/getExport")
-    public ResponseEntity<byte[]> exportGraph(@PathVariable String fileFormat){
-    	try {
-			byte[] fileData=sparqlService.exportGraphToAnotherFormat(fileFormat);
-			HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=exported_graph." + fileFormat);
-        headers.add(HttpHeaders.CONTENT_TYPE, "application/octet-stream");  // Use appropriate content type
-
+   @GetMapping(value="/getExport")
+    public ResponseEntity<byte[]> exportGraph(@RequestParam String format) {
+        try {
+        if (format == null || format.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        byte[] fileData = sparqlService.exportGraphToAnotherFormat("TURTLE");
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=exported_graph." + format);
+        headers.add(HttpHeaders.CONTENT_TYPE, "application/octet-stream");
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(fileData);
+
     } catch (Exception e) {
-    	Logger.getLogger(loggerName).log(Level.SEVERE,"Error exporting dataset"+e.getMessage());
-    	return ResponseEntity.status(500).build();
+        Logger.getLogger(loggerName).log(Level.SEVERE, "Error exporting dataset: " + e.getMessage());
+        return ResponseEntity.status(500).build();
     }
-    }
+}
+
 
     // Return 400 for incorrect HTTP methods on /getExport
     @PostMapping("/getExport")
@@ -150,7 +217,7 @@ public class SparqlController {
     @DeleteMapping("/getExport")
     @PatchMapping("/getExport")
     public ResponseEntity<String> getExportMethodNotAllowed() {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please use GET method to export the graph.");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please use POST method to export the graph.");
     }
     
     

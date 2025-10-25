@@ -1,387 +1,1075 @@
-import { useState, useRef } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card"
-import { Label } from "../components/ui/label"
-import { Input } from "../components/ui/input"
-import { Button } from "../components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
-import { Checkbox } from "../components/ui/checkbox"
-import { Textarea } from "../components/ui/textarea"
-import { Sparkles, Plus, Code, Trash2, ChevronDown, ChevronUp } from "lucide-react"
-import { Badge } from "../components/ui/badge"
+"use client";
 
-const mockConcepts = ["Person", "Organization", "Document", "Event", "Location"]
-const mockProperties = ["hasName", "hasAge", "worksFor", "locatedIn", "createdBy"]
-const operators = ["=", "<>", "<", "<=", ">", ">=", "contains", "starts with", "ends with"]
+import type React from "react";
+import { useState, useRef, useEffect } from "react";
+import styled from "styled-components";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Label } from "../components/ui/label";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { Checkbox } from "../components/ui/checkbox";
+import { Textarea } from "../components/ui/textarea";
+import { Code, ChevronDown, ChevronUp, Trash2,Plus } from "lucide-react"; // Added Trash2 icon
+import { PrefixManager } from "../components/prefix-wizard";
+import { DatasetManager } from "../components/dataset-manager";
+
+const mockConcepts = ["Person", "Organization", "Document", "Event", "Location"];
+const mockProperties = ["hasName", "hasAge", "worksFor", "locatedIn", "createdBy"];
+const operators = ["=", "<>", "<", "<=", ">", ">=", "contains", "starts with", "ends with", "in", "not in"];
+const functions = ["none", "Average", "Count", "Sum", "Max", "Min", "Group by", "Group Concat"];
+const orderOptions = ["none", "ascending", "descending"];
+const graphPatternTypes = ["Basic", "Optional", "Union", "Minus"];
+const propertyPathOperators = ["none", "/", "^", "|", "*", "+", "?", "!uri", "!^uri"];
 const commonPrefixes = [
   { prefix: "rdf", uri: "http://www.w3.org/1999/02/22-rdf-syntax-ns#" },
   { prefix: "rdfs", uri: "http://www.w3.org/2000/01/rdf-schema#" },
   { prefix: "xsd", uri: "http://www.w3.org/2001/XMLSchema#" },
   { prefix: "owl", uri: "http://www.w3.org/2002/07/owl#" },
   { prefix: "foaf", uri: "http://xmlns.com/foaf/0.1/" },
-]
+];
 
 interface QueryRow {
-  id: string
-  subject: string
-  concept: string
-  property: string
-  alias: string
-  visible: boolean
-  optional: boolean
-  operator: string
-  value: string
+  id: string;
+  subject: string;
+  concept: string;
+  conceptPrefix: string;
+  property: string;
+  propertyPrefix: string;
+  alias: string;
+  order: string;
+  visible: boolean;
+  function: string;
+  operator: string;
+  value: string;
+  optional: boolean;
+  result: string;
+  graphPattern: string;
+  propertyPath: string;
+  groupId?: string;
+  graph?: string;
+  service?: string;
 }
 
 interface Prefix {
-  id: string
-  prefix: string
-  uri: string
+  id: string;
+  prefix: string;
+  uri: string;
 }
 
-export function SparqlQueryWizard() {
+interface Dataset {
+  id: string;
+  type: "default" | "named";
+  uri: string;
+}
+
+interface SparqlQueryWizardProps {
+  setQuery: (query: string) => void;
+  setMessage: (message: { text: string; type: "info" | "success" | "error" }) => void;
+}
+
+// Styled components
+const Container = styled.div`
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 70vw;
+`;
+
+const QueryCard = styled(Card)`
+  background: rgba(24, 24, 27, 0.8);
+  border: 1px solid #3f3f46;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+`;
+
+const QueryHeader = styled(CardHeader)`
+  padding-bottom: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(to bottom, rgba(39, 39, 42, 0.9), rgba(24, 24, 27, 0.8));
+  border-bottom: 1px solid #3f3f46;
+`;
+
+const QueryContent = styled(CardContent)`
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const QueryDescriptionContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const TableContainer = styled.div`
+  position: relative;
+  overflow-x: auto;
+  overflow-y: ${({ rowsCount }: { rowsCount: number }) => (rowsCount >= 4 ? "auto" : "visible")};
+  max-height: ${({ rowsCount }: { rowsCount: number }) => (rowsCount >= 4 ? "400px" : "auto")};
+  scrollbar-width: thin;
+  scrollbar-color: #3f3f46 #18181b;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: #3f3f46;
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background-color: #18181b;
+  }
+`;
+
+const FieldWrapper = styled.div<{ width: string }>`
+  width: ${(props) => props.width};
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+`;
+
+const ConceptPropertyContainer = styled.div`
+  width: 200px;
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+`;
+
+const TableHeader = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(39, 39, 42, 0.9);
+  min-width: fit-content;
+  border: 1px solid #3f3f46;
+  border-radius: 0.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+`;
+
+const TableRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  min-width: fit-content;
+  background: rgba(39, 39, 42, 0.3);
+  border: 1px solid rgba(63, 63, 70, 0.5);
+  border-radius: 0.5rem;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: rgba(39, 39, 42, 0.5);
+  }
+`;
+
+const LargeInput = styled(Input)`
+  background: rgba(24, 24, 27, 0.5);
+  border: 1px solid #3f3f46;
+  color: #fff;
+  font-size: 0.875rem;
+  height: 2.5rem;
+  min-width: 100%;
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    border-color: #2563eb;
+  }
+`;
+
+const ScrollShadowLeft = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 1rem;
+  background: linear-gradient(to right, rgba(24, 24, 27, 0.5), transparent);
+  pointer-events: none;
+`;
+
+const ScrollShadowRight = styled.div`
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 1rem;
+  background: linear-gradient(to left, rgba(24, 24, 27, 0.5), transparent);
+  pointer-events: none;
+`;
+
+const OptionsContainer = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #27272a;
+`;
+
+const CheckboxContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const LimitOffsetContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const NumberInputContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-left: 1.5rem;
+`;
+
+const NumberButton = styled.button`
+  height: 2rem;
+  padding: 0 0.5rem;
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: #3f3f46;
+  }
+`;
+
+const NumberInput = styled(Input)`
+  height: 2rem;
+  width: 4rem;
+  text-align: center;
+  background: #18181b;
+  border: 1px solid #3f3f46;
+  border-radius: 0;
+  font-size: 0.75rem;
+  color: #fff;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  -moz-appearance: textfield;
+`;
+
+const GenerateButton = styled(Button)`
+  width: 100%;
+  background: linear-gradient(to right, #2563eb, #7c3aed);
+  color: #fff;
+  height: 2.25rem;
+  font-weight: 500;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: linear-gradient(to right, #1d4ed8, #6d28d9);
+  }
+`;
+
+const GeneratedQueryContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const GeneratedQueryTextarea = styled(Textarea)`
+  background: rgba(39, 39, 42, 0.5);
+  border: 1px solid #3f3f46;
+  color: #fff;
+  font-family: monospace;
+  font-size: 0.875rem;
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    border-color: #2563eb;
+  }
+`;
+
+const AddRowContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  margin-top: 0.5rem;
+  justify-content: center; /* Center the add row interface */
+`;
+
+const AddRowButton = styled(Button)`
+  background: transparent;
+  color: #fff;
+  height: 2.25rem;
+  font-weight: 500;
+  transition: background 0.2s ease;
+   border: 1px solid #3f3f46;
+  &:hover {
+    background: #1d4ed8;
+  }
+`;
+
+const RemoveButton = styled(Button)`
+  background: #dc2626; /* Red color for destructive action */
+  color: #fff;
+  height: 2rem;
+  width: 2rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: #b91c1c;
+  }
+
+  &:disabled {
+    background: #4b4b4b;
+    cursor: not-allowed;
+  }
+`;
+
+export function SparqlQueryWizard({ setQuery, setMessage }: SparqlQueryWizardProps) {
   const [rows, setRows] = useState<QueryRow[]>([
     {
       id: "1",
       subject: "",
       concept: "",
+      conceptPrefix: "",
       property: "",
+      propertyPrefix: "",
       alias: "",
+      order: "none",
       visible: true,
-      optional: false,
+      function: "none",
       operator: "",
       value: "",
+      optional: false,
+      result: "",
+      graphPattern: "Basic",
+      propertyPath: "none",
+      groupId: "",
+      graph: "",
+      service: "",
     },
-  ])
+  ]);
   const [prefixes, setPrefixes] = useState<Prefix[]>([
     { id: "1", prefix: "rdf", uri: "http://www.w3.org/1999/02/22-rdf-syntax-ns#" },
-    { id: "2", prefix: "xsd", uri: "http://www.w3.org/2001/XMLSchema#" },
-  ])
-  const [generatedQuery, setGeneratedQuery] = useState("")
-  const [distinct, setDistinct] = useState(false)
-  const [limit, setLimit] = useState(100)
-  const [isLimitEnabled, setIsLimitEnabled] = useState(true)
-  const [isButtonPressed, setIsButtonPressed] = useState<boolean>(false)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  ]);
+  const [datasets, setDatasets] = useState<Dataset[]>([]);
+  const [generatedQuery, setGeneratedQuery] = useState("");
+  const [distinct, setDistinct] = useState(false);
+  const [limit, setLimit] = useState(10);
+  const [offset, setOffset] = useState(0);
+  const [isLimitEnabled, setIsLimitEnabled] = useState(true);
+  const [isOffsetEnabled, setIsOffsetEnabled] = useState(false);
+  const [queryDescription, setQueryDescription] = useState("");
+  const [isButtonPressed, setIsButtonPressed] = useState<boolean>(false);
+  const [isQueryBuilderCollapsed, setIsQueryBuilderCollapsed] = useState(false);
+  const [newRowCount, setNewRowCount] = useState(1);
+  const [selectKeys, setSelectKeys] = useState<{ [key: string]: number }>(
+    rows.reduce(
+      (acc, row) => ({
+        ...acc,
+        [`concept-${row.id}`]: 0,
+        [`property-${row.id}`]: 0,
+        [`conceptPrefix-${row.id}`]: 0,
+        [`propertyPrefix-${row.id}`]: 0,
+        [`graphPattern-${row.id}`]: 0,
+        [`propertyPath-${row.id}`]: 0,
+        [`graph-${row.id}`]: 0,
+        [`service-${row.id}`]: 0,
+      }),
+      {}
+    )
+  );
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Prefix management
-  const addPrefix = () => {
-    setPrefixes([
-      ...prefixes,
-      {
-        id: Date.now().toString(),
-        prefix: "",
-        uri: "",
-      },
-    ])
-  }
+  // Handle select keys update when rows, prefixes, or datasets change
+  useEffect(() => {
+    setSelectKeys(
+      rows.reduce(
+        (acc, row) => ({
+          ...acc,
+          [`concept-${row.id}`]: 0,
+          [`property-${row.id}`]: 0,
+          [`conceptPrefix-${row.id}`]: 0,
+          [`propertyPrefix-${row.id}`]: 0,
+          [`graphPattern-${row.id}`]: 0,
+          [`propertyPath-${row.id}`]: 0,
+          [`graph-${row.id}`]: 0,
+          [`service-${row.id}`]: 0,
+        }),
+        {}
+      )
+    );
+  }, [rows.length, prefixes, datasets]);
 
-  const updatePrefix = (id: string, field: keyof Prefix, value: string) => {
-    setPrefixes(prefixes.map((prefix) => (prefix.id === id ? { ...prefix, [field]: value } : prefix)))
-  }
-
-  const deletePrefix = (id: string) => {
-    setPrefixes(prefixes.filter((prefix) => prefix.id !== id))
-  }
-
-  const addCommonPrefix = (commonPrefix: { prefix: string; uri: string }) => {
-    setPrefixes([
-      ...prefixes,
-      {
-        id: Date.now().toString(),
-        prefix: commonPrefix.prefix,
-        uri: commonPrefix.uri,
-      },
-    ])
-  }
-
-  // Query row management
-  const addRow = () => {
-    setRows([
-      ...rows,
-      {
-        id: Date.now().toString(),
-        subject: "",
-        concept: "",
-        property: "",
-        alias: "",
-        visible: true,
-        optional: false,
-        operator: "",
-        value: "",
-      },
-    ])
-  }
-
-  const updateRow = (id: string, field: keyof QueryRow, value: any) => {
-    setRows(rows.map((row) => (row.id === id ? { ...row, [field]: value } : row)))
-  }
-
-  const deleteRow = (id: string) => {
-    setRows(rows.filter((row) => row.id !== id))
-  }
-
-  // Limit controls
-  const startHolding = (type: 'increment' | 'decrement') => {
-    setIsButtonPressed(true)
+  // Limit, Offset, and Row Count controls
+  const startHolding = (type: "increment" | "decrement", field: "limit" | "offset" | "rowCount") => {
+    setIsButtonPressed(true);
     intervalRef.current = setInterval(() => {
-      if (type === 'increment') {
-        setLimit(prev => prev + 1)
-      } else {
-        setLimit(prev => (prev > 1 ? prev - 1 : 1))
+      if (field === "limit") {
+        if (type === "increment") {
+          setLimit((prev) => prev + 1);
+        } else {
+          setLimit((prev) => (prev > 1 ? prev - 1 : 1));
+        }
+      } else if (field === "offset") {
+        if (type === "increment") {
+          setOffset((prev) => prev + 1);
+        } else {
+          setOffset((prev) => (prev > 0 ? prev - 1 : 0));
+        }
+      } else if (field === "rowCount") {
+        if (type === "increment") {
+          setNewRowCount((prev) => prev + 1);
+        } else {
+          setNewRowCount((prev) => (prev > 1 ? prev - 1 : 1));
+        }
       }
-    }, 100)
-  }
+    }, 100);
+  };
 
   const stopHolding = () => {
-    setIsButtonPressed(false)
+    setIsButtonPressed(false);
     if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
-  }
+  };
 
-  const handleIncrement = () => {
-    setLimit((prev) => prev + 1)
-  }
+  const handleIncrement = (field: "limit" | "offset" | "rowCount") => {
+    if (field === "limit") {
+      setLimit((prev) => prev + 1);
+    } else if (field === "offset") {
+      setOffset((prev) => prev + 1);
+    } else if (field === "rowCount") {
+      setNewRowCount((prev) => prev + 1);
+    }
+  };
 
-  const handleDecrement = () => {
-    setLimit((prev) => (prev > 1 ? prev - 1 : 1))
-  }
+  const handleDecrement = (field: "limit" | "offset" | "rowCount") => {
+    if (field === "limit") {
+      setLimit((prev) => (prev > 1 ? prev - 1 : 1));
+    } else if (field === "offset") {
+      setOffset((prev) => (prev > 0 ? prev - 1 : 0));
+    } else if (field === "rowCount") {
+      setNewRowCount((prev) => (prev > 1 ? prev - 1 : 1));
+    }
+  };
 
   const handleLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value)
+    const value = Number.parseInt(e.target.value);
     if (!isNaN(value) && value >= 1) {
-      setLimit(value)
+      setLimit(value);
     }
-  }
+  };
+
+  const handleOffsetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number.parseInt(e.target.value);
+    if (!isNaN(value) && value >= 0) {
+      setOffset(value);
+    }
+  };
+
+  const handleRowCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number.parseInt(e.target.value);
+    if (!isNaN(value) && value >= 1) {
+      setNewRowCount(value);
+    }
+  };
+
+  // Query row management
+  const updateRow = (id: string, field: keyof QueryRow, value: any) => {
+    setRows((prev) => prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)));
+  };
+
+  const addRow = () => {
+    const newRow: QueryRow = {
+      id: `${rows.length + 1}`,
+      subject: "",
+      concept: "",
+      conceptPrefix: "",
+      property: "",
+      propertyPrefix: "",
+      alias: "",
+      order: "none",
+      visible: true,
+      function: "none",
+      operator: "",
+      value: "",
+      optional: false,
+      result: "",
+      graphPattern: "Basic",
+      propertyPath: "none",
+      groupId: "",
+      graph: "",
+      service: "",
+    };
+    setRows((prev) => [...prev, newRow]);
+    setSelectKeys((prev) => ({
+      ...prev,
+      [`concept-${newRow.id}`]: 0,
+      [`property-${newRow.id}`]: 0,
+      [`conceptPrefix-${newRow.id}`]: 0,
+      [`propertyPrefix-${newRow.id}`]: 0,
+      [`graphPattern-${newRow.id}`]: 0,
+      [`propertyPath-${newRow.id}`]: 0,
+      [`graph-${newRow.id}`]: 0,
+      [`service-${newRow.id}`]: 0,
+    }));
+  };
+
+  const addMultipleRows = (count: number) => {
+    const newRows: QueryRow[] = Array.from({ length: count }, (_, index) => ({
+      id: `${rows.length + index + 1}`,
+      subject: "",
+      concept: "",
+      conceptPrefix: "",
+      property: "",
+      propertyPrefix: "",
+      alias: "",
+      order: "none",
+      visible: true,
+      function: "none",
+      operator: "",
+      value: "",
+      optional: false,
+      result: "",
+      graphPattern: "Basic",
+      propertyPath: "none",
+      groupId: "",
+      graph: "",
+      service: "",
+    }));
+    setRows((prev) => [...prev, ...newRows]);
+    setSelectKeys((prev) => {
+      const newKeys = newRows.reduce(
+        (acc, row) => ({
+          ...acc,
+          [`concept-${row.id}`]: 0,
+          [`property-${row.id}`]: 0,
+          [`conceptPrefix-${row.id}`]: 0,
+          [`propertyPrefix-${row.id}`]: 0,
+          [`graphPattern-${row.id}`]: 0,
+          [`propertyPath-${row.id}`]: 0,
+          [`graph-${row.id}`]: 0,
+          [`service-${row.id}`]: 0,
+        }),
+        {}
+      );
+      return { ...prev, ...newKeys };
+    });
+  };
+
+  const removeRow = (id: string) => {
+    setRows((prev) => prev.filter((row) => row.id !== id));
+    setSelectKeys((prev) => {
+      const newKeys = { ...prev };
+      delete newKeys[`concept-${id}`];
+      delete newKeys[`property-${id}`];
+      delete newKeys[`conceptPrefix-${id}`];
+      delete newKeys[`propertyPrefix-${id}`];
+      delete newKeys[`graphPattern-${id}`];
+      delete newKeys[`propertyPath-${id}`];
+      delete newKeys[`graph-${id}`];
+      delete newKeys[`service-${id}`];
+      return newKeys;
+    });
+  };
 
   // Query generation
   const generateQuery = () => {
-    let query = ""
+    let query = "";
+    const variablesInResult: string[] = [];
+    const triplesInWhere: string[] = [];
+    const filterConditions: string[] = [];
+    const orderList: string[] = [];
+    const groupByList: string[] = [];
+    const havingConditions: string[] = [];
+    const variablesForRDFType = new Set<string>();
 
-    // Add prefixes
+    if (queryDescription) {
+      query += `# ${queryDescription}\n\n`;
+    }
+
     prefixes.forEach((prefix) => {
       if (prefix.prefix && prefix.uri) {
-        query += `PREFIX ${prefix.prefix}: <${prefix.uri}>\n`
+        query += `PREFIX ${prefix.prefix}: <${prefix.uri}>\n`;
+      } else if (!prefix.prefix && prefix.uri) {
+        query += `PREFIX <${prefix.uri}>\n`;
       }
-    })
-    if (query) query += "\n"
+    });
+    if (prefixes.length > 0) query += "\n";
 
-    // Add SELECT clause
-    query += `SELECT${distinct ? " DISTINCT" : ""}`
+    const defaultGraphs = datasets.filter((d) => d.type === "default");
+    const namedGraphs = datasets.filter((d) => d.type === "named");
+    defaultGraphs.forEach((graph) => {
+      if (graph.uri) {
+        query += `FROM <${graph.uri}>\n`;
+      }
+    });
+    namedGraphs.forEach((graph) => {
+      if (graph.uri) {
+        query += `FROM NAMED <${graph.uri}>\n`;
+      }
+    });
+    if (defaultGraphs.length > 0 || namedGraphs.length > 0) query += "\n";
 
-    const visibleRows = rows.filter((r) => r.visible && r.alias)
-    visibleRows.forEach((row) => {
-      query += ` ?${row.alias}`
-    })
+    rows.forEach((row, rowIndex) => {
+      const questionVariable = `?${row.subject}`;
+      const questionAlias = `?${row.alias}`;
+      const concept = row.conceptPrefix ? `${row.conceptPrefix}:${row.concept}` : row.concept;
+      let property = row.propertyPrefix ? `${row.propertyPrefix}:${row.property}` : row.property;
 
-    query += "\nWHERE\n{\n"
-
-    // Add triple patterns
-    rows.forEach((row) => {
-      if (row.subject && row.concept && row.property && row.alias) {
-        if (row.optional) {
-          query += "  OPTIONAL {\n"
-          query += `    ?${row.subject} rdf:type ${row.concept} .\n`
-          query += `    ?${row.subject} ${row.property} ?${row.alias} .\n`
-          query += "  }\n"
+      if (row.propertyPath !== "none") {
+        if (row.propertyPath === "!uri" || row.propertyPath === "!^uri") {
+          property = `${row.propertyPath} <${row.property}>`;
         } else {
-          query += `  ?${row.subject} rdf:type ${row.concept} .\n`
-          query += `  ?${row.subject} ${row.property} ?${row.alias} .\n`
+          property = `${property}${row.propertyPath}`;
         }
       }
-    })
 
-    // Add FILTERs
-    const filters = rows.filter((r) => r.operator && r.value && r.alias)
-    if (filters.length > 0) {
-      query += "  FILTER ("
-      filters.forEach((row, idx) => {
-        if (idx > 0) query += " && "
-        if (row.operator === "contains") {
-          query += `regex(?${row.alias}, "${row.value}", "i")`
-        } else if (row.operator === "starts with") {
-          query += `strStarts(?${row.alias}, "${row.value}")`
-        } else if (row.operator === "ends with") {
-          query += `strEnds(?${row.alias}, "${row.value}")`
-        } else {
-          query += `?${row.alias} ${row.operator} "${row.value}"`
+      let triplePattern = "";
+      if (row.subject && row.alias && !row.concept && !row.property) {
+        triplePattern = `${questionVariable} ${questionAlias} .`;
+      } else if (row.subject && row.concept && row.property && row.alias) {
+        const triples: string[] = [];
+        if (!variablesForRDFType.has(row.subject)) {
+          triples.push(`${questionVariable} rdf:type ${concept} .`);
+          variablesForRDFType.add(row.subject);
         }
-      })
-      query += ")\n"
+        triples.push(`${questionVariable} ${property} ${questionAlias} .`);
+        triplePattern = triples.join("\n    ");
+      } else if (row.subject || row.concept || row.property || row.alias) {
+        setGeneratedQuery(
+          `# Error in row ${rowIndex + 1}: Incomplete row. Ensure subject, concept, property, and alias are provided, or use subject and alias for simple triple.`
+        );
+        setMessage({
+          text: `Error in row ${rowIndex + 1}: Incomplete row. Ensure subject, concept, property, and alias are provided.`,
+          type: "error",
+        });
+        return;
+      }
+
+      if (triplePattern) {
+        let wrappedPattern = triplePattern;
+        if (row.service) {
+          wrappedPattern = `SERVICE <${row.service}> { ${triplePattern} }`;
+        } else if (row.graph) {
+          wrappedPattern = `GRAPH <${row.graph}> { ${triplePattern} }`;
+        } else if (row.graphPattern === "Optional") {
+          wrappedPattern = `OPTIONAL { ${triplePattern} }`;
+        }
+        triplesInWhere.push(wrappedPattern);
+      }
+
+      if (row.visible && row.alias) {
+        if (row.function === "none" || row.function === "Where") {
+          variablesInResult.push(questionAlias);
+        } else if (row.function === "Group by") {
+          variablesInResult.push(questionAlias);
+          groupByList.push(questionAlias);
+        } else {
+          const resultVar = row.result || `result${rowIndex + 1}`;
+          variablesInResult.push(`(${functionTranslated(row.function)}(${questionAlias}) AS ?${resultVar})`);
+          if (row.operator && row.value) {
+            havingConditions.push(buildFilterExpression(row, `?${resultVar}`));
+          }
+        }
+      }
+
+      if (row.operator && row.value && row.function !== "Group by") {
+        filterConditions.push(buildFilterExpression(row, questionAlias));
+      } else if (row.value && !row.operator) {
+        setGeneratedQuery(`# Error in row ${rowIndex + 1}: Missing operator for value`);
+        setMessage({
+          text: `Error in row ${rowIndex + 1}: Missing operator for value`,
+          type: "error",
+        });
+        return;
+      }
+
+      if (row.order !== "none") {
+        orderList.push(row.order === "ascending" ? questionAlias : `DESC(${questionAlias})`);
+      }
+    });
+
+    if (generatedQuery.startsWith("# Error")) return;
+
+    query += `SELECT${distinct ? " DISTINCT" : ""} ${
+      variablesInResult.length > 0 ? variablesInResult.join(" ") : ""
+    }\nWHERE\n{\n`;
+    triplesInWhere.forEach((triple) => {
+      query += `  ${triple}\n`;
+    });
+
+    if (filterConditions.length > 0) {
+      query += "  FILTER (";
+      filterConditions.forEach((condition, idx) => {
+        query += condition;
+        if (idx < filterConditions.length - 1) query += " && ";
+      });
+      query += ")\n";
     }
 
-    query += "}\n"
+    query += "}\n";
 
-    // Add LIMIT
-    if (isLimitEnabled) {
-      query += `LIMIT ${limit}\n`
+    if (groupByList.length > 0) {
+      query += "GROUP BY ";
+      groupByList.forEach((variable, idx) => {
+        query += variable;
+        if (idx < groupByList.length - 1) query += ", ";
+      });
+      query += "\n";
     }
 
-    setGeneratedQuery(query)
-  }
+    if (havingConditions.length > 0) {
+      query += "HAVING (";
+      havingConditions.forEach((condition, idx) => {
+        query += condition;
+        if (idx < havingConditions.length - 1) query += " && ";
+      });
+      query += ")\n";
+    }
+
+    if (orderList.length > 0) {
+      query += "ORDER BY ";
+      orderList.forEach((order, idx) => {
+        query += order;
+        if (idx < orderList.length - 1) query += ", ";
+      });
+      query += "\n";
+    }
+
+    if (isLimitEnabled && limit > 0) {
+      query += `LIMIT ${limit}\n`;
+    }
+    if (isOffsetEnabled && offset > 0) {
+      query += `OFFSET ${offset}\n`;
+    }
+
+    setGeneratedQuery(query);
+    setQuery(query);
+    setMessage({
+      text: "Query copied to Query Executor",
+      type: "success",
+    });
+  };
+
+  const functionTranslated = (functionName: string) => {
+    switch (functionName) {
+      case "Average":
+        return "AVG";
+      case "Count":
+        return "COUNT";
+      case "Sum":
+        return "SUM";
+      case "Max":
+        return "MAX";
+      case "Min":
+        return "MIN";
+      case "Group Concat":
+        return "GROUP_CONCAT";
+      default:
+        return functionName;
+    }
+  };
+
+  const buildFilterExpression = (row: QueryRow, variable: string) => {
+    const { operator, value } = row;
+    if (operator === "contains") {
+      return `regex(str(${variable}), "${value}", "i")`;
+    } else if (operator === "starts with") {
+      return `strstarts(str(${variable}), "${value}")`;
+    } else if (operator === "ends with") {
+      return `strends(str(${variable}), "${value}")`;
+    } else if (operator === "in" || operator === "not in") {
+      const values = value
+        .split(",")
+        .map((v) => `"${v.trim()}"`)
+        .join(", ");
+      return `${variable} ${operator.toUpperCase()} (${values})`;
+    } else {
+      let typedValue = value;
+      if (value.match(/^\d+$/)) {
+        typedValue = `"${value}"^^xsd:integer`;
+      } else if (value.match(/^\d+\.\d+$/)) {
+        typedValue = `"${value}"^^xsd:decimal`;
+      } else if (value === "true" || value === "false") {
+        typedValue = `"${value}"^^xsd:boolean`;
+      } else {
+        typedValue = `"${value}"`;
+      }
+      return `${variable} ${operator} ${typedValue}`;
+    }
+  };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 p-4">
-      {/* Prefix Management Card */}
-      <Card className="bg-zinc-900/50 border-zinc-800">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-white flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-emerald-400" />
-            Prefix Management
-          </CardTitle>
-          <CardDescription className="text-zinc-400">
-            Define namespace prefixes for your SPARQL query
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Common Prefixes Quick Add */}
-          <div className="flex flex-wrap gap-2">
-            <Label className="text-sm text-zinc-400 font-medium flex items-center">Common prefixes:</Label>
-            {commonPrefixes.map((commonPrefix) => (
-              <Badge
-                key={commonPrefix.prefix}
-                variant="secondary"
-                className="cursor-pointer hover:bg-zinc-700 transition-colors"
-                onClick={() => addCommonPrefix(commonPrefix)}
-              >
-                {commonPrefix.prefix}
-              </Badge>
-            ))}
+    <Container>
+      <PrefixManager prefixes={prefixes} setPrefixes={setPrefixes} commonPrefixes={commonPrefixes} />
+      <DatasetManager datasets={datasets} setDatasets={setDatasets} />
+      <QueryCard>
+        <QueryHeader>
+          <div>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Code className="w-5 h-5 text-blue-400" />
+              Query Builder
+            </CardTitle>
+            <CardDescription className="text-zinc-400">Build your SPARQL query using the visual wizard</CardDescription>
           </div>
-
-          {/* Prefix Table */}
-          <div className="overflow-hidden">
-            <div className="min-w-full space-y-2">
-              <div className="grid grid-cols-12 gap-3 px-4 py-3 bg-zinc-800/50 rounded-lg border border-zinc-700">
-                <Label className="text-sm text-zinc-300 font-medium col-span-5">Prefix Name</Label>
-                <Label className="text-sm text-zinc-300 font-medium col-span-6">Namespace URI</Label>
-                <Label className="text-sm text-zinc-300 font-medium text-center col-span-1">Actions</Label>
-              </div>
-
-              <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
-                {prefixes.map((prefix, idx) => (
-                  <div key={prefix.id} className="grid grid-cols-12 gap-3 p-3 rounded-lg bg-zinc-800/30 border border-zinc-700/50">
-                    <Input
-                      placeholder="e.g., rdf"
-                      value={prefix.prefix}
-                      onChange={(e) => updatePrefix(prefix.id, "prefix", e.target.value)}
-                      className="col-span-5 bg-zinc-900/50 border-zinc-700 text-white text-sm"
-                    />
-                    <Input
-                      placeholder="e.g., http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-                      value={prefix.uri}
-                      onChange={(e) => updatePrefix(prefix.id, "uri", e.target.value)}
-                      className="col-span-6 bg-zinc-900/50 border-zinc-700 text-white text-sm"
-                    />
-                    <div className="flex items-center justify-center col-span-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deletePrefix(prefix.id)}
-                        className="h-8 w-8 text-zinc-400 hover:text-red-400 hover:bg-red-400/10"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <Button onClick={addPrefix} variant="outline" className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800">
-            <Plus className="mr-2 w-4 h-4" /> Add Prefix
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsQueryBuilderCollapsed(!isQueryBuilderCollapsed)}
+            className="text-zinc-400 hover:text-white"
+          >
+            {isQueryBuilderCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
           </Button>
-        </CardContent>
-      </Card>
-
-      {/* Query Builder Card */}
-      <Card className="bg-zinc-900/50 border-zinc-800">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-white flex items-center gap-2">
-            <Code className="w-5 h-5 text-blue-400" />
-            Query Builder
-          </CardTitle>
-          <CardDescription className="text-zinc-400">
-            Build your SPARQL query using the visual wizard
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Query Rows Table */}
-          <div className="overflow-hidden">
-            <div className="min-w-[1000px] space-y-2">
-              {/* Table Header */}
-              <div className="grid grid-cols-12 gap-3 px-4 py-3 bg-zinc-800/50 rounded-lg border border-zinc-700">
-                <Label className="text-sm text-zinc-300 font-medium col-span-1">Subject</Label>
-                <Label className="text-sm text-zinc-300 font-medium col-span-2">Concept</Label>
-                <Label className="text-sm text-zinc-300 font-medium col-span-2">Property</Label>
-                <Label className="text-sm text-zinc-300 font-medium col-span-1">Alias</Label>
-                <Label className="text-sm text-zinc-300 font-medium col-span-2">Operator</Label>
-                <Label className="text-sm text-zinc-300 font-medium col-span-2">Value</Label>
-                <Label className="text-sm text-zinc-300 font-medium text-center col-span-1">Visible</Label>
-                <Label className="text-sm text-zinc-300 font-medium text-center col-span-1">Optional</Label>
-              </div>
-
-              {/* Scrollable Rows Container */}
-              <div className="max-h-64 overflow-y-auto space-y-2 pr-2">
-                {rows.map((row, idx) => (
-                  <div key={row.id} className="grid grid-cols-12 gap-3 p-3 rounded-lg bg-zinc-800/30 border border-zinc-700/50">
-                    {/* Subject */}
+        </QueryHeader>
+        {!isQueryBuilderCollapsed && (
+          <QueryContent>
+            <QueryDescriptionContainer>
+              <Label className="text-sm text-zinc-300">Query Description</Label>
+              <Input
+                placeholder="Enter query description"
+                value={queryDescription}
+                onChange={(e) => setQueryDescription(e.target.value)}
+                className="bg-zinc-900/50 border-zinc-700 text-white text-sm h-8"
+              />
+            </QueryDescriptionContainer>
+            <TableContainer rowsCount={rows.length}>
+              <TableHeader>
+                <FieldWrapper width="80px">
+                  <Label className="text-xs text-zinc-300 font-medium">Actions</Label>
+                </FieldWrapper>
+                <FieldWrapper width="100px">
+                  <Label className="text-xs text-zinc-300 font-medium">Subject</Label>
+                </FieldWrapper>
+                <FieldWrapper width="100px">
+                  <Label className="text-xs text-zinc-300 font-medium">Concept Prefix</Label>
+                </FieldWrapper>
+                <FieldWrapper width="300px">
+                  <Label className="text-xs text-zinc-300 font-medium">Concept</Label>
+                </FieldWrapper>
+                <FieldWrapper width="100px">
+                  <Label className="text-xs text-zinc-300 font-medium">Property Prefix</Label>
+                </FieldWrapper>
+                <FieldWrapper width="300px">
+                  <Label className="text-xs text-zinc-300 font-medium">Property</Label>
+                </FieldWrapper>
+                <FieldWrapper width="180px">
+                  <Label className="text-xs text-zinc-300 font-medium">Alias</Label>
+                </FieldWrapper>
+                <FieldWrapper width="125px">
+                  <Label className="text-xs text-zinc-300 font-medium">Order</Label>
+                </FieldWrapper>
+                <FieldWrapper width="125px">
+                  <Label className="text-xs text-zinc-300 font-medium text-center">Visible</Label>
+                </FieldWrapper>
+                <FieldWrapper width="100px">
+                  <Label className="text-xs text-zinc-300 font-medium">Function</Label>
+                </FieldWrapper>
+                <FieldWrapper width="100px">
+                  <Label className="text-xs text-zinc-300 font-medium">Operator</Label>
+                </FieldWrapper>
+                <FieldWrapper width="100px">
+                  <Label className="text-xs text-zinc-300 font-medium">Value</Label>
+                </FieldWrapper>
+                <FieldWrapper width="130px">
+                  <Label className="text-xs text-zinc-300 font-medium text-center">Optional</Label>
+                </FieldWrapper>
+                <FieldWrapper width="100px">
+                  <Label className="text-xs text-zinc-300 font-medium">Result</Label>
+                </FieldWrapper>
+                <FieldWrapper width="100px">
+                  <Label className="text-xs text-zinc-300 font-medium">Pattern</Label>
+                </FieldWrapper>
+                <FieldWrapper width="100px">
+                  <Label className="text-xs text-zinc-300 font-medium">Path</Label>
+                </FieldWrapper>
+                <FieldWrapper width="150px">
+                  <Label className="text-xs text-zinc-300 font-medium">Graph</Label>
+                </FieldWrapper>
+                <FieldWrapper width="150px">
+                  <Label className="text-xs text-zinc-300 font-medium">Service</Label>
+                </FieldWrapper>
+              </TableHeader>
+              {rows.map((row) => (
+                <TableRow key={row.id}>
+                  <FieldWrapper width="80px">
+                    <RemoveButton
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => removeRow(row.id)}
+                      disabled={rows.length === 1}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </RemoveButton>
+                  </FieldWrapper>
+                  <FieldWrapper width="100px">
                     <Input
                       placeholder="s1"
                       value={row.subject}
                       onChange={(e) => updateRow(row.id, "subject", e.target.value)}
-                      className="col-span-1 bg-zinc-900/50 border-zinc-700 text-white text-sm"
+                      className="bg-zinc-900/50 border-zinc-700 text-white text-xs h-8"
                     />
-                    {/* Concept */}
+                  </FieldWrapper>
+                  <FieldWrapper width="100px">
                     <Select
-                      value={row.concept}
-                      onValueChange={(value) => updateRow(row.id, "concept", value)}
+                      key={`conceptPrefix-${row.id}-${selectKeys[`conceptPrefix-${row.id}`]}`}
+                      value={row.conceptPrefix}
+                      onValueChange={(value) => updateRow(row.id, "conceptPrefix", value)}
                     >
-                      <SelectTrigger className="col-span-2 bg-zinc-900/50 border-zinc-700 text-white text-sm">
-                        <SelectValue placeholder="Concept" />
+                      <SelectTrigger className="w-full bg-zinc-900/50 border-zinc-700 text-white text-xs h-8">
+                        <SelectValue placeholder="Prefix" />
                       </SelectTrigger>
-                      <SelectContent>
-                        {mockConcepts.map((concept) => (
-                          <SelectItem key={concept} value={concept}>
-                            {concept}
+                      <SelectContent className="bg-zinc-800 border-zinc-700 text-xs">
+                        <SelectItem value="none">None</SelectItem>
+                        {prefixes.map((prefix) => (
+                          <SelectItem key={prefix.prefix} value={prefix.prefix} className="text-white">
+                            {prefix.prefix}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    {/* Property */}
+                  </FieldWrapper>
+                  <FieldWrapper width="300px">
+                    <ConceptPropertyContainer>
+                      <LargeInput
+                        placeholder="Concept (e.g., Person)"
+                        value={row.concept}
+                        onChange={(e) => updateRow(row.id, "concept", e.target.value)}
+                      />
+                      <Select
+                        key={`concept-${row.id}-${selectKeys[`concept-${row.id}`]}`}
+                        value={row.concept}
+                        onValueChange={(value) => updateRow(row.id, "concept", value)}
+                      >
+                        <SelectTrigger className="w-[100px] bg-zinc-900/50 border-zinc-700 text-white text-xs h-8">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-zinc-800 border-zinc-700 text-xs">
+                          <SelectItem value="none">None</SelectItem>
+                          {mockConcepts.map((concept) => (
+                            <SelectItem key={concept} value={concept} className="text-white">
+                              {concept}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </ConceptPropertyContainer>
+                  </FieldWrapper>
+                  <FieldWrapper width="100px">
                     <Select
-                      value={row.property}
-                      onValueChange={(value) => updateRow(row.id, "property", value)}
+                      key={`propertyPrefix-${row.id}-${selectKeys[`propertyPrefix-${row.id}`]}`}
+                      value={row.propertyPrefix}
+                      onValueChange={(value) => updateRow(row.id, "propertyPrefix", value)}
                     >
-                      <SelectTrigger className="col-span-2 bg-zinc-900/50 border-zinc-700 text-white text-sm">
-                        <SelectValue placeholder="Property" />
+                      <SelectTrigger className="w-full bg-zinc-900/50 border-zinc-700 text-white text-xs h-8">
+                        <SelectValue placeholder="Prefix" />
                       </SelectTrigger>
-                      <SelectContent>
-                        {mockProperties.map((property) => (
-                          <SelectItem key={property} value={property}>
-                            {property}
+                      <SelectContent className="bg-zinc-800 border-zinc-700 text-xs">
+                        <SelectItem value="none">None</SelectItem>
+                        {prefixes.map((prefix) => (
+                          <SelectItem key={prefix.prefix} value={prefix.prefix} className="text-white">
+                            {prefix.prefix}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    {/* Alias */}
+                  </FieldWrapper>
+                  <FieldWrapper width="300px">
+                    <ConceptPropertyContainer>
+                      <LargeInput
+                        placeholder="Property (e.g., hasName)"
+                        value={row.property}
+                        onChange={(e) => updateRow(row.id, "property", e.target.value)}
+                      />
+                      <Select
+                        key={`property-${row.id}-${selectKeys[`property-${row.id}`]}`}
+                        value={row.property}
+                        onValueChange={(value) => updateRow(row.id, "property", value)}
+                      >
+                        <SelectTrigger className="w-[100px] bg-zinc-900/50 border-zinc-700 text-white text-xs h-8">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-zinc-800 border-zinc-700 text-xs">
+                          <SelectItem value="none">None</SelectItem>
+                          {mockProperties.map((property) => (
+                            <SelectItem key={property} value={property} className="text-white">
+                              {property}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </ConceptPropertyContainer>
+                  </FieldWrapper>
+                  <FieldWrapper width="180px">
                     <Input
-                      placeholder="alias"
+                      placeholder="alias (e.g., name)"
                       value={row.alias}
                       onChange={(e) => updateRow(row.id, "alias", e.target.value)}
-                      className="col-span-1 bg-zinc-900/50 border-zinc-700 text-white text-sm"
+                      className="bg-zinc-900/50 border-zinc-700 text-white text-xs h-8"
                     />
-                    {/* Operator */}
-                    <Select
-                      value={row.operator}
-                      onValueChange={(value) => updateRow(row.id, "operator", value)}
-                    >
-                      <SelectTrigger className="col-span-2 bg-zinc-900/50 border-zinc-700 text-white text-sm">
+                  </FieldWrapper>
+                  <FieldWrapper width="125px">
+                    <Select value={row.order} onValueChange={(value) => updateRow(row.id, "order", value)}>
+                      <SelectTrigger className="w-full bg-zinc-900/50 border-zinc-700 text-white text-xs h-8">
+                        <SelectValue placeholder="Order" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-800 border-zinc-700 text-xs">
+                        {orderOptions.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FieldWrapper>
+                  <FieldWrapper width="125px">
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+                      <Checkbox
+                        checked={row.visible}
+                        onCheckedChange={(checked) => updateRow(row.id, "visible", checked)}
+                        className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                      />
+                    </div>
+                  </FieldWrapper>
+                  <FieldWrapper width="100px">
+                    <Select value={row.function} onValueChange={(value) => updateRow(row.id, "function", value)}>
+                      <SelectTrigger className="w-full bg-zinc-900/50 border-zinc-700 text-white text-xs h-8">
+                        <SelectValue placeholder="Function" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-800 border-zinc-700 text-xs">
+                        {functions.map((func) => (
+                          <SelectItem key={func} value={func}>
+                            {func}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FieldWrapper>
+                  <FieldWrapper width="100px">
+                    <Select value={row.operator} onValueChange={(value) => updateRow(row.id, "operator", value)}>
+                      <SelectTrigger className="w-full bg-zinc-900/50 border-zinc-700 text-white text-xs h-8">
                         <SelectValue placeholder="Operator" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-zinc-800 border-zinc-700 text-xs">
+                        <SelectItem value="none">None</SelectItem>
                         {operators.map((operator) => (
                           <SelectItem key={operator} value={operator}>
                             {operator}
@@ -389,138 +1077,238 @@ export function SparqlQueryWizard() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {/* Value */}
+                  </FieldWrapper>
+                  <FieldWrapper width="100px">
                     <Input
-                      placeholder="value"
+                      placeholder="value (e.g., 30)"
                       value={row.value}
                       onChange={(e) => updateRow(row.id, "value", e.target.value)}
-                      className="col-span-2 bg-zinc-900/50 border-zinc-700 text-white text-sm"
+                      className="bg-zinc-900/50 border-zinc-700 text-white text-xs h-8"
                     />
-                    {/* Visible Checkbox */}
-                    <div className="flex justify-center items-center col-span-1">
-                      <Checkbox
-                        checked={row.visible}
-                        onCheckedChange={(checked) => updateRow(row.id, "visible", checked)}
-                        className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
-                      />
-                    </div>
-                    {/* Optional Checkbox */}
-                    <div className="flex justify-center items-center col-span-1">
+                  </FieldWrapper>
+                  <FieldWrapper width="130px">
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
                       <Checkbox
                         checked={row.optional}
                         onCheckedChange={(checked) => updateRow(row.id, "optional", checked)}
                         className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                       />
                     </div>
-                    {/* Row Actions */}
-                    <div className="flex items-center justify-end gap-2 col-span-12 pt-2 border-t border-zinc-700/50">
-                      <Badge variant="outline" className="text-zinc-400">
-                        Row {idx + 1}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteRow(row.id)}
-                        className="h-8 text-zinc-400 hover:text-red-400 hover:bg-red-400/10"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <Button onClick={addRow} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
-            <Plus className="mr-2 w-4 h-4" /> Add Row
-          </Button>
-
-          {/* Query Options */}
-          <div className="grid grid-cols-2 gap-6 pt-4 border-t border-zinc-800">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Checkbox
-                  id="distinct"
-                  checked={distinct}
-                  onCheckedChange={(checked) => setDistinct(checked as boolean)}
-                  className="border-zinc-600 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
-                />
-                <Label htmlFor="distinct" className="text-zinc-300 cursor-pointer">
-                  Return distinct results
-                </Label>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Checkbox
-                  id="limitCheckbox"
-                  checked={isLimitEnabled}
-                  onCheckedChange={(checked) => setIsLimitEnabled(checked as boolean)}
-                  className="border-zinc-600 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
-                />
-                <Label htmlFor="limitCheckbox" className="text-zinc-300 cursor-pointer">
-                  Limit results
-                </Label>
-              </div>
-
-              {isLimitEnabled && (
-                <div className="flex items-center gap-3 pl-7">
-                  <div className="relative flex items-center">
-                    <button
-                      type="button"
-                      onMouseDown={() => startHolding('decrement')}
-                      onMouseUp={stopHolding}
-                      onMouseLeave={stopHolding}
-                      onClick={handleDecrement}
-                      className="h-9 px-3 bg-zinc-800 border border-zinc-700 rounded-l-lg hover:bg-zinc-700 transition-colors"
-                    >
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
-
+                  </FieldWrapper>
+                  <FieldWrapper width="100px">
                     <Input
-                      type="number"
-                      value={limit}
-                      onChange={handleLimitChange}
-                      min={1}
-                      className="h-9 w-20 text-center bg-zinc-900 border-x-0 border-zinc-700 rounded-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      placeholder="result (e.g., count)"
+                      value={row.result}
+                      onChange={(e) => updateRow(row.id, "result", e.target.value)}
+                      className="bg-zinc-900/50 border-zinc-700 text-white text-xs h-8"
                     />
-
-                    <button
-                      type="button"
-                      onMouseDown={() => startHolding('increment')}
-                      onMouseUp={stopHolding}
-                      onMouseLeave={stopHolding}
-                      onClick={handleIncrement}
-                      className="h-9 px-3 bg-zinc-800 border border-zinc-700 rounded-r-lg hover:bg-zinc-700 transition-colors"
+                  </FieldWrapper>
+                  <FieldWrapper width="100px">
+                    <Select
+                      key={`graphPattern-${row.id}-${selectKeys[`graphPattern-${row.id}`]}`}
+                      value={row.graphPattern}
+                      onValueChange={(value) => updateRow(row.id, "graphPattern", value)}
                     >
-                      <ChevronUp className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <span className="text-sm text-zinc-400">results</span>
+                      <SelectTrigger className="w-full bg-zinc-900/50 border-zinc-700 text-white text-xs h-8">
+                        <SelectValue placeholder="Pattern" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-800 border-zinc-700 text-xs">
+                        {graphPatternTypes.map((pattern) => (
+                          <SelectItem key={pattern} value={pattern}>
+                            {pattern}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FieldWrapper>
+                  <FieldWrapper width="100px">
+                    <Select
+                      key={`propertyPath-${row.id}-${selectKeys[`propertyPath-${row.id}`]}`}
+                      value={row.propertyPath}
+                      onValueChange={(value) => updateRow(row.id, "propertyPath", value)}
+                    >
+                      <SelectTrigger className="w-full bg-zinc-900/50 border-zinc-700 text-white text-xs h-8">
+                        <SelectValue placeholder="Path" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-800 border-zinc-700 text-xs">
+                        {propertyPathOperators.map((path) => (
+                          <SelectItem key={path} value={path}>
+                            {path}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FieldWrapper>
+                  <FieldWrapper width="150px">
+                    <Select
+                      key={`graph-${row.id}-${selectKeys[`graph-${row.id}`]}`}
+                      value={row.graph}
+                      onValueChange={(value) => updateRow(row.id, "graph", value)}
+                    >
+                      <SelectTrigger className="w-full bg-zinc-900/50 border-zinc-700 text-white text-xs h-8">
+                        <SelectValue placeholder="Graph" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-800 border-zinc-700 text-xs">
+                        <SelectItem value="none">None</SelectItem>
+                        {datasets
+                          .filter((d) => d.type === "named")
+                          .map((dataset) => (
+                            <SelectItem key={dataset.id} value={dataset.uri}>
+                              {dataset.uri}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </FieldWrapper>
+                  <FieldWrapper width="150px">
+                    <Input
+                      placeholder="Service URL (e.g., http://example.com/sparql)"
+                      value={row.service}
+                      onChange={(e) => updateRow(row.id, "service", e.target.value)}
+                      className="bg-zinc-900/50 border-zinc-700 text-white text-xs h-8"
+                    />
+                  </FieldWrapper>
+                </TableRow>
+              ))}
+              <ScrollShadowLeft />
+              <ScrollShadowRight />
+            </TableContainer>
+            <AddRowContainer>
+              <AddRowButton onClick={addRow}><Plus className="mr-2 w-4 h-4" /> Add Row</AddRowButton>
+              <NumberInputContainer>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <NumberButton
+                    type="button"
+                    onMouseDown={() => startHolding("decrement", "rowCount")}
+                    onMouseUp={stopHolding}
+                    onMouseLeave={stopHolding}
+                    onClick={() => handleDecrement("rowCount")}
+                  >
+                    <ChevronDown className="w-3 h-3" />
+                  </NumberButton>
+                  <NumberInput
+                    type="number"
+                    value={newRowCount}
+                    onChange={handleRowCountChange}
+                    min={1}
+                  />
+                  <NumberButton
+                    type="button"
+                    onMouseDown={() => startHolding("increment", "rowCount")}
+                    onMouseUp={stopHolding}
+                    onMouseLeave={stopHolding}
+                    onClick={() => handleIncrement("rowCount")}
+                  >
+                    <ChevronUp className="w-3 h-3" />
+                  </NumberButton>
                 </div>
-              )}
-            </div>
-          </div>
-
-          {/* Generate Query Button */}
-          <Button onClick={generateQuery} className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
-            Generate SPARQL Query <Code className="ml-2 w-4 h-4" />
-          </Button>
-
-          {/* Generated Query Output */}
-          <div className="space-y-2">
-            <Label className="text-sm text-zinc-300">Generated Query</Label>
-            <Textarea
-              readOnly
-              value={generatedQuery}
-              rows={8}
-              className="bg-zinc-800/50 border-zinc-700 text-white font-mono text-sm"
-            />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
+                <span style={{ fontSize: "0.75rem", color: "#a1a1aa" }}>rows</span>
+              </NumberInputContainer>
+              <AddRowButton onClick={() => addMultipleRows(newRowCount)}>
+                <Plus className="mr-2 w-4 h-4" /> Add Multiple Rows
+              </AddRowButton>
+            </AddRowContainer>
+            <OptionsContainer>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <CheckboxContainer>
+                  <Checkbox
+                    id="distinct"
+                    checked={distinct}
+                    onCheckedChange={(checked) => setDistinct(checked as boolean)}
+                    className="border-zinc-600 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                  />
+                  <Label htmlFor="distinct" className="text-zinc-300 text-sm cursor-pointer">
+                    Return distinct results
+                  </Label>
+                </CheckboxContainer>
+              </div>
+              <LimitOffsetContainer>
+                <CheckboxContainer>
+                  <Checkbox
+                    id="limitCheckbox"
+                    checked={isLimitEnabled}
+                    onCheckedChange={(checked) => setIsLimitEnabled(checked as boolean)}
+                    className="border-zinc-600 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                  />
+                  <Label htmlFor="limitCheckbox" className="text-zinc-300 text-sm cursor-pointer">
+                    Limit results
+                  </Label>
+                </CheckboxContainer>
+                {isLimitEnabled && (
+                  <NumberInputContainer>
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <NumberButton
+                        type="button"
+                        onMouseDown={() => startHolding("decrement", "limit")}
+                        onMouseUp={stopHolding}
+                        onMouseLeave={stopHolding}
+                        onClick={() => handleDecrement("limit")}
+                      >
+                        <ChevronDown className="w-3 h-3" />
+                      </NumberButton>
+                      <NumberInput type="number" value={limit} onChange={handleLimitChange} min={1} />
+                      <NumberButton
+                        type="button"
+                        onMouseDown={() => startHolding("increment", "limit")}
+                        onMouseUp={stopHolding}
+                        onMouseLeave={stopHolding}
+                        onClick={() => handleIncrement("limit")}
+                      >
+                        <ChevronUp className="w-3 h-3" />
+                      </NumberButton>
+                    </div>
+                    <span style={{ fontSize: "0.75rem", color: "#a1a1aa" }}>results</span>
+                  </NumberInputContainer>
+                )}
+                <CheckboxContainer>
+                  <Checkbox
+                    id="offsetCheckbox"
+                    checked={isOffsetEnabled}
+                    onCheckedChange={(checked) => setIsOffsetEnabled(checked as boolean)}
+                    className="border-zinc-600 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                  />
+                  <Label htmlFor="offsetCheckbox" className="text-zinc-300 text-sm cursor-pointer">
+                    Offset results
+                  </Label>
+                </CheckboxContainer>
+                {isOffsetEnabled && (
+                  <NumberInputContainer>
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <NumberButton
+                        type="button"
+                        onMouseDown={() => startHolding("decrement", "offset")}
+                        onMouseUp={stopHolding}
+                        onMouseLeave={stopHolding}
+                        onClick={() => handleDecrement("offset")}
+                      >
+                        <ChevronDown className="w-3 h-3" />
+                      </NumberButton>
+                      <NumberInput type="number" value={offset} onChange={handleOffsetChange} min={0} />
+                      <NumberButton
+                        type="button"
+                        onMouseDown={() => startHolding("increment", "offset")}
+                        onMouseUp={stopHolding}
+                        onMouseLeave={stopHolding}
+                        onClick={() => handleIncrement("offset")}
+                      >
+                        <ChevronUp className="w-3 h-3" />
+                      </NumberButton>
+                    </div>
+                    <span style={{ fontSize: "0.75rem", color: "#a1a1aa" }}>offset</span>
+                  </NumberInputContainer>
+                )}
+              </LimitOffsetContainer>
+            </OptionsContainer>
+            <GenerateButton onClick={generateQuery}>
+              Generate SPARQL Query <Code className="ml-2 w-4 h-4" />
+            </GenerateButton>
+            <GeneratedQueryContainer>
+              <Label className="text-sm text-zinc-300">Generated Query</Label>
+              <GeneratedQueryTextarea readOnly value={generatedQuery} rows={8} />
+            </GeneratedQueryContainer>
+          </QueryContent>
+        )}
+      </QueryCard>
+    </Container>
+  );
 }

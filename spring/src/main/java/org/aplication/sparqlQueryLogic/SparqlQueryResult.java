@@ -98,33 +98,88 @@ public class SparqlQueryResult {
     
     
     private String convertModelToCSV() {
-        if (modelResult == null) {
-            return "No model result";
-        }
-
-        StringBuilder csvBuilder = new StringBuilder();
-
-        // Assuming we want to get all the triples (subject, predicate, object)
-        // and display them in CSV format (subject, predicate, object)
-        csvBuilder.append("subject,predicate,object\n");
-        modelResult.listStatements().forEachRemaining(statement -> {
-            String subject = statement.getSubject().toString();
-            String predicate = statement.getPredicate().toString();
-            String object = statement.getObject().toString();
-
-            // Append to CSV with a new line
-            csvBuilder.append(subject).append(",")
-                       .append(predicate).append(",")
-                       .append(object).append("\n");
-        });
-
-        return csvBuilder.toString();
+    if (modelResult == null) {
+        return "No model result";
     }
+
+    StringBuilder csvBuilder = new StringBuilder();
+    csvBuilder.append("subject,predicate,object\n");
+
+    modelResult.listStatements().forEachRemaining(statement -> {
+        String subject = escapeCsv(statement.getSubject().toString());
+        String predicate = escapeCsv(statement.getPredicate().toString());
+        String object = escapeCsv(statement.getObject().toString());
+
+        csvBuilder.append(subject).append(",")
+                  .append(predicate).append(",")
+                  .append(object).append("\n");
+    });
+
+    return csvBuilder.toString();
+}
+
+private String escapeCsv(String value) {
+    if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+        value = value.replace("\"", "\"\""); // double the quotes
+        return "\"" + value + "\""; // wrap in quotes
+    }
+    return value;
+}
+
    
-    
+   private String convertModelToJSON() {
+    if (modelResult == null) {
+        return "{\"error\": \"No model result\"}";
+    }
+
+    StringBuilder jsonBuilder = new StringBuilder();
+    jsonBuilder.append("[\n");
+
+    // Iterate over statements and build JSON manually
+    modelResult.listStatements().forEachRemaining(statement -> {
+        String subject = escapeJSON(statement.getSubject().toString());
+        String predicate = escapeJSON(statement.getPredicate().toString());
+        String object = escapeJSON(statement.getObject().toString());
+
+        jsonBuilder.append("  {\n")
+                   .append("    \"subject\": \"").append(subject).append("\",\n")
+                   .append("    \"predicate\": \"").append(predicate).append("\",\n")
+                   .append("    \"object\": \"").append(object).append("\"\n")
+                   .append("  },\n");
+    });
+
+    // Remove the trailing comma (if any)
+    if (jsonBuilder.lastIndexOf(",") == jsonBuilder.length() - 2) {
+        jsonBuilder.delete(jsonBuilder.length() - 2, jsonBuilder.length());
+    }
+
+    jsonBuilder.append("\n]");
+    return jsonBuilder.toString();
+}
+
+/**
+ * Escapes common JSON special characters.
+ */
+private String escapeJSON(String value) {
+    if (value == null) return "";
+    return value.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
+}
+
     private String convertAskToCsvResult() {
 		return "result\n"+askResult.toString();
 	}
+	private String convertAskToJsonResult() {
+    if (askResult == null) {
+        return "{\"result\": false}";
+    }
+
+    return "{\n  \"result\": " + askResult.toString().toLowerCase() + "\n}";
+}
+
     
     public Boolean getAskResult() {
         return askResult;

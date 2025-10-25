@@ -13,13 +13,18 @@ interface ResultsTableProps {
   onSave: (format: "json" | "csv") => void
 }
 
-
+interface Column {
+  id: string;
+  label: string;
+  accessor: string;
+}
 
 export function ResultsTable({ results, columns, onClear, onSave }: ResultsTableProps) {
   if (results.length === 0) {
     return <TableEmptyState />
   }
 
+  console.log("Holaaaaaaaaaaaaaaaaa")
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
@@ -55,14 +60,11 @@ export function ResultsTable({ results, columns, onClear, onSave }: ResultsTable
           <table className="w-full">
             <thead className="bg-zinc-900 border-b border-zinc-800">
               <tr>
-                {columns.map((column) => (
-                  <th
-                    key={column}
-                    className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider"
-                  >
-                    {column}
-                  </th>
-                ))}
+                {columns.map((column, index) => {
+                  const key = typeof column === "string" ? column : column.id || index;
+                  const label = typeof column === "string" ? column : column.label;
+                  return <th key={key} className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">{label}</th>
+                })}
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
