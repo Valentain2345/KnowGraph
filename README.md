@@ -100,6 +100,3 @@
 * **Deploy**: Hacer deploy en algún servicio gratuito para probarlo.
 
 ```
-
-Este es el formato completo y listo para usar. Puedes copiar y pegar este código en tu documentación o cualquier herramienta que soporte Markdown. Si necesitas más ayuda, ¡solo avísame!
-```
