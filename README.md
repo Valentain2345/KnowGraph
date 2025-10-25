@@ -33,7 +33,7 @@
 * Por defecto, Tomcat corre en `localhost:8080`. Un endpoint de ejemplo es:
 
   ```
-  localhost:8080/hello
+  http://localhost:8080/sparql/clearDataset
   ```
 
 ## Frontend (Vite + React)
