@@ -4,8 +4,8 @@ import org.apache.jena.ontapi.GraphRepository;
 import org.apache.jena.ontapi.OntModelFactory;
 import org.apache.jena.ontapi.OntSpecification;
 import org.apache.jena.ontapi.model.OntModel;
-import org.apache.jena.ontology.OntModelSpec;
-import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.rdf.model.InfModel;
+import org.apache.jena.rdf.model.Model;
 
 public class OntoManipulator {
 	private OntModel ontModel;
@@ -43,21 +43,18 @@ public class OntoManipulator {
     }
 
 
-    
-    
     public OntModel getOntModel() {
     	return ontModel;
+	} 
+
+    public InfModel getInfModel() {
+		return ontModel.asInferenceModel();
+		
 	}
     
-    public void addImport(OntModel newModel) {
-    	ontModel.addImport(ontModel);
+    public Model getModel() {
+    	if (ontModel == null) return null;
+    	return ontModel.getBaseModel();
     }
     
-    public void readOntologyFromSource(String source) {
-    	
-			ontModel.read(source);
-	}
-    
-    
-	
 }

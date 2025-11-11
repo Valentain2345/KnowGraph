@@ -5,14 +5,22 @@ import { VisualizationButton } from "./visualization-button";
 import { DataButton } from "./data-button";
 import { HelpButton } from "./help-button";
 import { ModelsButton } from "./models-button";
+import { useNavigate } from "react-router-dom";
 
 interface MenuBarProps {
   onMenuAction: (action: string) => void;
-  zIndex: number; // Accepting zIndex prop here
+  zIndex: number;
+  variables: string[];
+  queryResults: Array<Record<string, string>>;
 }
 
-export function MenuBar({ onMenuAction, zIndex }: MenuBarProps) {
+export function MenuBar({ onMenuAction, zIndex,variables,queryResults }: MenuBarProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+   const navigate = useNavigate();
+
+   const handleHome= ()=>{
+     navigate("/")
+  }
 
   return (
     <div
@@ -21,7 +29,7 @@ export function MenuBar({ onMenuAction, zIndex }: MenuBarProps) {
     >
       <div className="flex items-center gap-2 mr-4">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-          <span className="text-white font-bold text-sm">KG</span>
+          <span className="text-white font-bold text-sm" onClick={handleHome}>KG</span>
         </div>
         <span className="text-sm font-semibold text-zinc-100">KnowGraph</span>
       </div>
@@ -31,7 +39,9 @@ export function MenuBar({ onMenuAction, zIndex }: MenuBarProps) {
           onMenuAction={onMenuAction}
           open={openMenu === "visualization"}
           onOpenChange={(open) => setOpenMenu(open ? "visualization" : null)}
-          zIndex={zIndex + 1} // Ensure dropdowns are above the menu bar
+          zIndex={zIndex + 1}
+          variables={variables}
+          queryResults={queryResults}
         />
         <DataButton
           onMenuAction={onMenuAction}

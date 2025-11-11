@@ -1,6 +1,5 @@
-"use client"
-
 import { Textarea } from "./ui/textarea"
+import { Button } from "./ui/button"
 
 interface QueryEditorProps {
   query: string
@@ -8,11 +7,25 @@ interface QueryEditorProps {
 }
 
 export function QueryEditor({ query, onChange }: QueryEditorProps) {
+
+  const handleClearClick=()=>{
+    onChange("");
+  }
   return (
     <div className="flex flex-col gap-2">
-      <label htmlFor="query" className="text-sm font-medium text-zinc-300">
-        SPARQL Query
-      </label>
+      <div className="flex items-center justify-between">
+        <label htmlFor="query" className="text-sm font-medium text-zinc-300">
+          SPARQL Query
+        </label>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleClearClick}
+          className="border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300"
+        >
+          Clear Query
+        </Button>
+      </div>
       <Textarea
         id="query"
         value={query}

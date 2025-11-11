@@ -269,7 +269,7 @@ const handleRemoveFile = (index: number) => {
         />
       </DropdownMenu>
 
-      {/* Existing Remote URL Modal */}
+      {/* Remote URL Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-opacity-0 flex justify-center items-center z-50 h-screen">
           <div className="bg-black p-6 rounded-xl shadow-2xl max-w-lg w-full">

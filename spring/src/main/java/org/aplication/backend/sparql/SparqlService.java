@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.util.Map;
 import java.util.logging.Level;
 
+import org.apache.jena.assembler.assemblers.ModelAssembler;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.query.Query;
@@ -20,6 +21,8 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RDFWriterRegistry;
+import org.apache.jena.sparql.core.DatasetGraph;
+import org.apache.jena.sparql.core.assembler.DatasetAssembler;
 import org.aplication.sparqlQueryLogic.SparqlQueryExecutor;
 import org.aplication.sparqlQueryLogic.SparqlQueryExecutorFactory;
 import org.aplication.sparqlQueryLogic.SparqlQueryResult;
@@ -49,7 +52,7 @@ public class SparqlService {
 			throw new Exception("Error executing query: " + result.getError());
 
 		}
-		java.util.logging.Logger.getLogger(loggerName).info("La query se ejecuto correctamente y el resultado es "+result.getResultAsStringObject());
+		java.util.logging.Logger.getLogger(loggerName).info("La query se ejecuto correctamente");
         return result.getResultAsStringObject();
         
 	}
@@ -65,29 +68,12 @@ public class SparqlService {
 			}
 		}
 	    
-	    private Dataset getGraphDatasetMock() {
-	        java.util.logging.Logger.getLogger(loggerName).info("Este es un dataset de prueba, después hay que borrarlo");
-	        
-	        // Create a default model
-	        Model mockModel = ModelFactory.createDefaultModel();
-	        
-	        // Adding sample data (triples) to the model
-	        Resource subject = mockModel.createResource("http://example.org/subject");
-	        Property predicate = mockModel.createProperty("http://example.org/predicate");
-	        Literal object = mockModel.createLiteral("Test object");
-
-	        mockModel.add(subject, predicate, object);
-	        mockModel.add(subject, predicate, mockModel.createLiteral("Another object"));
-	        mockModel.add(mockModel.createResource("http://example.org/anotherSubject"),
-	                      predicate, mockModel.createLiteral("Different object"));
-	        
-	        // Create a dataset and add the model as the default graph
-	        Dataset dataset = DatasetFactory.create();
-	        dataset.setDefaultModel(mockModel);
-	        
-	        return dataset;
-	    }
-	    
+	 public Model generateUnionModel() {
+		 SparqlQueryResult res=executeQuery("construct {?s ?p ?o} where {?s ?p ?o}");
+			Model model=res.getModelResult();
+			return model;
+	 }
+	 
 	    public SparqlQueryResult loadFromSource(String source) throws Exception {
 	        try {
 	            // Create a model to hold the RDF data
@@ -132,14 +118,10 @@ public class SparqlService {
 		    }
 			System.out.println("Iniciando export");
 		    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-	            if (rdfFormat != null) {
-	                // Write using the specific RDFFormat
-	                RDFDataMgr.write(out, model, rdfFormat);
-	            } else {
-	                // Fallback: Write using Lang (default serialization for the Lang)
-	                RDFDataMgr.write(out, model, lang);
-	            }
-	            
+	                if(rdfFormat!=null)
+						RDFDataMgr.write(out, model, rdfFormat);
+					else
+						RDFDataMgr.write(out, model, lang);
 	            // Get the byte array data from the ByteArrayOutputStream
 	            byte[] fileData = out.toByteArray();
 	            return fileData;
@@ -158,6 +140,18 @@ public class SparqlService {
 			}
 		}
 
+
+		public void addModelToDataset(Model model) {
+			if(this.dataset==null) {
+				this.dataset=DatasetFactory.create();
+			}
+			
+			if(model!=null) this.dataset.asDatasetGraph().addAll(DatasetFactory.create(model).asDatasetGraph());
+		}
+
+		public void setModelInDataset(Model model) {
+			this.dataset=DatasetFactory.create(model);
+		}
 	
 
 }

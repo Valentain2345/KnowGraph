@@ -1,11 +1,9 @@
-"use client"
-
 import { useState } from "react"
 import { Check, X, ArrowRight, Network } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "./ui/button"
+import { Checkbox } from "./ui/checkbox"
+import { Label } from "./ui/label"
+import { ScrollArea } from "./ui/scroll-area"
 
 interface GraphVariableSelectorProps {
   variables: string[]
@@ -14,7 +12,7 @@ interface GraphVariableSelectorProps {
   onCancel: () => void
 }
 
-export interface GraphOutput {
+ interface GraphOutput {
   nodes: Array<{
     id: string
     name: string
@@ -42,35 +40,48 @@ export function GraphVariableSelector({ variables, queryResults, onComplete, onC
   }
 
   const handleStepOneAccept = () => {
-    if (selectedNodes.length === 0) {
-      alert("Please select at least one node variable")
-      return
-    }
-    // Initialize connections map
-    const newConnections = new Map<string, Map<string, string[]>>()
-    selectedNodes.forEach((src) => {
-      const targetMap = new Map<string, string[]>()
-      selectedNodes.forEach((tgt) => {
-        targetMap.set(tgt, [])
-      })
-      newConnections.set(src, targetMap)
-    })
-    setConnections(newConnections)
-    setStep(2)
+  if (selectedNodes.length === 0) {
+    alert("Please select at least one node variable")
+    return
   }
 
-  const toggleConnection = (src: string, tgt: string, edge: string) => {
-    setConnections((prev) => {
-      const newMap = new Map(prev)
-      const targetMap = newMap.get(src)
-      if (targetMap) {
-        const edges = targetMap.get(tgt) || []
-        const newEdges = edges.includes(edge) ? edges.filter((e) => e !== edge) : [...edges, edge]
-        targetMap.set(tgt, newEdges)
-      }
-      return newMap
+  // Deep initialize connections: every src → every tgt → empty array
+  const newConnections = new Map<string, Map<string, string[]>>()
+  selectedNodes.forEach((src) => {
+    const targetMap = new Map<string, string[]>()
+    selectedNodes.forEach((tgt) => {
+        targetMap.set(tgt, [])
     })
-  }
+    newConnections.set(src, targetMap)
+  })
+  setConnections(newConnections)
+  setStep(2)
+}
+
+const toggleConnection = (src: string, tgt: string, edge: string) => {
+  setConnections((prev) => {
+    // Deep clone the entire structure
+    const newConnections = new Map<string, Map<string, string[]>>()
+
+    prev.forEach((targetMap, srcKey) => {
+      const newTargetMap = new Map<string, string[]>()
+      targetMap.forEach((edges, tgtKey) => {
+        let newEdges = [...edges]
+        if (srcKey === src && tgtKey === tgt) {
+          if (edges.includes(edge)) {
+            newEdges = edges.filter((e) => e !== edge)
+          } else {
+            newEdges = [...edges, edge]
+          }
+        }
+        newTargetMap.set(tgtKey, newEdges)
+      })
+      newConnections.set(srcKey, newTargetMap)
+    })
+
+    return newConnections
+  })
+}
 
   const handleStepTwoAccept = () => {
     const nodeIds = new Set<string>()
@@ -120,7 +131,8 @@ export function GraphVariableSelector({ variables, queryResults, onComplete, onC
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 items-center z-50 h-screen">
       <div className="relative w-full max-w-2xl animate-in fade-in zoom-in duration-300">
         {/* Glassmorphism container */}
         <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-white/10 to-white/5 shadow-2xl backdrop-blur-xl">
@@ -219,7 +231,8 @@ export function GraphVariableSelector({ variables, queryResults, onComplete, onC
                     Continue
                     <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-purple-500 opacity-0 transition-opacity group-hover:opacity-100" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-purple-500 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none" />
+
                 </Button>
               </div>
             )}
@@ -229,7 +242,7 @@ export function GraphVariableSelector({ variables, queryResults, onComplete, onC
               <div className="space-y-6">
                 <p className="text-sm text-white/80">For each node pair, select which edges connect them:</p>
 
-                <ScrollArea className="h-[400px] rounded-2xl border border-white/10 bg-white/5 p-4">
+                <ScrollArea className="h-[400px] rounded-2xl border border-white/10 bg-white/5 p-4 overflow-auto">
                   <div className="space-y-4">
                     {selectedNodes.map((src) =>
                       selectedNodes.map((tgt) => {

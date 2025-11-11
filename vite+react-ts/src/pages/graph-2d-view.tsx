@@ -10,6 +10,7 @@ interface Node {
 interface Link {
   source: string | number;
   target: string | number;
+  label: string | number;
   [key: string]: any;
 }
 
@@ -79,9 +80,11 @@ const ForceGraph2d: React.FC<ForceGraph2DProps> = ({ graphData }) => {
     const Graph = ForceGraph()(document.getElementById('2d-graph'))
       .graphData(gData)
       .nodeAutoColorBy('id')
-      .nodeLabel(node => 'Node ' + node.id)
+      .nodeLabel(node => '' + node.id)
       .nodeVal(node => node.size)
       .linkWidth(1.5)
+      .linkLabel(link => ''+link.label)
+      .linkCurvature(0.3)
       .linkAutoColorBy('source')
       .width(window.innerWidth)
       .height(window.innerHeight);

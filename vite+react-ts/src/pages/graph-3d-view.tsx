@@ -9,6 +9,7 @@ interface Node {
 interface Link {
   source: string | number;
   target: string | number;
+  label:string | number;
   [key: string]: any;
 }
 
@@ -53,10 +54,15 @@ const ForceGraph3d: React.FC<ForceGraphProps> = ({ graphData }) => {
         .ForceGraph3D()(graphRef.current)
         .graphData(effectiveGraphData)
         .backgroundColor("#101020")
-        .nodeAutoColorBy("group")
-        .linkWidth((link: any) => link.value * 0.5)
-        .nodeLabel((node: any) => node.name || `Node ${node.id}`)
-        .nodeVal(() => 4 + Math.random() * 8);
+        .nodeAutoColorBy("id")
+        .linkWidth((link: any) =>  1.5)
+        .linkAutoColorBy('source')
+        .linkCurvature(0.5)
+        .linkCurveRotation(3.14159*0.25)
+        .linkLabel((link:any) => link.label ||`${link.source}+ "->" + ${link.target}` )
+        .nodeLabel((node: any) => node.name || `${node.id}`)
+        .nodeVal(node => node.size)
+
 
       Graph.onNodeClick((node: any) => {
         const distance = 40;

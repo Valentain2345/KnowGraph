@@ -21,7 +21,9 @@ public class InferenceManipulator {
 	InfModel infModel;
 	
 	public  void createInferenceModel(Model baseModel, String reasonerType) {
-		
+		if(baseModel==null) {
+			baseModel=ModelFactory.createDefaultModel();
+		}
 		Reasoner reasoner;
 		switch (reasonerType) {
 			case "RDFS":

@@ -20,12 +20,17 @@ interface QueryExecutorProps {
   >
   query: string
   setQuery: React.Dispatch<React.SetStateAction<string>>
+
+  setVariables: React.Dispatch<React.SetStateAction<string[]>>
+  setQueryResults: React.Dispatch<React.SetStateAction<Array<Record<string, string>>>>
 }
 
 export const QueryExecutor: React.FC<QueryExecutorProps> = ({
   setMessage,
   query,
   setQuery,
+  setVariables,
+  setQueryResults,
 }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [results, setResults] = useState<Array<Record<string, string>>>([])
@@ -61,6 +66,8 @@ export const QueryExecutor: React.FC<QueryExecutorProps> = ({
           console.log(parsedData)
           console.log(parsedColumns)
           setResults(parsedData)
+          setVariables(parsedColumns)
+          setQueryResults(parsedData)
           setColumns(parsedColumns)
           setMessage({
             text: `Query executed successfully. ${parsedData.length} results found.`,
@@ -86,7 +93,7 @@ export const QueryExecutor: React.FC<QueryExecutorProps> = ({
     const reader = new FileReader()
     reader.onload = () => {
       const fileContent = reader.result as string
-      setQuery(fileContent)
+      handleChangeQuery(fileContent)
       setMessage({ text: "Query loaded successfully!", type: "success" })
     }
     reader.onerror = () => {
@@ -154,6 +161,11 @@ export const QueryExecutor: React.FC<QueryExecutorProps> = ({
     }
   }
 
+ const handleChangeQuery = (newQuery: string) => {
+   setQuery(newQuery);
+   setExecutionQuery(newQuery);
+}
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6 relative">
       <Card className="bg-zinc-900/50 border-zinc-800">
@@ -165,7 +177,7 @@ export const QueryExecutor: React.FC<QueryExecutorProps> = ({
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <QueryEditor query={query} onChange={setExecutionQuery} />
+          <QueryEditor query={query} onChange={handleChangeQuery} />
 
           <div className="flex items-center justify-between">
             <QueryActions onLoad={handleLoadQuery} onSave={handleSaveQuery} />
@@ -191,7 +203,7 @@ export const QueryExecutor: React.FC<QueryExecutorProps> = ({
         </CardContent>
       </Card>
 
-      {/* ChatGPT Assistant Panel */}
+      {/* LLM Assistant Panel */}
       {showChat && (
         <ChatWidget setShowChat={setShowChat}/>
       )}

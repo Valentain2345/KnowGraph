@@ -1,11 +1,12 @@
 "use client"
 
 import { useState } from "react"
+import styled from "styled-components"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card"
 import { Label } from "../components/ui/label"
-import { Input } from "../components/ui/input"
+import { Input as BaseInput } from "../components/ui/input"
 import { Button } from "../components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger as BaseSelectTrigger, SelectValue } from "../components/ui/select"
 import { Plus, Trash2, RotateCcw, Database, Code } from "lucide-react"
 import { Badge } from "../components/ui/badge"
 import { Textarea } from "../components/ui/textarea"
@@ -47,9 +48,72 @@ const commonPrefixes = [
   { prefix: "foaf", uri: "http://xmlns.com/foaf/0.1/" },
 ]
 
+// Styled Components
+const PrefixSelectTrigger = styled(BaseSelectTrigger)`
+  width: 80px;
+  background-color: rgba(39, 39, 42, 0.7);
+  border: 1px solid rgba(82, 82, 91, 0.8);
+  color: white;
+  font-size: 0.875rem;
+  transition: background-color 0.2s, border-color 0.2s;
+
+  &:hover {
+    background-color: rgba(63, 63, 70, 0.5);
+  }
+
+  &:focus {
+    outline: none;
+    ring: 2px solid rgba(16, 185, 129, 0.5);
+  }
+`
+
+const WideInput = styled(BaseInput)`
+  flex: 2;
+  width: 300px;
+  background-color: rgba(39, 39, 42, 0.7);
+  border: 1px solid rgba(82, 82, 91, 0.8);
+  color: white;
+  font-size: 0.875rem;
+  padding: 0.5rem;
+  transition: border-color 0.2s, ring 0.2s;
+
+  &::placeholder {
+    color: rgba(113, 113, 122, 0.6);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: rgba(16, 185, 129, 0.5);
+    ring: 2px solid rgba(16, 185, 129, 0.5);
+  }
+`
+
+const GraphSelector=styled(BaseSelectTrigger)`
+  width: 300px;
+  background-color: rgba(39, 39, 42, 0.7);
+  border: 1px solid rgba(82, 82, 91, 0.8);
+  color: white;
+  font-size: 0.875rem;
+  transition: background-color 0.2s, border-color 0.2s;
+
+  &:hover {
+    background-color: rgba(63, 63, 70, 0.5);
+  }
+
+  &:focus {
+    outline: none;
+    ring: 2px solid rgba(16, 185, 129, 0.5);
+  }
+`
+
 export function TripleBuilder({ setQuery, setMessage }: TripleBuilderProps) {
   const [triples, setTriples] = useState<RDFTriple[]>([])
   const [currentTriple, setCurrentTriple] = useState({
+    subject: "",
+    predicate: "",
+    object: "",
+  })
+  const [prefixSelections, setPrefixSelections] = useState({
     subject: "",
     predicate: "",
     object: "",
@@ -72,7 +136,9 @@ export function TripleBuilder({ setQuery, setMessage }: TripleBuilderProps) {
         ...triples,
         {
           id: Date.now().toString(),
-          ...currentTriple,
+          subject: prefixSelections.subject ? `${prefixSelections.subject}:${currentTriple.subject}` : currentTriple.subject,
+          predicate: prefixSelections.predicate ? `${prefixSelections.predicate}:${currentTriple.predicate}` : currentTriple.predicate,
+          object: prefixSelections.object ? `${prefixSelections.object}:${currentTriple.object}` : currentTriple.object,
         },
       ])
       resetForm()
@@ -81,6 +147,7 @@ export function TripleBuilder({ setQuery, setMessage }: TripleBuilderProps) {
 
   const resetForm = () => {
     setCurrentTriple({ subject: "", predicate: "", object: "" })
+    setPrefixSelections({ subject: "", predicate: "", object: "" })
     setSelectKeys({
       subject: selectKeys.subject + 1,
       predicate: selectKeys.predicate + 1,
@@ -100,10 +167,10 @@ export function TripleBuilder({ setQuery, setMessage }: TripleBuilderProps) {
   }
 
   const generateInsertQuery = () => {
-    if (triples.length === 0 ) {
+    if (triples.length === 0) {
       setQuery("")
       setMessage({
-        text: "No valid query generated: Please add at least one triple and specify a graph",
+        text: "No valid query generated: Please add at least one triple",
         type: "error",
       })
       return
@@ -115,22 +182,22 @@ export function TripleBuilder({ setQuery, setMessage }: TripleBuilderProps) {
     prefixes.forEach((prefix) => {
       if (prefix.prefix && prefix.uri) {
         query += `PREFIX ${prefix.prefix}: <${prefix.uri}>\n`
-      }
-      if(!prefix.prefix && prefix.uri)
+      } else if (prefix.uri) {
         query += `PREFIX <${prefix.uri}>\n`
+      }
     })
     if (query) query += "\n"
 
     // Add INSERT DATA clause with graph
     query += `INSERT DATA {\n`
-    query += graph==="" ? "": `  GRAPH <${graph}> {\n`
+    query += graph === "" ? "" : `  GRAPH <${graph}> {\n`
 
     // Add triples
     triples.forEach((triple) => {
       query += `    ${triple.subject} ${triple.predicate} ${triple.object} .\n`
     })
 
-    query += graph===""?"":`  }\n`
+    query += graph === "" ? "" : `  }\n`
     query += `}\n`
 
     setGeneratedQuery(query)
@@ -147,7 +214,7 @@ export function TripleBuilder({ setQuery, setMessage }: TripleBuilderProps) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 p-4">
+    <div className="max-w-6xl mx-auto space-y-6 p-6 bg-zinc-950/95 rounded-xl shadow-2xl shadow-black/50">
       <PrefixManager
         prefixes={prefixes}
         setPrefixes={setPrefixes}
@@ -155,120 +222,90 @@ export function TripleBuilder({ setQuery, setMessage }: TripleBuilderProps) {
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="bg-zinc-900/50 border-zinc-800">
-          <CardHeader>
-            <CardTitle className="text-white">Build New Triple</CardTitle>
+        <Card className="bg-zinc-900/70 border-zinc-800/80 shadow-lg shadow-black/30 backdrop-blur-sm">
+          <CardHeader className="border-b border-zinc-800/50">
+            <CardTitle className="text-white text-2xl font-semibold">Build New Triple</CardTitle>
             <CardDescription className="text-zinc-400">
-              Specify the subject, predicate, and object of your RDF triple
+              Define the subject, predicate, and object for your RDF triple
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="subject" className="text-zinc-300">
-                Subject
-              </Label>
-              <div className="flex gap-2">
-                <Input
-                  id="subject"
-                  placeholder="Enter subject or select from list"
-                  value={currentTriple.subject}
-                  onChange={(e) => setCurrentTriple({ ...currentTriple, subject: e.target.value })}
-                  className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500"
-                />
-                <Select
-                  key={`subject-${selectKeys.subject}`}
-                  value={currentTriple.subject}
-                  onValueChange={(value) => setCurrentTriple({ ...currentTriple, subject: value })}
-                >
-                  <SelectTrigger className="w-[180px] bg-zinc-800/50 border-zinc-700 text-white">
-                    <SelectValue placeholder="Select..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-zinc-800 border-zinc-700">
-                    {mockVariables.map((v) => (
-                      <SelectItem key={v} value={v} className="text-white">
-                        {v}
+          <CardContent className="space-y-6 pt-6">
+            {[
+              { label: "Subject", field: "subject", options: mockVariables },
+              { label: "Predicate", field: "predicate", options: mockProperties },
+              { label: "Object", field: "object", options: mockVariables },
+            ].map(({ label, field, options }) => (
+              <div key={field} className="space-y-2">
+                <Label htmlFor={field} className="text-zinc-300 font-medium">
+                  {label}
+                </Label>
+                <div className="flex gap-2">
+                  <Select
+                    value={prefixSelections[field as keyof typeof prefixSelections]}
+                    onValueChange={(value) =>
+                      setPrefixSelections({ ...prefixSelections, [field]: value })
+                    }
+                  >
+                    <PrefixSelectTrigger>
+                      <SelectValue placeholder="Prefix..." />
+                    </PrefixSelectTrigger>
+                    <SelectContent className="bg-zinc-800 border-zinc-700/80 text-white">
+                      <SelectItem value="" className="text-white">
+                        None
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      {prefixes.map((prefix) => (
+                        <SelectItem
+                          key={prefix.id}
+                          value={prefix.prefix}
+                          className="text-white font-mono"
+                        >
+                          {prefix.prefix || "<No Prefix>"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <WideInput
+                    id={field}
+                    placeholder={`Enter ${label.toLowerCase()} or select from list`}
+                    value={currentTriple[field as keyof typeof currentTriple]}
+                    onChange={(e) =>
+                      setCurrentTriple({ ...currentTriple, [field]: e.target.value })
+                    }
+                  />
+                  <Select
+                    key={`${field}-${selectKeys[field as keyof typeof selectKeys]}`}
+                    value={currentTriple[field as keyof typeof currentTriple]}
+                    onValueChange={(value) =>
+                      setCurrentTriple({ ...currentTriple, [field]: value })
+                    }
+                  >
+                    <BaseSelectTrigger className="w-[100px] bg-zinc-800/70 border-zinc-700/80 text-white focus:ring-2 focus:ring-emerald-500/50">
+                      <SelectValue placeholder="Select..." />
+                    </BaseSelectTrigger>
+                    <SelectContent className="bg-zinc-800 border-zinc-700/80">
+                      {options.map((option) => (
+                        <SelectItem key={option} value={option} className="text-white">
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="predicate" className="text-zinc-300">
-                Predicate
-              </Label>
-              <div className="flex gap-2">
-                <Input
-                  id="predicate"
-                  placeholder="Enter predicate or select from list"
-                  value={currentTriple.predicate}
-                  onChange={(e) => setCurrentTriple({ ...currentTriple, predicate: e.target.value })}
-                  className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500"
-                />
-                <Select
-                  key={`predicate-${selectKeys.predicate}`}
-                  value={currentTriple.predicate}
-                  onValueChange={(value) => setCurrentTriple({ ...currentTriple, predicate: value })}
-                >
-                  <SelectTrigger className="w-[180px] bg-zinc-800/50 border-zinc-700 text-white">
-                    <SelectValue placeholder="Select..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-zinc-800 border-zinc-700">
-                    {mockProperties.map((p) => (
-                      <SelectItem key={p} value={p} className="text-white">
-                        {p}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="object" className="text-zinc-300">
-                Object
-              </Label>
-              <div className="flex gap-2">
-                <Input
-                  id="object"
-                  placeholder="Enter object or select from list"
-                  value={currentTriple.object}
-                  onChange={(e) => setCurrentTriple({ ...currentTriple, object: e.target.value })}
-                  className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500"
-                />
-                <Select
-                  key={`object-${selectKeys.object}`}
-                  value={currentTriple.object}
-                  onValueChange={(value) => setCurrentTriple({ ...currentTriple, object: value })}
-                >
-                  <SelectTrigger className="w-[180px] bg-zinc-800/50 border-zinc-700 text-white">
-                    <SelectValue placeholder="Select..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-zinc-800 border-zinc-700">
-                    {mockVariables.map((v) => (
-                      <SelectItem key={v} value={v} className="text-white">
-                        {v}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            ))}
 
             <div className="flex gap-3">
               <Button
                 onClick={addTriple}
-                className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all duration-200"
+                className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-semibold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all duration-200"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Triple
               </Button>
-
               <Button
                 onClick={resetForm}
                 variant="outline"
-                className="border-zinc-600 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                className="border-zinc-600 text-zinc-300 hover:bg-zinc-700 hover:text-white focus:ring-2 focus:ring-emerald-500/50"
               >
                 <RotateCcw className="w-4 h-4" />
               </Button>
@@ -276,10 +313,10 @@ export function TripleBuilder({ setQuery, setMessage }: TripleBuilderProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-zinc-900/50 border-zinc-800">
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card className="bg-zinc-900/70 border-zinc-800/80 shadow-lg shadow-black/30 backdrop-blur-sm">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-zinc-800/50">
             <div>
-              <CardTitle className="text-white">Built Triples</CardTitle>
+              <CardTitle className="text-white text-2xl font-semibold">Built Triples</CardTitle>
               <CardDescription className="text-zinc-400">
                 {triples.length} triple{triples.length !== 1 ? "s" : ""} created
               </CardDescription>
@@ -289,25 +326,25 @@ export function TripleBuilder({ setQuery, setMessage }: TripleBuilderProps) {
                 onClick={clearAllTriples}
                 variant="outline"
                 size="sm"
-                className="border-red-600/50 text-red-400 hover:bg-red-600/10 hover:text-red-300"
+                className="border-red-600/50 text-red-400 hover:bg-red-600/20 hover:text-red-300 focus:ring-2 focus:ring-red-500/50"
               >
                 <Trash2 className="w-4 h-4 mr-1" />
                 Clear All
               </Button>
             )}
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+          <CardContent className="pt-6">
+            <div className="space-y-4">
               {triples.length === 0 ? (
                 <div className="text-center py-12 text-zinc-500">
                   <Database className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>No triples yet. Build your first triple to get started.</p>
+                  <p className="text-sm">No triples yet. Build your first triple to get started.</p>
                 </div>
               ) : (
                 triples.map((triple) => (
                   <div
                     key={triple.id}
-                    className="p-4 rounded-lg bg-zinc-800/50 border border-zinc-700 hover:border-emerald-500/50 transition-colors"
+                    className="p-4 rounded-lg bg-zinc-800/70 border border-zinc-700/80 hover:border-emerald-500/50 transition-colors"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-2">
@@ -347,35 +384,35 @@ export function TripleBuilder({ setQuery, setMessage }: TripleBuilderProps) {
         </Card>
       </div>
 
-      <Card className="bg-zinc-900/50 border-zinc-800">
-        <CardHeader>
-          <CardTitle className="text-white">Graph Selection & Query Generation</CardTitle>
+      <Card className="bg-zinc-900/70 border-zinc-800/80 shadow-lg shadow-black/30 backdrop-blur-sm">
+        <CardHeader className="border-b border-zinc-800/50">
+          <CardTitle className="text-white text-2xl font-semibold">Graph Selection & Query Generation</CardTitle>
           <CardDescription className="text-zinc-400">
             Select or enter a graph URI to generate the INSERT DATA query
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 pt-6">
           <div className="space-y-2">
-            <Label htmlFor="graph" className="text-zinc-300">
+            <Label htmlFor="graph" className="text-zinc-300 font-medium">
               Graph URI
             </Label>
             <div className="flex gap-2">
-              <Input
+              <WideInput
                 id="graph"
                 placeholder="Enter graph URI (e.g., http://example.org/graph/default)"
                 value={graph}
                 onChange={(e) => setGraph(e.target.value)}
-                className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500"
+                className=" flex-1 bg-zinc-800/70 border-zinc-700/80 text-white placeholder:text-zinc-500/60 focus:ring-2 focus:ring-emerald-500/50"
               />
               <Select
                 key={`graph-${selectGraphKey}`}
                 value={graph}
                 onValueChange={(value) => setGraph(value)}
               >
-                <SelectTrigger className="w-[180px] bg-zinc-800/50 border-zinc-700 text-white">
+                <GraphSelector className="w-[300px] bg-zinc-800/70 border-zinc-700/80 text-white focus:ring-2 focus:ring-emerald-500/50">
                   <SelectValue placeholder="Select graph..." />
-                </SelectTrigger>
-                <SelectContent className="bg-zinc-800 border-zinc-700">
+                </GraphSelector>
+                <SelectContent className="bg-zinc-800 border-zinc-700/80">
                   {mockGraphs.map((g) => (
                     <SelectItem key={g} value={g} className="text-white">
                       {g}
@@ -386,7 +423,7 @@ export function TripleBuilder({ setQuery, setMessage }: TripleBuilderProps) {
               <Button
                 onClick={resetGraphSelection}
                 variant="outline"
-                className="border-zinc-600 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                className="border-zinc-600 text-zinc-300 hover:bg-zinc-700 hover:text-white focus:ring-2 focus:ring-emerald-500/50"
               >
                 <RotateCcw className="w-4 h-4" />
               </Button>
@@ -395,7 +432,7 @@ export function TripleBuilder({ setQuery, setMessage }: TripleBuilderProps) {
 
           <Button
             onClick={generateInsertQuery}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all duration-200"
             disabled={triples.length === 0}
           >
             <Code className="w-4 h-4 mr-2" />
@@ -404,12 +441,12 @@ export function TripleBuilder({ setQuery, setMessage }: TripleBuilderProps) {
 
           {generatedQuery && (
             <div className="space-y-2">
-              <Label className="text-sm text-zinc-300">Generated Query</Label>
+              <Label className="text-sm text-zinc-300 font-medium">Generated Query</Label>
               <Textarea
                 readOnly
                 value={generatedQuery}
                 rows={8}
-                className="bg-zinc-800/50 border-zinc-700 text-white font-mono text-sm"
+                className="bg-zinc-800/70 border-zinc-700/80 text-white font-mono text-sm resize-none focus:ring-2 focus:ring-emerald-500/50"
               />
             </div>
           )}

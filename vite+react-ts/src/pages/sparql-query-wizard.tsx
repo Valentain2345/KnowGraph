@@ -309,17 +309,23 @@ const AddRowContainer = styled.div`
 `;
 
 const AddRowButton = styled(Button)`
+  width: 100%;
   background: transparent;
-  color: #fff;
+  border: 1px solid rgb(82, 82, 91); /* Tailwind's zinc-700 */
+  color: rgb(212, 212, 216); /* Tailwind's zinc-300 */
   height: 2.25rem;
   font-weight: 500;
   transition: background 0.2s ease;
-   border: 1px solid #3f3f46;
-  &:hover {
-    background: #1d4ed8;
-  }
-`;
 
+  &:hover {
+    background: rgb(39, 39, 42); /* Tailwind's zinc-800 */
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.5); /* Optional: align with emerald-500/50 focus ring from previous components */
+  }
+`
 const RemoveButton = styled(Button)`
   background: #dc2626; /* Red color for destructive action */
   color: #fff;
