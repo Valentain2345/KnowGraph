@@ -12,9 +12,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class OntModelController {
 	
 	private OntoManipulator ontManipulator=new OntoManipulator();
-	@Autowired
-	private SparqlService sparqlService;
+
+	private final SparqlService sparqlService;
 	
+	public OntModelController(SparqlService sp){
+		sparqlService=sp;
+	}
+
 	@GetMapping("/createModel")
 	public ResponseEntity<String> createOntologyModel(@RequestParam String type) {
 

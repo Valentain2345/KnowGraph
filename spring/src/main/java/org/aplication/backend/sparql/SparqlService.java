@@ -2,44 +2,31 @@
 package org.aplication.backend.sparql;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
-import java.util.Map;
+import java.io.InputStream;
 import java.util.logging.Level;
 
-import org.apache.jena.assembler.assemblers.ModelAssembler;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryFactory;
-import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RDFWriterRegistry;
-import org.apache.jena.sparql.core.DatasetGraph;
-import org.apache.jena.sparql.core.assembler.DatasetAssembler;
 import org.aplication.sparqlQueryLogic.SparqlQueryExecutor;
 import org.aplication.sparqlQueryLogic.SparqlQueryExecutorFactory;
 import org.aplication.sparqlQueryLogic.SparqlQueryResult;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
 public class SparqlService {
 
 	private final static String loggerName="Sparql service";
 	private Dataset dataset;
-	@Value("${name:World}")
-	private String name;
+	
 
-	public String getHelloMessage() {
-		return "Hello " + this.name;
-	}
 	
 	
 	private boolean successfulExecution(SparqlQueryResult result) {
@@ -87,6 +74,24 @@ public class SparqlService {
 	        	 throw new Exception("Error al cargar grafo desde " + source + ": " + e.getMessage());
 	        }
 	    }
+	    
+	    
+	    public SparqlQueryResult loadFromSource(InputStream is,Lang lang) throws Exception {
+	        try {
+	            // Create a model to hold the RDF data
+	        	  Dataset dataset= DatasetFactory.create();
+	              RDFDataMgr.read(dataset,is,lang);
+	              
+	              this.dataset=dataset;
+	            // Handles file paths or URLs
+	            return SparqlQueryResult.forBottomMsg("Grafo cargado correctamente desde " + is+ " con lenguaje "+lang.getName());
+	        } catch (Exception e) {
+	        	   java.util.logging.Logger.getLogger(loggerName).log(Level.SEVERE, "There was an error in the loading "+e.getMessage());
+	        	 throw new Exception("Error al cargar grafo desde " + is + ": " + e.getMessage());
+	        }
+	    }
+	    
+	    
 	    
 	    public SparqlQueryResult addToDatasetFromSource(String source) throws Exception {
 	        try {

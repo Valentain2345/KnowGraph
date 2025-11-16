@@ -1,18 +1,20 @@
 package org.aplication.backend.sparql;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.List;
 import java.util.ArrayList;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import org.apache.jena.riot.Lang;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,9 +28,14 @@ import org.springframework.web.multipart.MultipartFile;
 public class SparqlController {
 	private final static String loggerName="SparqlController";
    
-	@Autowired
-	private SparqlService sparqlService;
+
+	private final SparqlService sparqlService;
 	
+	public SparqlController(SparqlService sp){
+        sparqlService=sp;
+	}
+
+
 	
     @PostMapping(value = "/runQuery", produces = "text/plain")
     public ResponseEntity<String> runQuery(@RequestBody(required=false) String queryString) {
@@ -91,7 +98,6 @@ public class SparqlController {
      * Contains a vulnerability with the file extension. No worries tho,it does not access anything important
      * 
      */
-    
     @PostMapping(value="/loadDatasetFromFile", consumes = "multipart/form-data", produces = "text/plain")
     public ResponseEntity<String> loadDatasetFromFile(@RequestParam("file") MultipartFile file) {
         if (file == null || file.isEmpty()) {
@@ -118,6 +124,7 @@ public class SparqlController {
             }
         }
     }
+
 
 
  @PostMapping(value = "/addDataToDataset",consumes = "multipart/form-data",produces = "text/plain")
@@ -196,7 +203,7 @@ public class SparqlController {
         if (format == null || format.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
-        byte[] fileData = sparqlService.exportGraphToAnotherFormat("TURTLE");
+        byte[] fileData = sparqlService.exportGraphToAnotherFormat(format);
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=exported_graph." + format);
         headers.add(HttpHeaders.CONTENT_TYPE, "application/octet-stream");
@@ -242,5 +249,36 @@ public class SparqlController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error clearing dataset.");
         }
     }
+
+    @GetMapping("/loadExample1")
+    public ResponseEntity<String> loadExample1(){
+        try(InputStream is = ResourceLoader.class.getResourceAsStream("/PersonPhoneHeavy.owl.xml")){
+        	
+			if(is==null){
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Example 1 file not found");
+			}
+			sparqlService.loadFromSource(is, Lang.RDFXML);
+			return ResponseEntity.ok("Example 1 loaded successfully");
+        }catch (Exception e){
+        Logger.getLogger(loggerName).log(Level.SEVERE, "Error loading example 1: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error loading example 1");
+        }
+    }
+
+    @GetMapping("/loadExample2")
+    public ResponseEntity<String> loadExample2(){
+        try(InputStream is = ResourceLoader.class.getResourceAsStream("/PersonHeavyExtended.ttl")){
+        	if(is==null){
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Example 2 file not found");
+			}
+			sparqlService.loadFromSource(is, Lang.TTL);
+			return ResponseEntity.ok("Example 2 loaded successfully");
+        }catch (Exception e){
+        Logger.getLogger(loggerName).log(Level.SEVERE, "Error loading example 2: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error loading example 2");
+        }
+    }
+
+
     
 }

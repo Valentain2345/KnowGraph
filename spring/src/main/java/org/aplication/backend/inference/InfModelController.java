@@ -17,9 +17,13 @@ public class InfModelController {
 
 	private InferenceManipulator infManipulator=new InferenceManipulator();
 	
-	@Autowired
-	private SparqlService sparqlService;
+
+	private final SparqlService sparqlService;
 	
+	public InfModelController(SparqlService sp){
+		sparqlService=sp;
+	}
+
 	@GetMapping("/validate")
 	public ResponseEntity<String> validateInferenceModel() {
 		return  ResponseEntity.ok(infManipulator.validateModel());

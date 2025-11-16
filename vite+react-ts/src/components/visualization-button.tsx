@@ -10,6 +10,8 @@ import {
 } from "./ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { GraphVariableSelector } from "./graph-selector";
+import  {DimReductionSelector}  from "./visuals-selector";
+
 
 interface VisualizationButtonProps {
   onMenuAction: (action: string) => void;
@@ -17,6 +19,7 @@ interface VisualizationButtonProps {
   onOpenChange?: (open: boolean) => void;
   variables: string[];
   queryResults: Array<Record<string, string>>;
+  queryResponseRaw:string
 }
 interface GraphOutput {
   nodes: Array<{
@@ -31,6 +34,11 @@ interface GraphOutput {
   }>;
 }
 
+interface VisualsParamsOut {
+  jobId:string
+   method: 'umap' | 'tsne' | 'pca';
+}
+
 // Define possible pending actions for clarity
 type PendingGraphAction = "graph2d" | "graph3d" | null;
 
@@ -40,16 +48,20 @@ export function VisualizationButton({
   onOpenChange,
   variables,
   queryResults,
+  queryResponseRaw,
 }: VisualizationButtonProps) {
   const navigate = useNavigate();
 
   // ---------- Graph building state ----------
   const [showSelector, setShowSelector] = useState(false);
   const [graphData, setGraphData] = useState<GraphOutput | null>(null);
-
+  const [visualsData,setVisualsData]= useState<VisualsParamsOut | null>(null);
   // *** NEW STATE ***
   const [pendingAction, setPendingAction] = useState<PendingGraphAction>(null);
-
+  const [showVisualSelector,setShowVisualSelector]=useState(false);
+  const [selectedMethod,setSelectedMethod]=useState<'umap'| 'tsne' | 'pca' >('')
+  const [jobId,setJobId]=useState<string>('')
+  const [oldVariables,setOldVariables]=useState<dtring[]>()
   // ---------- Selector callbacks ----------
   const handleComplete = (config: GraphOutput) => {
     setGraphData(config);
@@ -68,7 +80,6 @@ export function VisualizationButton({
 
   const handleCancel = () => {
     setShowSelector(false);
-    // *** NEW LOGIC: Clear the action on cancel
     setPendingAction(null);
   }
 
@@ -95,6 +106,155 @@ export function VisualizationButton({
   const handleGraph2D = () => {
     navigate("/graph2d", { state: { graphData } });
   };
+
+const uploadResultsToServer = async ():string => {
+  try {
+    // Ensure there's valid raw CSV data to upload
+    if (!queryResponseRaw || queryResponseRaw.trim() === '') {
+      console.log('No data to upload');
+      return;
+    }
+
+  // Create a FormData object to send the raw CSV as a file
+    const formData = new FormData();
+    const blob = new Blob([queryResponseRaw], { type: 'text/csv' });
+    formData.append('csv', blob, 'data.csv');
+
+    // Send the FormData object to the server
+    const response = await fetch('http://127.0.0.1:5000/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    // Check if the response is successful
+    if (response.ok) {
+      const jsonResponse = await response.json();
+      console.log('Upload successful:', jsonResponse);
+      console.log("The jod id is "+ jsonResponse.job_id);
+      const newJobId = jsonResponse.job_id as string;
+      return newJobId;
+    } else {
+      console.error('Upload failed:', response.statusText);
+      return;
+    }
+  } catch (error) {
+    console.error('There was an error uploading the data:', error);
+  }
+  return;
+};
+
+const uploadResultsToServerCustom = async (newCsvData: string):string => {
+  try {
+    // Ensure there's valid raw CSV data to upload
+    console.log(newCsvData)
+    if (typeof newCsvData !== 'string' || newCsvData.trim() === '') {
+      console.log('No data to upload');
+      return;
+    }
+
+    // Create a FormData object to send the raw CSV as a file
+    const formData = new FormData();
+    const blob = new Blob([newCsvData], { type: 'text/csv' });
+    formData.append('csv', blob, 'data.csv');
+
+    // Send the FormData object to the server
+    const response = await fetch('http://127.0.0.1:5000/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    // Check if the response is successful
+    if (response.ok) {
+      const jsonResponse = await response.json();
+      console.log('Upload successful:', jsonResponse);
+      console.log("The job id is " + jsonResponse.job_id);
+      const newJobId = jsonResponse.job_id as string;
+      return newJobId;
+    } else {
+      console.error('Upload failed:', response.statusText);
+      return;
+    }
+  } catch (error) {
+    console.error('There was an error uploading the data:', error);
+  }
+  return;
+};
+
+
+
+const arrayToCSV = (array: Record<string, string>[], selectedVariables: string[]): string => {
+  // Create header row based on selectedVariables
+  const header = selectedVariables.join(',');
+
+  // Create data rows based on the selectedVariables and object keys
+  const rows = array.map((row) =>
+    selectedVariables
+      .map((varName) => `"${row[varName]}"`)
+      .join(',')
+  );
+
+  return [header, ...rows].join('\n');
+};
+
+  // Callback to handle running the dimensionality reduction
+  const handleDimReductionRun = async (
+    selectedVariables: string[],
+    dims: number,
+    method: "umap" | "tsne" | "pca",
+    isUpload: boolean
+  ) => {
+    console.log("The method is"+ method)
+    let newJobId=jobId;
+    if(!jobId && selectedVariables!==oldVariables ){
+      if (isUpload) {
+        newJobId= await uploadResultsToServer();
+      } else {
+          // Step 1: Filter the data based on selected variables
+      const parsedData = parseCSV(queryResults, selectedVariables); // Filtered query results
+
+      // Step 2: Convert the filtered data into CSV string
+      const csvData = arrayToCSV(parsedData, selectedVariables);
+
+      // Step 3: Upload the CSV data
+       newJobId= await uploadResultsToServerCustom(csvData);
+      }
+
+    console.log("The new job id is "+ newJobId)
+    setJobId(newJobId);
+    setOldVariables(selectedVariables);
+    }
+    const visualsParams: VisualsParamsOut = { jobId:newJobId, method };
+
+
+     if (dims === 2) {
+        navigate("/visuals2d", { state: visualsParams });
+
+      } else {
+        navigate("/visuals3d", { state: visualsParams });
+      }
+
+
+  };
+
+  // Function to parse CSV using selected variables
+const parseCSV = (queryResults: any[], selectedVariables: string[]): Record<string, string>[] => {
+  return queryResults.map((row) => {
+    const filteredRow: Record<string, string> = {};
+    selectedVariables.forEach((varName) => {
+      if (row[varName]) {
+        filteredRow[varName] = row[varName];
+      }
+    });
+    return filteredRow;
+  });
+};
+  const handleShowVisualSelector = (method: string) => {
+    console.log("Method to show is "+ method);
+    setSelectedMethod(method)
+    setShowVisualSelector(true)
+  }
+
+
 
   // ---------- UI (Changes in how ensureGraph is called) ----------
   return (
@@ -147,9 +307,9 @@ export function VisualizationButton({
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>Visuals</DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
-              <DropdownMenuItem onClick={() => onMenuAction("show-umap")}>UMAP</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onMenuAction("show-tsne")}>t-SNE</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onMenuAction("show-pca")}>PCA</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleShowVisualSelector('umap')}>UMAP</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleShowVisualSelector('tsne')}>t-SNE</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleShowVisualSelector('pca')}>PCA</DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
 
@@ -172,10 +332,20 @@ export function VisualizationButton({
           queryResults={queryResults}
           onComplete={handleComplete}
           onCancel={handleCancel}
-          // Optionally pass the current graph so the selector can pre-fill it
           initialGraph={graphData}
         />
       )}
+
+      {showVisualSelector && (
+         <DimReductionSelector
+          variables={variables}
+          method={selectedMethod}
+          onCancel={() => setShowVisualSelector(false)}
+          onRun={handleDimReductionRun}
+        />
+
+      )}
+
     </>
   );
 }

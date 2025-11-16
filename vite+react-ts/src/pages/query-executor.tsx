@@ -20,9 +20,9 @@ interface QueryExecutorProps {
   >
   query: string
   setQuery: React.Dispatch<React.SetStateAction<string>>
-
   setVariables: React.Dispatch<React.SetStateAction<string[]>>
   setQueryResults: React.Dispatch<React.SetStateAction<Array<Record<string, string>>>>
+  setQueryResponseRaw:React.Dispatch<React.SetStateAction<string>>
 }
 
 export const QueryExecutor: React.FC<QueryExecutorProps> = ({
@@ -31,6 +31,7 @@ export const QueryExecutor: React.FC<QueryExecutorProps> = ({
   setQuery,
   setVariables,
   setQueryResults,
+  setQueryResponseRaw,
 }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [results, setResults] = useState<Array<Record<string, string>>>([])
@@ -55,7 +56,7 @@ export const QueryExecutor: React.FC<QueryExecutorProps> = ({
       if (!response.ok)
         throw new Error("Failed to fetch query results from the server")
       const csvText = await response.text()
-
+      setQueryResponseRaw(csvText)
       Papa.parse(csvText, {
         header: true,
         skipEmptyLines: true,

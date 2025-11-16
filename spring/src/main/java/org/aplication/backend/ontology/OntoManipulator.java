@@ -6,7 +6,8 @@ import org.apache.jena.ontapi.OntSpecification;
 import org.apache.jena.ontapi.model.OntModel;
 import org.apache.jena.rdf.model.InfModel;
 import org.apache.jena.rdf.model.Model;
-
+import org.springframework.stereotype.Service;
+@Service
 public class OntoManipulator {
 	private OntModel ontModel;
 	

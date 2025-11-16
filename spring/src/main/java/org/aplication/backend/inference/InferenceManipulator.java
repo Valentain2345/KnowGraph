@@ -15,13 +15,15 @@ import org.apache.jena.reasoner.Reasoner;
 import org.apache.jena.reasoner.ReasonerRegistry;
 import org.apache.jena.reasoner.rulesys.GenericRuleReasoner;
 import org.apache.jena.reasoner.rulesys.Rule;
-
+import org.springframework.stereotype.Service;
+@Service
 public class InferenceManipulator {
 
 	InfModel infModel;
 	
 	public  void createInferenceModel(Model baseModel, String reasonerType) {
 		if(baseModel==null) {
+			System.out.println("El modelo resulto ser nulo");
 			baseModel=ModelFactory.createDefaultModel();
 		}
 		Reasoner reasoner;
@@ -40,7 +42,7 @@ public class InferenceManipulator {
 				break;
 			case "MICRO":
 				reasoner = ReasonerRegistry.getOWLMicroReasoner();
-				break;	
+				break;
 			default:
 				throw new IllegalArgumentException("Unknown reasoner type: " + reasonerType);
 		}

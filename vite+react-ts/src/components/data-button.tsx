@@ -9,7 +9,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
-
+import { useNavigate } from "react-router-dom"
 interface DataButtonProps {
   onMenuAction: (action: string) => void
   open?: boolean
@@ -26,6 +26,7 @@ export function DataButton({ onMenuAction, open, onOpenChange }: DataButtonProps
   const [urls, setUrls] = useState<string[]>([''])
   const [isUploading, setIsUploading] = useState(false)
   const [fileRows, setFileRows] = useState<number[]>([0])
+   const navigate = useNavigate();
 
 
   // === Existing logic ===
@@ -223,6 +224,8 @@ const handleRemoveFile = (index: number) => {
   setFiles(files.filter((_, i) => i !== index))
 }
 
+
+
   return (
     <div>
       <DropdownMenu open={open} onOpenChange={onOpenChange}>
@@ -242,10 +245,10 @@ const handleRemoveFile = (index: number) => {
           <DropdownMenuItem onClick={handleOpenDatasetFile}>Open Local File</DropdownMenuItem>
           <DropdownMenuItem onClick={openRemoteFileModal}>Open Remote File</DropdownMenuItem>
           <DropdownMenuItem onClick={handleOpenMany}>Open Many</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onMenuAction("import")}>Import</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate("/importer")}>Import</DropdownMenuItem>
 
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Export results</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger>Export</DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               <DropdownMenuItem onClick={() => handleExportDataset("RDF/XML")}>RDF/XML</DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleExportDataset("TTL")}>Turtle</DropdownMenuItem>
@@ -289,7 +292,7 @@ const handleRemoveFile = (index: number) => {
         </div>
       )}
 
-      {/* New "Open Many" Modal */}
+
       {/* New "Open Many" Modal */}
 {isManyModalOpen && (
   <div className="fixed inset-0 bg-opacity-0 flex justify-center items-center z-50 h-screen">

@@ -9,6 +9,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import ForceGraph3d from "./pages/graph-3d-view"
 import ForceGraph2d from "./pages/graph-2d-view"
 import {ImportManager} from "./pages/import-manager"
+import {UsageManual} from "./pages/usage-helper"
+import Visualization3d from "./pages/reduction-view-3d"
+import Visualization2d from "./pages/reduction-view-2d"
 import styled from "styled-components";
 
 export function SparqlQueryInterface() {
@@ -17,11 +20,12 @@ export function SparqlQueryInterface() {
     text: "Ready to execute queries",
     type: "info",
   });
+  const [queryResponseRaw,setQueryResponseRaw]=useState<string>('')
   const [variables,setVariables]=useState<string[]>([]);
   const [queryResults,setQueryResults]=useState<Array<Record<string, string>>>();
   const navigate = useNavigate();
-  const isGraphView = location.pathname === "/graph3d" || location.pathname==="/graph2d"||
-  location.pathname === "/importer";
+  const isNonQueryView = location.pathname === "/graph3d" || location.pathname==="/graph2d"||
+  location.pathname === "/importer" || location.pathname === "/usage" || location.pathname === "/visuals3d" || location.pathname === "/visuals2d" ;
   return (
     <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100 relative">
       <MenuBar
@@ -29,8 +33,9 @@ export function SparqlQueryInterface() {
         zIndex={1000}
         variables={variables}
         queryResults={queryResults}
+        queryResponseRaw={queryResponseRaw}
       />
-         {!isGraphView && (
+         {!isNonQueryView && (
         <StyledNavbar>
           <div className="wrap">
             <NavButton
@@ -55,14 +60,16 @@ export function SparqlQueryInterface() {
       <div className="flex-1 overflow-auto relative z-10">
         <AnimatePresence mode="wait">
           <Routes>
-            <Route path="/" element={<PageTransition><QueryExecutor setQuery={setQuery} query={query} setMessage={setMessage} setVariables={setVariables} setQueryResults={setQueryResults}/></PageTransition>} />
+            <Route path="/" element={<PageTransition><QueryExecutor setQuery={setQuery} query={query} setMessage={setMessage} setVariables={setVariables} setQueryResults={setQueryResults} setQueryResponseRaw={setQueryResponseRaw} /></PageTransition>} />
             <Route path="/executor" element={<PageTransition><QueryExecutor setMessage={setMessage} query={query} setQuery={setQuery} setVariables={setVariables} setQueryResults={setQueryResults} /></PageTransition>} />
             <Route path="/wizard" element={<PageTransition><SparqlQueryWizard setQuery={setQuery} setMessage={setMessage}/></PageTransition>} />
             <Route path="/builder" element={<PageTransition><TripleBuilder setQuery={setQuery} setMessage={setMessage} /></PageTransition>} />
             <Route path="/graph3d" element={<PageTransition><ForceGraph3d/></PageTransition>} />
-             <Route path="/graph2d" element={<PageTransition><ForceGraph2d/></PageTransition>} />
-
-              <Route path="/importer" element={<PageTransition><ImportManager/></PageTransition>} />
+            <Route path="/graph2d" element={<PageTransition><ForceGraph2d/></PageTransition>} />
+            <Route path="/usage" element={<PageTransition><UsageManual/></PageTransition>} />
+            <Route path="/visuals3d" element={<PageTransition><Visualization3d /></PageTransition>} />
+            <Route path="/visuals2d" element={<PageTransition><Visualization2d/></PageTransition>} />
+            <Route path="/importer" element={<PageTransition><ImportManager setMessage={setMessage}/></PageTransition>} />
           </Routes>
         </AnimatePresence>
       </div>

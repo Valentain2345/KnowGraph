@@ -12,9 +12,10 @@ interface MenuBarProps {
   zIndex: number;
   variables: string[];
   queryResults: Array<Record<string, string>>;
+  queryResponseRaw:string;
 }
 
-export function MenuBar({ onMenuAction, zIndex,variables,queryResults }: MenuBarProps) {
+export function MenuBar({ onMenuAction, zIndex,variables,queryResults,queryResponseRaw }: MenuBarProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
    const navigate = useNavigate();
 
@@ -42,6 +43,7 @@ export function MenuBar({ onMenuAction, zIndex,variables,queryResults }: MenuBar
           zIndex={zIndex + 1}
           variables={variables}
           queryResults={queryResults}
+          queryResponseRaw={queryResponseRaw}
         />
         <DataButton
           onMenuAction={onMenuAction}

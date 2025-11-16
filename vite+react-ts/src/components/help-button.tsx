@@ -1,7 +1,13 @@
 "use client"
 
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
-
+import { DropdownMenu, DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from "./ui/dropdown-menu"
+import { useNavigate } from "react-router-dom"
 interface HelpButtonProps {
   onMenuAction: (action: string) => void
   open?: boolean
@@ -9,8 +15,30 @@ interface HelpButtonProps {
 }
 
 export function HelpButton({ onMenuAction, open, onOpenChange }: HelpButtonProps) {
+  const navigate = useNavigate();
+
+  const handleLoadExample= async (exampleName:string)=>{
+    let response;
+    try{
+      if(exampleName==="example1")
+        response = await fetch('http://localhost:8080/sparql/loadExample1')
+      else
+        response = await fetch('http://localhost:8080/sparql/loadExample2')
+
+        if(response.ok)
+          onMenuAction("Loaded example into server")
+        else
+          onMenuAction("Failed to load example in server")
+
+
+    } catch (error) {
+        onMenuAction("An error ocurred when loading example")
+    }
+  }
+
   return (
     <DropdownMenu open={open} onOpenChange={onOpenChange}>
+
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-zinc-100 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 rounded-lg border border-amber-500/50 shadow-lg shadow-amber-500/20 transition-all duration-200 hover:shadow-amber-500/40">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -26,10 +54,19 @@ export function HelpButton({ onMenuAction, open, onOpenChange }: HelpButtonProps
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
+
+
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={() => onMenuAction("examples")}>Examples</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onMenuAction("usage")}>Usage</DropdownMenuItem>
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger>Examples</DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuItem onClick={()=>handleLoadExample("example1")}>Person Heavy</DropdownMenuItem>
+            <DropdownMenuItem onClick={()=>handleLoadExample("example2")}>Person Heavy extended</DropdownMenuItem>
+          </DropdownMenuSubContent>
+      </DropdownMenuSub>
+      <DropdownMenuItem onClick={() => navigate("/usage")}>Usage</DropdownMenuItem>
+
       </DropdownMenuContent>
     </DropdownMenu>
   )

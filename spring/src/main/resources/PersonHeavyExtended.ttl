@@ -1,0 +1,1126 @@
+PREFIX :       <http://example.org/>
+PREFIX Person: <http://example.org/Person/>
+PREFIX Phone:  <http://example.org/Phone/>
+PREFIX owl:    <http://www.w3.org/2002/07/owl#>
+PREFIX rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xml:    <http://www.w3.org/XML/1998/namespace>
+PREFIX xsd:    <http://www.w3.org/2001/XMLSchema#>
+
+:       rdf:type  owl:Ontology .
+
+Person:ref-phone  rdf:type  owl:ObjectProperty;
+        rdfs:domain  :Person;
+        rdfs:range   :Phone .
+
+Phone:ref-owner  rdf:type  owl:ObjectProperty;
+        rdfs:domain  :Phone;
+        rdfs:range   :Person .
+
+Person:birthDate  rdf:type  owl:DatatypeProperty;
+        rdfs:domain  :Person;
+        rdfs:range   xsd:dateTime .
+
+Person:name  rdf:type  owl:DatatypeProperty;
+        rdfs:domain  :Person;
+        rdfs:range   xsd:string .
+
+Person:personID  rdf:type  owl:DatatypeProperty;
+        rdfs:domain  :Person;
+        rdfs:range   xsd:integer .
+
+Person:sex  rdf:type  owl:DatatypeProperty;
+        rdfs:domain  :Person;
+        rdfs:range   xsd:boolean .
+
+Person:weight  rdf:type  owl:DatatypeProperty;
+        rdfs:domain  :Person;
+        rdfs:range   xsd:double .
+
+Phone:number  rdf:type  owl:DatatypeProperty;
+        rdfs:domain  :Phone;
+        rdfs:range   xsd:string .
+
+Phone:owner  rdf:type  owl:DatatypeProperty;
+        rdfs:domain  :Phone;
+        rdfs:range   xsd:integer .
+
+Phone:phoneID  rdf:type  owl:DatatypeProperty;
+        rdfs:domain  :Phone;
+        rdfs:range   xsd:integer .
+
+Phone:price  rdf:type  owl:DatatypeProperty;
+        rdfs:domain  :Phone;
+        rdfs:range   xsd:double .
+
+:HeavyYoungMan  rdf:type  owl:Class;
+        rdfs:subClassOf  :Person .
+
+:Person  rdf:type  owl:Class .
+
+:Phone  rdf:type  owl:Class .
+
+<http://example.org/Person/personID=1>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2001-01-01T00:00:00"^^xsd:dateTime;
+        Person:name       "John";
+        Person:personID   1;
+        Person:ref-phone  <http://example.org/Phone/phoneID=1> , <http://example.org/Phone/phoneID=2>;
+        Person:sex        true;
+        Person:weight     "120.0"^^xsd:double .
+
+<http://example.org/Person/personID=2>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2002-01-01T00:00:00"^^xsd:dateTime;
+        Person:name       "Paul";
+        Person:personID   2;
+        Person:ref-phone  <http://example.org/Phone/phoneID=3>;
+        Person:sex        true;
+        Person:weight     "110.0"^^xsd:double .
+
+<http://example.org/Person/personID=3>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2001-01-01T00:00:00"^^xsd:dateTime;
+        Person:name       "Mary";
+        Person:personID   3;
+        Person:sex        false;
+        Person:weight     "60.0"^^xsd:double .
+
+<http://example.org/Phone/phoneID=1>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-1234";
+        Phone:owner      1;
+        Phone:phoneID    1;
+        Phone:price      "200.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=1> .
+
+<http://example.org/Phone/phoneID=2>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-1235";
+        Phone:owner      1;
+        Phone:phoneID    2;
+        Phone:price      "220.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=1> .
+
+<http://example.org/Phone/phoneID=3>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-1236";
+        Phone:owner      2;
+        Phone:phoneID    3;
+        Phone:price      "230.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=2> .
+
+<http://example.org/Person/personID=4>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2000-03-15T00:00:00"^^xsd:dateTime;
+        Person:name       "Alex";
+        Person:personID   4;
+        Person:ref-phone  <http://example.org/Phone/phoneID=4> , <http://example.org/Phone/phoneID=5> , <http://example.org/Phone/phoneID=6>;
+        Person:sex        true;
+        Person:weight     "135.5"^^xsd:double .
+
+<http://example.org/Person/personID=5>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "1999-07-22T00:00:00"^^xsd:dateTime;
+        Person:name       "Emma";
+        Person:personID   5;
+        Person:ref-phone  <http://example.org/Phone/phoneID=7>;
+        Person:sex        false;
+        Person:weight     "58.2"^^xsd:double .
+
+<http://example.org/Person/personID=6>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2001-11-30T00:00:00"^^xsd:dateTime;
+        Person:name       "Michael";
+        Person:personID   6;
+        Person:ref-phone  <http://example.org/Phone/phoneID=8> , <http://example.org/Phone/phoneID=9>;
+        Person:sex        true;
+        Person:weight     "128.7"^^xsd:double .
+
+<http://example.org/Person/personID=7>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2003-05-10T00:00:00"^^xsd:dateTime;
+        Person:name       "Sophia";
+        Person:personID   7;
+        Person:ref-phone  <http://example.org/Phone/phoneID=10>;
+        Person:sex        false;
+        Person:weight     "62.4"^^xsd:double .
+
+<http://example.org/Person/personID=8>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2000-09-18T00:00:00"^^xsd:dateTime;
+        Person:name       "James";
+        Person:personID   8;
+        Person:ref-phone  <http://example.org/Phone/phoneID=11> , <http://example.org/Phone/phoneID=12> , <http://example.org/Phone/phoneID=13>;
+        Person:sex        true;
+        Person:weight     "142.3"^^xsd:double .
+
+<http://example.org/Person/personID=9>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2002-12-05T00:00:00"^^xsd:dateTime;
+        Person:name       "Olivia";
+        Person:personID   9;
+        Person:ref-phone  <http://example.org/Phone/phoneID=14>;
+        Person:sex        false;
+        Person:weight     "59.1"^^xsd:double .
+
+<http://example.org/Person/personID=10>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2001-06-27T00:00:00"^^xsd:dateTime;
+        Person:name       "William";
+        Person:personID   10;
+        Person:ref-phone  <http://example.org/Phone/phoneID=15> , <http://example.org/Phone/phoneID=16>;
+        Person:sex        true;
+        Person:weight     "130.8"^^xsd:double .
+
+<http://example.org/Person/personID=11>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "1998-08-14T00:00:00"^^xsd:dateTime;
+        Person:name       "Ava";
+        Person:personID   11;
+        Person:ref-phone  <http://example.org/Phone/phoneID=17> , <http://example.org/Phone/phoneID=18>;
+        Person:sex        false;
+        Person:weight     "63.5"^^xsd:double .
+
+<http://example.org/Person/personID=12>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2000-02-19T00:00:00"^^xsd:dateTime;
+        Person:name       "Noah";
+        Person:personID   12;
+        Person:ref-phone  <http://example.org/Phone/phoneID=19>;
+        Person:sex        true;
+        Person:weight     "138.2"^^xsd:double .
+
+<http://example.org/Person/personID=13>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2003-10-03T00:00:00"^^xsd:dateTime;
+        Person:name       "Isabella";
+        Person:personID   13;
+        Person:ref-phone  <http://example.org/Phone/phoneID=20>;
+        Person:sex        false;
+        Person:weight     "57.9"^^xsd:double .
+
+<http://example.org/Person/personID=14>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2001-04-11T00:00:00"^^xsd:dateTime;
+        Person:name       "Liam";
+        Person:personID   14;
+        Person:ref-phone  <http://example.org/Phone/phoneID=21> , <http://example.org/Phone/phoneID=22> , <http://example.org/Phone/phoneID=23>;
+        Person:sex        true;
+        Person:weight     "133.6"^^xsd:double .
+
+<http://example.org/Person/personID=15>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2002-07-29T00:00:00"^^xsd:dateTime;
+        Person:name       "Mia";
+        Person:personID   15;
+        Person:ref-phone  <http://example.org/Phone/phoneID=24>;
+        Person:sex        false;
+        Person:weight     "61.3"^^xsd:double .
+
+<http://example.org/Person/personID=16>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "1999-12-01T00:00:00"^^xsd:dateTime;
+        Person:name       "Ethan";
+        Person:personID   16;
+        Person:ref-phone  <http://example.org/Phone/phoneID=25> , <http://example.org/Phone/phoneID=26>;
+        Person:sex        true;
+        Person:weight     "141.1"^^xsd:double .
+
+<http://example.org/Person/personID=17>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2000-11-17T00:00:00"^^xsd:dateTime;
+        Person:name       "Charlotte";
+        Person:personID   17;
+        Person:ref-phone  <http://example.org/Phone/phoneID=27>;
+        Person:sex        false;
+        Person:weight     "64.7"^^xsd:double .
+
+<http://example.org/Person/personID=18>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2001-08-23T00:00:00"^^xsd:dateTime;
+        Person:name       "Lucas";
+        Person:personID   18;
+        Person:ref-phone  <http://example.org/Phone/phoneID=28> , <http://example.org/Phone/phoneID=29> , <http://example.org/Phone/phoneID=30>;
+        Person:sex        true;
+        Person:weight     "129.4"^^xsd:double .
+
+<http://example.org/Person/personID=19>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2003-01-08T00:00:00"^^xsd:dateTime;
+        Person:name       "Amelia";
+        Person:personID   19;
+        Person:ref-phone  <http://example.org/Phone/phoneID=31>;
+        Person:sex        false;
+        Person:weight     "58.8"^^xsd:double .
+
+<http://example.org/Person/personID=20>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2000-05-25T00:00:00"^^xsd:dateTime;
+        Person:name       "Mason";
+        Person:personID   20;
+        Person:ref-phone  <http://example.org/Phone/phoneID=32>;
+        Person:sex        true;
+        Person:weight     "136.9"^^xsd:double .
+
+<http://example.org/Person/personID=21>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2002-09-12T00:00:00"^^xsd:dateTime;
+        Person:name       "Harper";
+        Person:personID   21;
+        Person:ref-phone  <http://example.org/Phone/phoneID=33> , <http://example.org/Phone/phoneID=34>;
+        Person:sex        false;
+        Person:weight     "62.1"^^xsd:double .
+
+<http://example.org/Person/personID=22>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2001-03-04T00:00:00"^^xsd:dateTime;
+        Person:name       "Logan";
+        Person:personID   22;
+        Person:ref-phone  <http://example.org/Phone/phoneID=35>;
+        Person:sex        true;
+        Person:weight     "132.5"^^xsd:double .
+
+<http://example.org/Person/personID=23>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "1999-10-20T00:00:00"^^xsd:dateTime;
+        Person:name       "Evelyn";
+        Person:personID   23;
+        Person:ref-phone  <http://example.org/Phone/phoneID=36>;
+        Person:sex        false;
+        Person:weight     "59.6"^^xsd:double .
+
+<http://example.org/Person/personID=24>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2000-07-07T00:00:00"^^xsd:dateTime;
+        Person:name       "Benjamin";
+        Person:personID   24;
+        Person:ref-phone  <http://example.org/Phone/phoneID=37> , <http://example.org/Phone/phoneID=38>;
+        Person:sex        true;
+        Person:weight     "139.3"^^xsd:double .
+
+<http://example.org/Person/personID=25>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2003-02-28T00:00:00"^^xsd:dateTime;
+        Person:name       "Abigail";
+        Person:personID   25;
+        Person:ref-phone  <http://example.org/Phone/phoneID=39>;
+        Person:sex        false;
+        Person:weight     "60.8"^^xsd:double .
+
+<http://example.org/Person/personID=26>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2001-12-16T00:00:00"^^xsd:dateTime;
+        Person:name       "Jacob";
+        Person:personID   26;
+        Person:ref-phone  <http://example.org/Phone/phoneID=40> , <http://example.org/Phone/phoneID=41> , <http://example.org/Phone/phoneID=42>;
+        Person:sex        true;
+        Person:weight     "127.8"^^xsd:double .
+
+<http://example.org/Person/personID=27>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2002-04-09T00:00:00"^^xsd:dateTime;
+        Person:name       "Emily";
+        Person:personID   27;
+        Person:ref-phone  <http://example.org/Phone/phoneID=43>;
+        Person:sex        false;
+        Person:weight     "63.2"^^xsd:double .
+
+<http://example.org/Person/personID=28>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2000-01-23T00:00:00"^^xsd:dateTime;
+        Person:name       "Daniel";
+        Person:personID   28;
+        Person:ref-phone  <http://example.org/Phone/phoneID=44>;
+        Person:sex        true;
+        Person:weight     "134.7"^^xsd:double .
+
+<http://example.org/Person/personID=29>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2001-09-30T00:00:00"^^xsd:dateTime;
+        Person:name       "Ella";
+        Person:personID   29;
+        Person:ref-phone  <http://example.org/Phone/phoneID=45> , <http://example.org/Phone/phoneID=46>;
+        Person:sex        false;
+        Person:weight     "57.4"^^xsd:double .
+
+<http://example.org/Person/personID=30>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "1999-06-18T00:00:00"^^xsd:dateTime;
+        Person:name       "Henry";
+        Person:personID   30;
+        Person:ref-phone  <http://example.org/Phone/phoneID=47>;
+        Person:sex        true;
+        Person:weight     "140.5"^^xsd:double .
+
+<http://example.org/Phone/phoneID=4>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2001";
+        Phone:owner      4;
+        Phone:phoneID    4;
+        Phone:price      "250.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=4> .
+
+<http://example.org/Phone/phoneID=5>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2002";
+        Phone:owner      4;
+        Phone:phoneID    5;
+        Phone:price      "260.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=4> .
+
+<http://example.org/Phone/phoneID=6>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2003";
+        Phone:owner      4;
+        Phone:phoneID    6;
+        Phone:price      "270.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=4> .
+
+<http://example.org/Phone/phoneID=7>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2004";
+        Phone:owner      5;
+        Phone:phoneID    7;
+        Phone:price      "280.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=5> .
+
+<http://example.org/Phone/phoneID=8>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2005";
+        Phone:owner      6;
+        Phone:phoneID    8;
+        Phone:price      "290.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=6> .
+
+<http://example.org/Phone/phoneID=9>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2006";
+        Phone:owner      6;
+        Phone:phoneID    9;
+        Phone:price      "300.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=6> .
+
+<http://example.org/Phone/phoneID=10>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2007";
+        Phone:owner      7;
+        Phone:phoneID    10;
+        Phone:price      "310.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=7> .
+
+<http://example.org/Phone/phoneID=11>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2008";
+        Phone:owner      8;
+        Phone:phoneID    11;
+        Phone:price      "320.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=8> .
+
+<http://example.org/Phone/phoneID=12>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2009";
+        Phone:owner      8;
+        Phone:phoneID    12;
+        Phone:price      "330.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=8> .
+
+<http://example.org/Phone/phoneID=13>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2010";
+        Phone:owner      8;
+        Phone:phoneID    13;
+        Phone:price      "340.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=8> .
+
+<http://example.org/Phone/phoneID=14>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2011";
+        Phone:owner      9;
+        Phone:phoneID    14;
+        Phone:price      "350.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=9> .
+
+<http://example.org/Phone/phoneID=15>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2012";
+        Phone:owner      10;
+        Phone:phoneID    15;
+        Phone:price      "360.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=10> .
+
+<http://example.org/Phone/phoneID=16>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2013";
+        Phone:owner      10;
+        Phone:phoneID    16;
+        Phone:price      "370.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=10> .
+
+<http://example.org/Phone/phoneID=17>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2014";
+        Phone:owner      11;
+        Phone:phoneID    17;
+        Phone:price      "380.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=11> .
+
+<http://example.org/Phone/phoneID=18>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2015";
+        Phone:owner      11;
+        Phone:phoneID    18;
+        Phone:price      "390.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=11> .
+
+<http://example.org/Phone/phoneID=19>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2016";
+        Phone:owner      12;
+        Phone:phoneID    19;
+        Phone:price      "400.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=12> .
+
+<http://example.org/Phone/phoneID=20>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2017";
+        Phone:owner      13;
+        Phone:phoneID    20;
+        Phone:price      "410.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=13> .
+
+<http://example.org/Phone/phoneID=21>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2018";
+        Phone:owner      14;
+        Phone:phoneID    21;
+        Phone:price      "420.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=14> .
+
+<http://example.org/Phone/phoneID=22>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2019";
+        Phone:owner      14;
+        Phone:phoneID    22;
+        Phone:price      "430.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=14> .
+
+<http://example.org/Phone/phoneID=23>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2020";
+        Phone:owner      14;
+        Phone:phoneID    23;
+        Phone:price      "440.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=14> .
+
+<http://example.org/Phone/phoneID=24>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2021";
+        Phone:owner      15;
+        Phone:phoneID    24;
+        Phone:price      "450.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=15> .
+
+<http://example.org/Phone/phoneID=25>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2022";
+        Phone:owner      16;
+        Phone:phoneID    25;
+        Phone:price      "460.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=16> .
+
+<http://example.org/Phone/phoneID=26>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2023";
+        Phone:owner      16;
+        Phone:phoneID    26;
+        Phone:price      "470.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=16> .
+
+<http://example.org/Phone/phoneID=27>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2024";
+        Phone:owner      17;
+        Phone:phoneID    27;
+        Phone:price      "480.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=17> .
+
+<http://example.org/Phone/phoneID=28>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2025";
+        Phone:owner      18;
+        Phone:phoneID    28;
+        Phone:price      "490.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=18> .
+
+<http://example.org/Phone/phoneID=29>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2026";
+        Phone:owner      18;
+        Phone:phoneID    29;
+        Phone:price      "500.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=18> .
+
+<http://example.org/Phone/phoneID=30>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2027";
+        Phone:owner      18;
+        Phone:phoneID    30;
+        Phone:price      "510.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=18> .
+
+<http://example.org/Phone/phoneID=31>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2028";
+        Phone:owner      19;
+        Phone:phoneID    31;
+        Phone:price      "520.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=19> .
+
+<http://example.org/Phone/phoneID=32>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2029";
+        Phone:owner      20;
+        Phone:phoneID    32;
+        Phone:price      "530.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=20> .
+
+<http://example.org/Phone/phoneID=33>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2030";
+        Phone:owner      21;
+        Phone:phoneID    33;
+        Phone:price      "540.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=21> .
+
+<http://example.org/Phone/phoneID=34>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2031";
+        Phone:owner      21;
+        Phone:phoneID    34;
+        Phone:price      "550.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=21> .
+
+<http://example.org/Phone/phoneID=35>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2032";
+        Phone:owner      22;
+        Phone:phoneID    35;
+        Phone:price      "560.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=22> .
+
+<http://example.org/Phone/phoneID=36>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2033";
+        Phone:owner      23;
+        Phone:phoneID    36;
+        Phone:price      "570.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=23> .
+
+<http://example.org/Phone/phoneID=37>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2034";
+        Phone:owner      24;
+        Phone:phoneID    37;
+        Phone:price      "580.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=24> .
+
+<http://example.org/Phone/phoneID=38>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2035";
+        Phone:owner      24;
+        Phone:phoneID    38;
+        Phone:price      "590.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=24> .
+
+<http://example.org/Phone/phoneID=39>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2036";
+        Phone:owner      25;
+        Phone:phoneID    39;
+        Phone:price      "600.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=25> .
+
+<http://example.org/Phone/phoneID=40>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2037";
+        Phone:owner      26;
+        Phone:phoneID    40;
+        Phone:price      "610.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=26> .
+
+<http://example.org/Phone/phoneID=41>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2038";
+        Phone:owner      26;
+        Phone:phoneID    41;
+        Phone:price      "620.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=26> .
+
+<http://example.org/Phone/phoneID=42>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2039";
+        Phone:owner      26;
+        Phone:phoneID    42;
+        Phone:price      "630.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=26> .
+
+<http://example.org/Phone/phoneID=43>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2040";
+        Phone:owner      27;
+        Phone:phoneID    43;
+        Phone:price      "640.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=27> .
+
+<http://example.org/Phone/phoneID=44>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2041";
+        Phone:owner      28;
+        Phone:phoneID    44;
+        Phone:price      "650.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=28> .
+
+<http://example.org/Phone/phoneID=45>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2042";
+        Phone:owner      29;
+        Phone:phoneID    45;
+        Phone:price      "660.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=29> .
+
+<http://example.org/Phone/phoneID=46>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2043";
+        Phone:owner      29;
+        Phone:phoneID    46;
+        Phone:price      "670.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=29> .
+
+<http://example.org/Phone/phoneID=47>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2044";
+        Phone:owner      30;
+        Phone:phoneID    47;
+        Phone:price      "680.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=30> .
+
+<http://example.org/Person/personID=31>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2002-03-14T00:00:00"^^xsd:dateTime;
+        Person:name       "Grace";
+        Person:personID   31;
+        Person:ref-phone  <http://example.org/Phone/phoneID=48>;
+        Person:sex        false;
+        Person:weight     "61.5"^^xsd:double .
+
+<http://example.org/Person/personID=32>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2001-07-19T00:00:00"^^xsd:dateTime;
+        Person:name       "Jack";
+        Person:personID   32;
+        Person:ref-phone  <http://example.org/Phone/phoneID=49> , <http://example.org/Phone/phoneID=50>;
+        Person:sex        true;
+        Person:weight     "131.2"^^xsd:double .
+
+<http://example.org/Person/personID=33>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2000-11-05T00:00:00"^^xsd:dateTime;
+        Person:name       "Lily";
+        Person:personID   33;
+        Person:ref-phone  <http://example.org/Phone/phoneID=51>;
+        Person:sex        false;
+        Person:weight     "59.3"^^xsd:double .
+
+<http://example.org/Person/personID=34>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "1999-04-27T00:00:00"^^xsd:dateTime;
+        Person:name       "Owen";
+        Person:personID   34;
+        Person:ref-phone  <http://example.org/Phone/phoneID=52> , <http://example.org/Phone/phoneID=53> , <http://example.org/Phone/phoneID=54>;
+        Person:sex        true;
+        Person:weight     "137.8"^^xsd:double .
+
+<http://example.org/Person/personID=35>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2003-08-11T00:00:00"^^xsd:dateTime;
+        Person:name       "Zoe";
+        Person:personID   35;
+        Person:ref-phone  <http://example.org/Phone/phoneID=55>;
+        Person:sex        false;
+        Person:weight     "62.7"^^xsd:double .
+
+<http://example.org/Person/personID=36>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2001-02-03T00:00:00"^^xsd:dateTime;
+        Person:name       "Caleb";
+        Person:personID   36;
+        Person:ref-phone  <http://example.org/Phone/phoneID=56>;
+        Person:sex        true;
+        Person:weight     "134.1"^^xsd:double .
+
+<http://example.org/Person/personID=37>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2002-06-22T00:00:00"^^xsd:dateTime;
+        Person:name       "Nora";
+        Person:personID   37;
+        Person:ref-phone  <http://example.org/Phone/phoneID=57> , <http://example.org/Phone/phoneID=58>;
+        Person:sex        false;
+        Person:weight     "60.9"^^xsd:double .
+
+<http://example.org/Person/personID=38>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2000-10-15T00:00:00"^^xsd:dateTime;
+        Person:name       "Eli";
+        Person:personID   38;
+        Person:ref-phone  <http://example.org/Phone/phoneID=59>;
+        Person:sex        true;
+        Person:weight     "129.6"^^xsd:double .
+
+<http://example.org/Person/personID=39>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2001-12-28T00:00:00"^^xsd:dateTime;
+        Person:name       "Hazel";
+        Person:personID   39;
+        Person:ref-phone  <http://example.org/Phone/phoneID=60>;
+        Person:sex        false;
+        Person:weight     "58.5"^^xsd:double .
+
+<http://example.org/Person/personID=40>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "1999-09-09T00:00:00"^^xsd:dateTime;
+        Person:name       "Levi";
+        Person:personID   40;
+        Person:ref-phone  <http://example.org/Phone/phoneID=61> , <http://example.org/Phone/phoneID=62>;
+        Person:sex        true;
+        Person:weight     "140.2"^^xsd:double .
+
+<http://example.org/Phone/phoneID=48>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2045";
+        Phone:owner      31;
+        Phone:phoneID    48;
+        Phone:price      "690.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=31> .
+
+<http://example.org/Phone/phoneID=49>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2046";
+        Phone:owner      32;
+        Phone:phoneID    49;
+        Phone:price      "700.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=32> .
+
+<http://example.org/Phone/phoneID=50>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2047";
+        Phone:owner      32;
+        Phone:phoneID    50;
+        Phone:price      "710.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=32> .
+
+<http://example.org/Phone/phoneID=51>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2048";
+        Phone:owner      33;
+        Phone:phoneID    51;
+        Phone:price      "720.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=33> .
+
+<http://example.org/Phone/phoneID=52>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2049";
+        Phone:owner      34;
+        Phone:phoneID    52;
+        Phone:price      "730.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=34> .
+
+<http://example.org/Phone/phoneID=53>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2050";
+        Phone:owner      34;
+        Phone:phoneID    53;
+        Phone:price      "740.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=34> .
+
+<http://example.org/Phone/phoneID=54>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2051";
+        Phone:owner      34;
+        Phone:phoneID    54;
+        Phone:price      "750.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=34> .
+
+<http://example.org/Phone/phoneID=55>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2052";
+        Phone:owner      35;
+        Phone:phoneID    55;
+        Phone:price      "760.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=35> .
+
+<http://example.org/Phone/phoneID=56>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2053";
+        Phone:owner      36;
+        Phone:phoneID    56;
+        Phone:price      "770.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=36> .
+
+<http://example.org/Phone/phoneID=57>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2054";
+        Phone:owner      37;
+        Phone:phoneID    57;
+        Phone:price      "780.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=37> .
+
+<http://example.org/Phone/phoneID=58>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2055";
+        Phone:owner      37;
+        Phone:phoneID    58;
+        Phone:price      "790.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=37> .
+
+<http://example.org/Phone/phoneID=59>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2056";
+        Phone:owner      38;
+        Phone:phoneID    59;
+        Phone:price      "800.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=38> .
+
+<http://example.org/Phone/phoneID=60>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2057";
+        Phone:owner      39;
+        Phone:phoneID    60;
+        Phone:price      "810.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=39> .
+
+<http://example.org/Phone/phoneID=61>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2058";
+        Phone:owner      40;
+        Phone:phoneID    61;
+        Phone:price      "820.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=40> .
+
+<http://example.org/Phone/phoneID=62>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2059";
+        Phone:owner      40;
+        Phone:phoneID    62;
+        Phone:price      "830.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=40> .
+
+<http://example.org/Person/personID=41>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2002-05-16T00:00:00"^^xsd:dateTime;
+        Person:name       "Chloe";
+        Person:personID   41;
+        Person:ref-phone  <http://example.org/Phone/phoneID=63>;
+        Person:sex        false;
+        Person:weight     "63.1"^^xsd:double .
+
+<http://example.org/Person/personID=42>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2001-08-04T00:00:00"^^xsd:dateTime;
+        Person:name       "Nathan";
+        Person:personID   42;
+        Person:ref-phone  <http://example.org/Phone/phoneID=64> , <http://example.org/Phone/phoneID=65>;
+        Person:sex        true;
+        Person:weight     "132.9"^^xsd:double .
+
+<http://example.org/Person/personID=43>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2000-12-21T00:00:00"^^xsd:dateTime;
+        Person:name       "Layla";
+        Person:personID   43;
+        Person:ref-phone  <http://example.org/Phone/phoneID=66>;
+        Person:sex        false;
+        Person:weight     "59.8"^^xsd:double .
+
+<http://example.org/Person/personID=44>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "1999-03-30T00:00:00"^^xsd:dateTime;
+        Person:name       "Isaac";
+        Person:personID   44;
+        Person:ref-phone  <http://example.org/Phone/phoneID=67>;
+        Person:sex        true;
+        Person:weight     "138.4"^^xsd:double .
+
+<http://example.org/Person/personID=45>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2003-07-08T00:00:00"^^xsd:dateTime;
+        Person:name       "Aubrey";
+        Person:personID   45;
+        Person:ref-phone  <http://example.org/Phone/phoneID=68> , <http://example.org/Phone/phoneID=69>;
+        Person:sex        false;
+        Person:weight     "61.2"^^xsd:double .
+
+<http://example.org/Person/personID=46>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2001-01-12T00:00:00"^^xsd:dateTime;
+        Person:name       "Gabriel";
+        Person:personID   46;
+        Person:ref-phone  <http://example.org/Phone/phoneID=70>;
+        Person:sex        true;
+        Person:weight     "135.7"^^xsd:double .
+
+<http://example.org/Person/personID=47>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2002-09-25T00:00:00"^^xsd:dateTime;
+        Person:name       "Hannah";
+        Person:personID   47;
+        Person:ref-phone  <http://example.org/Phone/phoneID=71>;
+        Person:sex        false;
+        Person:weight     "60.4"^^xsd:double .
+
+<http://example.org/Person/personID=48>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "2000-04-06T00:00:00"^^xsd:dateTime;
+        Person:name       "Wyatt";
+        Person:personID   48;
+        Person:ref-phone  <http://example.org/Phone/phoneID=72> , <http://example.org/Phone/phoneID=73>;
+        Person:sex        true;
+        Person:weight     "130.3"^^xsd:double .
+
+<http://example.org/Person/personID=49>
+        rdf:type          owl:NamedIndividual , :Person;
+        Person:birthDate  "2001-10-19T00:00:00"^^xsd:dateTime;
+        Person:name       "Scarlett";
+        Person:personID   49;
+        Person:ref-phone  <http://example.org/Phone/phoneID=74>;
+        Person:sex        false;
+        Person:weight     "58.1"^^xsd:double .
+
+<http://example.org/Person/personID=50>
+        rdf:type          owl:NamedIndividual , :HeavyYoungMan , :Person;
+        Person:birthDate  "1999-06-14T00:00:00"^^xsd:dateTime;
+        Person:name       "Dylan";
+        Person:personID   50;
+        Person:ref-phone  <http://example.org/Phone/phoneID=75> , <http://example.org/Phone/phoneID=76> , <http://example.org/Phone/phoneID=77>;
+        Person:sex        true;
+        Person:weight     "141.8"^^xsd:double .
+
+<http://example.org/Phone/phoneID=63>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2060";
+        Phone:owner      41;
+        Phone:phoneID    63;
+        Phone:price      "840.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=41> .
+
+<http://example.org/Phone/phoneID=64>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2061";
+        Phone:owner      42;
+        Phone:phoneID    64;
+        Phone:price      "850.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=42> .
+
+<http://example.org/Phone/phoneID=65>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2062";
+        Phone:owner      42;
+        Phone:phoneID    65;
+        Phone:price      "860.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=42> .
+
+<http://example.org/Phone/phoneID=66>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2063";
+        Phone:owner      43;
+        Phone:phoneID    66;
+        Phone:price      "870.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=43> .
+
+<http://example.org/Phone/phoneID=67>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2064";
+        Phone:owner      44;
+        Phone:phoneID    67;
+        Phone:price      "880.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=44> .
+
+<http://example.org/Phone/phoneID=68>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2065";
+        Phone:owner      45;
+        Phone:phoneID    68;
+        Phone:price      "890.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=45> .
+
+<http://example.org/Phone/phoneID=69>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2066";
+        Phone:owner      45;
+        Phone:phoneID    69;
+        Phone:price      "900.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=45> .
+
+<http://example.org/Phone/phoneID=70>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2067";
+        Phone:owner      46;
+        Phone:phoneID    70;
+        Phone:price      "910.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=46> .
+
+<http://example.org/Phone/phoneID=71>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2068";
+        Phone:owner      47;
+        Phone:phoneID    71;
+        Phone:price      "920.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=47> .
+
+<http://example.org/Phone/phoneID=72>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2069";
+        Phone:owner      48;
+        Phone:phoneID    72;
+        Phone:price      "930.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=48> .
+
+<http://example.org/Phone/phoneID=73>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2070";
+        Phone:owner      48;
+        Phone:phoneID    73;
+        Phone:price      "940.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=48> .
+
+<http://example.org/Phone/phoneID=74>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2071";
+        Phone:owner      49;
+        Phone:phoneID    74;
+        Phone:price      "950.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=49> .
+
+<http://example.org/Phone/phoneID=75>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2072";
+        Phone:owner      50;
+        Phone:phoneID    75;
+        Phone:price      "960.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=50> .
+
+<http://example.org/Phone/phoneID=76>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2073";
+        Phone:owner      50;
+        Phone:phoneID    76;
+        Phone:price      "970.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=50> .
+
+<http://example.org/Phone/phoneID=77>
+        rdf:type         owl:NamedIndividual , :Phone;
+        Phone:number     "555-2074";
+        Phone:owner      50;
+        Phone:phoneID    77;
+        Phone:price      "980.0"^^xsd:double;
+        Phone:ref-owner  <http://example.org/Person/personID=50> .

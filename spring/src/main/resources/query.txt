@@ -1,6 +1,6 @@
 PREFIX ex: <http://example.org/Person/> 
  
-SELECT  ?name ?weight 
+SELECT ?person ?name ?weight
 WHERE { 
   ?person ex:name ?name ; 
           ex:weight ?weight . 
