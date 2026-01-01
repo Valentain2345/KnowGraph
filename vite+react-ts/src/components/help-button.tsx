@@ -7,24 +7,29 @@ import { DropdownMenu, DropdownMenuContent,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "./ui/dropdown-menu"
-import { useNavigate } from "react-router-dom"
+
 interface HelpButtonProps {
   onMenuAction: (action: string) => void
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  setQuery:React.Dispatch<React.SetStateAction<string>>;
 }
 
-export function HelpButton({ onMenuAction, open, onOpenChange }: HelpButtonProps) {
-  const navigate = useNavigate();
-
+export function HelpButton({ onMenuAction, open, onOpenChange,setQuery }: HelpButtonProps) {
   const handleLoadExample= async (exampleName:string)=>{
     let response;
     try{
-      if(exampleName==="example1")
+      if(exampleName==="example1"){
         response = await fetch('http://localhost:8080/sparql/loadExample1')
-      else
+        const queryEx = await fetch('http://localhost:8080/sparql/loadExampleQuery1')
+        const queryT= await queryEx.text()
+        setQuery(queryT)
+      }else{
         response = await fetch('http://localhost:8080/sparql/loadExample2')
-
+        const queryEx = await fetch('http://localhost:8080/sparql/loadExampleQuery2')
+        const queryT= await queryEx.text()
+        setQuery(queryT)
+      }
         if(response.ok)
           onMenuAction("Loaded example into server")
         else
@@ -54,8 +59,6 @@ export function HelpButton({ onMenuAction, open, onOpenChange }: HelpButtonProps
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-
-
       </DropdownMenuTrigger>
       <DropdownMenuContent>
       <DropdownMenuSub>
@@ -65,7 +68,15 @@ export function HelpButton({ onMenuAction, open, onOpenChange }: HelpButtonProps
             <DropdownMenuItem onClick={()=>handleLoadExample("example2")}>Person Heavy extended</DropdownMenuItem>
           </DropdownMenuSubContent>
       </DropdownMenuSub>
-      <DropdownMenuItem onClick={() => navigate("/usage")}>Usage</DropdownMenuItem>
+
+
+       <DropdownMenuSub>
+        <DropdownMenuSubTrigger>Theme</DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuItem >Bright Theme</DropdownMenuItem>
+            <DropdownMenuItem >Night Theme</DropdownMenuItem>
+          </DropdownMenuSubContent>
+      </DropdownMenuSub>
 
       </DropdownMenuContent>
     </DropdownMenu>

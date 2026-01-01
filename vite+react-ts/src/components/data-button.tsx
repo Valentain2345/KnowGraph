@@ -21,7 +21,6 @@ export function DataButton({ onMenuAction, open, onOpenChange }: DataButtonProps
   const [isManyModalOpen, setIsManyModalOpen] = useState(false)
   const [datasetURL, setDatasetURL] = useState('')
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const [openedDatasets, setOpenedDatasets] = useState([])
   const [files, setFiles] = useState<File[]>([])
   const [urls, setUrls] = useState<string[]>([''])
   const [isUploading, setIsUploading] = useState(false)
@@ -203,9 +202,6 @@ export function DataButton({ onMenuAction, open, onOpenChange }: DataButtonProps
     }
   }
 
-  const handleFileSelectMany = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) setFiles(Array.from(event.target.files))
-  }
 
 
 const addFileRow = () => setFileRows([...fileRows, fileRows.length])
@@ -213,7 +209,7 @@ const removeFileRow = (index: number) => {
   setFileRows(fileRows.filter((_, i) => i !== index))
 }
 
-const handleFileSelectRow = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
+const handleFileSelectRow = (event: React.ChangeEvent<HTMLInputElement>) => {
   if (event.target.files) {
     const selectedFiles = Array.from(event.target.files)
     setFiles((prevFiles) => [...prevFiles, ...selectedFiles])
@@ -326,7 +322,7 @@ const handleRemoveFile = (index: number) => {
               <input
                 type="file"
                 multiple
-                onChange={(e) => handleFileSelectRow(e, index)}
+                onChange={(e) => handleFileSelectRow(e)}
                 className="w-full text-white bg-gray-800 rounded-lg border border-gray-700 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {fileRows.length > 1 && (

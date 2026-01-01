@@ -240,6 +240,24 @@ const ModalButtons = styled.div`
   margin-top: 1.5rem;
 `;
 
+const GeneratorButton= styled.button`
+  margin-top: 2rem;
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(90deg, #a78bfa, #60a5fa);
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(167, 139, 250, 0.3);
+  }
+`;
 const ModalButton = styled.button`
   padding: 0.75rem 1.5rem;
   border-radius: 12px;
@@ -333,6 +351,42 @@ export const ImportManager = ({setMessage}:ImportManagerProps) => {
         return "Unknown";
     }
   };
+const handleGenerateGraph = async () => {
+  const response = await fetch("http://localhost:5001/dataframes");
+
+  if (!response.ok) {
+    setMessage({ text: "Error generating graph", type: "error" });
+    return;
+  }
+
+  const res = await fetch("http://localhost:5001/rdf/download");
+
+  if (!res.ok) {
+    setMessage({ text: "An error occurred generating graph", type: "error" });
+    return;
+  }
+
+  // Read file
+  const blob = await res.blob();
+
+  // Create download link
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+
+  // Optional: set filename if server does not send Content-Disposition
+  a.download = "generatedGraph.ttl";
+
+  document.body.appendChild(a);
+  a.click();
+
+  // Cleanup
+  a.remove();
+  window.URL.revokeObjectURL(url);
+
+  setMessage({ text: "Graph generated correctly", type: "success" });
+};
+
 
   // Handle file selection (Structured)
   const handleStructuredFileSelect = (e: React.ChangeEvent<HTMLInputElement>, format: string) => {
@@ -427,7 +481,7 @@ export const ImportManager = ({setMessage}:ImportManagerProps) => {
     });
 
     try {
-      const response = await fetch("http://localhost:5000/upload", {
+      const response = await fetch("http://localhost:5001/upload", {
         method: "POST",
         body: formData,
       });
@@ -448,7 +502,7 @@ export const ImportManager = ({setMessage}:ImportManagerProps) => {
   };
 
  const clearFilesFromServer= async ()=>{
-    const response = await fetch("http://localhost:5000/clear")
+    const response = await fetch("http://localhost:5001/clear")
 }
 
 
@@ -503,12 +557,6 @@ export const ImportManager = ({setMessage}:ImportManagerProps) => {
             <CardTitle>XML File</CardTitle>
           </Card>
 
-          <Card onClick={() => setShowSQLDbModal(true)}>
-            <Emoji>Database</Emoji>
-            <CardTitle>SQL Database</CardTitle>
-          </Card>
-
-
         </Grid>
 
         {/* Selected Files */}
@@ -525,7 +573,6 @@ export const ImportManager = ({setMessage}:ImportManagerProps) => {
                   <option value="JSON">JSON</option>
                   <option value="Excel">Excel</option>
                   <option value="XML">XML</option>
-                   <option value="SQL">SQL</option>
 
                 </FormatSelect>
                 <RemoveButton onClick={() => removeFile("structured", index)}>×</RemoveButton>
@@ -542,71 +589,7 @@ export const ImportManager = ({setMessage}:ImportManagerProps) => {
         </SubmitButton>
       </Section>
 
-      {/* === UNSTRUCTURED DATA === */}
-      <Section>
-        <SectionTitle>Unstructured Data</SectionTitle>
-        <Subtitle>Extract knowledge with AI</Subtitle>
-        <Grid>
-          <Card
-            $dragOver={dragOver}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onClick={() => openFilePicker(unstructuredFileInputRef)}
-          >
-            <input
-              ref={unstructuredFileInputRef}
-              type="file"
-              multiple
-              onChange={handleUnstructuredFileSelect}
-            />
-            <Emoji>Document</Emoji>
-            <CardTitle>Upload Document</CardTitle>
-          </Card>
 
-          <Card onClick={() => setShowUrlModal(true)}>
-            <Emoji>Web</Emoji>
-            <CardTitle>Web URL</CardTitle>
-          </Card>
-
-          <Card onClick={()=> setShowMongoDbModal(true)}>
-            <Emoji>Mongo</Emoji>
-            <CardTitle>MongoDB</CardTitle>
-          </Card>
-        </Grid>
-
-        {/* Selected Files */}
-        {unstructuredFiles.length > 0 && (
-          <SelectedFilesContainer>
-            {unstructuredFiles.map((item, index) => (
-              <FileRow key={index}>
-                <FileName>{item.file?.name || item.url}</FileName>
-                <FormatSelect
-                  value={item.selectedFormat}
-                  onChange={(e) => updateFormat("unstructured", index, e.target.value)}
-                >
-                  <option value="PDF">PDF</option>
-                  <option value="Text">Text</option>
-                  <option value="Word">Word</option>
-                  <option value="Html">Html</option>
-                  <option value="Mongo">Mongo</option>
-                   <option value="URL">URL</option>
-                  <option value="Unknown">Other</option>
-
-                </FormatSelect>
-                <RemoveButton onClick={() => removeFile("unstructured", index)}>×</RemoveButton>
-              </FileRow>
-            ))}
-          </SelectedFilesContainer>
-        )}
-
-        <SubmitButton
-          onClick={() => submitSection("unstructured")}
-          disabled={unstructuredFiles.length === 0 || uploadingUnstructured}
-        >
-          {uploadingUnstructured ? "Uploading Unstructured Data..." : "Submit Unstructured Data"}
-        </SubmitButton>
-      </Section>
 
       {/* === DATABASE URL MODAL === */}
       {showSQLDbModal && (
@@ -717,7 +700,10 @@ export const ImportManager = ({setMessage}:ImportManagerProps) => {
             </ModalButtons>
           </Modal>
         </ModalOverlay>
+
+
       )}
+      <GeneratorButton onClick={()=>handleGenerateGraph()}>Generate Graph</GeneratorButton>
     </Container>
   );
 };

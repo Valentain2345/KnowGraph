@@ -23,6 +23,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
+
+
 @RestController
 @RequestMapping("/sparql")
 public class SparqlController {
@@ -278,6 +281,38 @@ public class SparqlController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error loading example 2");
         }
     }
+
+
+    @GetMapping("/loadExampleQuery1")
+    public ResponseEntity<String> loadExampleQuery1(){
+        try(InputStream is = ResourceLoader.class.getResourceAsStream("/queryexample1.txt")){
+
+			if(is==null){
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Example Query 1 file not found");
+			}
+            String content = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            return ResponseEntity.ok(content);
+        }catch (Exception e){
+        Logger.getLogger(loggerName).log(Level.SEVERE, "Error loading example query 1: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error loading example query 1");
+        }
+    }
+
+     @GetMapping("/loadExampleQuery2")
+    public ResponseEntity<String> loadExampleQuery2(){
+        try(InputStream is = ResourceLoader.class.getResourceAsStream("/queryexample2.txt")){
+
+			if(is==null){
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Example Query 2 file not found");
+			}
+            String content = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            return ResponseEntity.ok(content);
+        }catch (Exception e){
+        Logger.getLogger(loggerName).log(Level.SEVERE, "Error loading example query 2: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error loading example query 2");
+        }
+    }
+
 
 
     

@@ -2,23 +2,6 @@
 ````markdown
 # Cosas por hacer
 
-## 1.Terminado Conectar lógica de Java con Spring
-- Integrar la lógica del backend en Java usando Spring Framework.
-
-## 2.Terminado Conectar frontend con backend
-- Establecer comunicación entre el frontend y el backend de la aplicación.
-
-## 3.Terminado Usar lo del profe para hacer un wizard para construir queries
-- Crear un wizard interactivo que permita construir queries.
-- Integrar una consola para utilizar un modelo de lenguaje (LLM) que genere automáticamente las queries.
-- Permitir que el usuario se loguee con Google para acceder a la funcionalidad.
-
-## 4. Implementar funcionalidades de visualización de datos con Plotly + Dash
-- Implementar visualización interactiva de datos en la aplicación utilizando Plotly y Dash.
-
-## 5.Terminado-- Implementar visualización de los grafos
-- Visualizar los grafos de manera interactiva en el frontend.
-
 ## 6. Añadir manera de importar datos de distintos tipos y pasarlos a formato grafo
 - Implementar una funcionalidad para importar datos desde diversos formatos y convertirlos a grafos.
 
@@ -70,6 +53,12 @@
   ```bash
   java -jar target/backend-0.0.1-SNAPSHOT.jar
   ```
+
+## Backend (Flask)
+
+* Para correr hay simplemente hay que instalar los paquetes en requirements.txt con pip
+* Luego correr ambos archivos con python y el nombre del archivo y se van a abrir servidores en los puertos 5000 y 5001
+
 
 ## Frontend (Vite)
 

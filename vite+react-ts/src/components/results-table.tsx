@@ -24,7 +24,6 @@ export function ResultsTable({ results, columns, onClear, onSave }: ResultsTable
     return <TableEmptyState />
   }
 
-  console.log("Holaaaaaaaaaaaaaaaaa")
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
@@ -61,8 +60,8 @@ export function ResultsTable({ results, columns, onClear, onSave }: ResultsTable
             <thead className="bg-zinc-900 border-b border-zinc-800">
               <tr>
                 {columns.map((column, index) => {
-                  const key = typeof column === "string" ? column : column.id || index;
-                  const label = typeof column === "string" ? column : column.label;
+                  const key = typeof column === "string" ? column : column.id ?? index;
+                  const label = typeof column === "string" ? column : column.label ?? column.accessor ?? column.id ?? "Unknown";
                   return <th key={key} className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">{label}</th>
                 })}
               </tr>

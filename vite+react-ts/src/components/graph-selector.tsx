@@ -10,6 +10,7 @@ interface GraphVariableSelectorProps {
   queryResults: Array<Record<string, string>>
   onComplete: (config: GraphOutput) => void
   onCancel: () => void
+  initialGraph:GraphOutput
 }
 
  interface GraphOutput {
@@ -155,7 +156,7 @@ const toggleConnection = (src: string, tgt: string, edge: string) => {
               </div>
               <Button
                 variant="ghost"
-                size="icon"
+                size="default"
                 onClick={onCancel}
                 className="h-10 w-10 rounded-full text-white/60 hover:bg-white/10 hover:text-white"
               >

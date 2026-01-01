@@ -37,8 +37,6 @@ export const QueryExecutor: React.FC<QueryExecutorProps> = ({
   const [results, setResults] = useState<Array<Record<string, string>>>([])
   const [columns, setColumns] = useState<string[]>([])
   const [showChat, setShowChat] = useState(false)
-  const [executionQuery,setExecutionQuery]= useState("")
-
 
 
   // ---- EXECUTE QUERY ----
@@ -49,8 +47,8 @@ export const QueryExecutor: React.FC<QueryExecutorProps> = ({
     try {
       const response = await fetch("http://localhost:8080/sparql/runQuery", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: executionQuery,
+        headers: { "Content-Type": "text/plain" },
+        body: query,
       })
 
       if (!response.ok)
@@ -164,7 +162,6 @@ export const QueryExecutor: React.FC<QueryExecutorProps> = ({
 
  const handleChangeQuery = (newQuery: string) => {
    setQuery(newQuery);
-   setExecutionQuery(newQuery);
 }
 
   return (

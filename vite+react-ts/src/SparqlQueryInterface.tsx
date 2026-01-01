@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { MenuBar } from "./components/menu-bar";
 import { MessagePanel } from "./components/message-panel";
 import { SparqlQueryWizard } from "./pages/sparql-query-wizard";
@@ -9,7 +9,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import ForceGraph3d from "./pages/graph-3d-view"
 import ForceGraph2d from "./pages/graph-2d-view"
 import {ImportManager} from "./pages/import-manager"
-import {UsageManual} from "./pages/usage-helper"
 import Visualization3d from "./pages/reduction-view-3d"
 import Visualization2d from "./pages/reduction-view-2d"
 import styled from "styled-components";
@@ -20,9 +19,9 @@ export function SparqlQueryInterface() {
     text: "Ready to execute queries",
     type: "info",
   });
-  const [queryResponseRaw,setQueryResponseRaw]=useState<string>('')
+  const [queryResponseRaw,setQueryResponseRaw]=useState<string>("")
   const [variables,setVariables]=useState<string[]>([]);
-  const [queryResults,setQueryResults]=useState<Array<Record<string, string>>>();
+  const [queryResults,setQueryResults]=useState<Array<Record<string, string>>>([]);
   const navigate = useNavigate();
   const isNonQueryView = location.pathname === "/graph3d" || location.pathname==="/graph2d"||
   location.pathname === "/importer" || location.pathname === "/usage" || location.pathname === "/visuals3d" || location.pathname === "/visuals2d" ;
@@ -31,6 +30,8 @@ export function SparqlQueryInterface() {
       <MenuBar
         onMenuAction={(action: string) => setMessage({ text: `Menu action: ${action}`, type: "info" })}
         zIndex={1000}
+        query={query}
+        setQuery={setQuery}
         variables={variables}
         queryResults={queryResults}
         queryResponseRaw={queryResponseRaw}
@@ -60,13 +61,30 @@ export function SparqlQueryInterface() {
       <div className="flex-1 overflow-auto relative z-10">
         <AnimatePresence mode="wait">
           <Routes>
-            <Route path="/" element={<PageTransition><QueryExecutor setQuery={setQuery} query={query} setMessage={setMessage} setVariables={setVariables} setQueryResults={setQueryResults} setQueryResponseRaw={setQueryResponseRaw} /></PageTransition>} />
-            <Route path="/executor" element={<PageTransition><QueryExecutor setMessage={setMessage} query={query} setQuery={setQuery} setVariables={setVariables} setQueryResults={setQueryResults} /></PageTransition>} />
-            <Route path="/wizard" element={<PageTransition><SparqlQueryWizard setQuery={setQuery} setMessage={setMessage}/></PageTransition>} />
+            <Route path="/" element={<PageTransition><QueryExecutor
+              setQuery={setQuery}
+              query={query}
+              setMessage={setMessage}
+              setVariables={setVariables}
+              setQueryResults={setQueryResults}
+              setQueryResponseRaw={setQueryResponseRaw}
+              /></PageTransition>} />
+            <Route path="/executor" element={<PageTransition>
+              <QueryExecutor
+              setMessage={setMessage}
+              query={query}
+              setQuery={setQuery}
+              setVariables={setVariables}
+              setQueryResults={setQueryResults}
+              setQueryResponseRaw={setQueryResponseRaw}
+              / >
+              </PageTransition>} />
+            <Route path="/wizard" element={<PageTransition>
+              <SparqlQueryWizard setQuery={setQuery} setMessage={setMessage}/>
+              </PageTransition>} />
             <Route path="/builder" element={<PageTransition><TripleBuilder setQuery={setQuery} setMessage={setMessage} /></PageTransition>} />
             <Route path="/graph3d" element={<PageTransition><ForceGraph3d/></PageTransition>} />
             <Route path="/graph2d" element={<PageTransition><ForceGraph2d/></PageTransition>} />
-            <Route path="/usage" element={<PageTransition><UsageManual/></PageTransition>} />
             <Route path="/visuals3d" element={<PageTransition><Visualization3d /></PageTransition>} />
             <Route path="/visuals2d" element={<PageTransition><Visualization2d/></PageTransition>} />
             <Route path="/importer" element={<PageTransition><ImportManager setMessage={setMessage}/></PageTransition>} />
@@ -146,37 +164,5 @@ const StyledButton = styled.button<{ $active: boolean }>`
   }
 `;
 
-const StyledGraphContainer = styled.div`
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  pointer-events: auto;
-`;
-
-const StyledGoBackButton = styled.button`
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  background-color: #3b82f6;
-  color: #fff;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  z-index: 2000;
-  transition: background-color 0.3s ease, transform 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  pointer-events: auto;
-  &:hover {
-    background-color: #2563eb;
-    transform: scale(1.05);
-  }
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-  }
-`;
 
 export default SparqlQueryInterface;

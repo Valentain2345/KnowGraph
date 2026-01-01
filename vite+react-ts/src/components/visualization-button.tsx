@@ -55,8 +55,6 @@ export function VisualizationButton({
   // ---------- Graph building state ----------
   const [showSelector, setShowSelector] = useState(false);
   const [graphData, setGraphData] = useState<GraphOutput | null>(null);
-  const [visualsData,setVisualsData]= useState<VisualsParamsOut | null>(null);
-  // *** NEW STATE ***
   const [pendingAction, setPendingAction] = useState<PendingGraphAction>(null);
   const [showVisualSelector,setShowVisualSelector]=useState(false);
   const [selectedMethod,setSelectedMethod]=useState<'umap'| 'tsne' | 'pca' >('')
@@ -107,12 +105,12 @@ export function VisualizationButton({
     navigate("/graph2d", { state: { graphData } });
   };
 
-const uploadResultsToServer = async ():string => {
+const uploadResultsToServer = async ():Promise<string> => {
   try {
     // Ensure there's valid raw CSV data to upload
     if (!queryResponseRaw || queryResponseRaw.trim() === '') {
-      console.log('No data to upload');
-      return;
+      onMenuAction('No data to upload');
+      return '';
     }
 
   // Create a FormData object to send the raw CSV as a file
@@ -134,22 +132,21 @@ const uploadResultsToServer = async ():string => {
       const newJobId = jsonResponse.job_id as string;
       return newJobId;
     } else {
-      console.error('Upload failed:', response.statusText);
-      return;
+      onMenuAction("Upload failed")
+      return '';
     }
   } catch (error) {
-    console.error('There was an error uploading the data:', error);
+    onMenuAction('Error uploading the data')
   }
-  return;
+  return '';
 };
 
-const uploadResultsToServerCustom = async (newCsvData: string):string => {
+const uploadResultsToServerCustom = async (newCsvData: string):Promise<string> => {
   try {
     // Ensure there's valid raw CSV data to upload
-    console.log(newCsvData)
     if (typeof newCsvData !== 'string' || newCsvData.trim() === '') {
-      console.log('No data to upload');
-      return;
+      onMenuAction('No data to upload');
+      return '';
     }
 
     // Create a FormData object to send the raw CSV as a file
@@ -171,13 +168,13 @@ const uploadResultsToServerCustom = async (newCsvData: string):string => {
       const newJobId = jsonResponse.job_id as string;
       return newJobId;
     } else {
-      console.error('Upload failed:', response.statusText);
-      return;
+      onMenuAction('Upload failed')
+      return '';
     }
   } catch (error) {
-    console.error('There was an error uploading the data:', error);
+     onMenuAction('Error uploading the data')
   }
-  return;
+  return '';
 };
 
 
@@ -205,7 +202,7 @@ const arrayToCSV = (array: Record<string, string>[], selectedVariables: string[]
   ) => {
     console.log("The method is"+ method)
     let newJobId=jobId;
-    if(!jobId && selectedVariables!==oldVariables ){
+    if(!jobId || selectedVariables!==oldVariables ){
       if (isUpload) {
         newJobId= await uploadResultsToServer();
       } else {
@@ -219,7 +216,7 @@ const arrayToCSV = (array: Record<string, string>[], selectedVariables: string[]
        newJobId= await uploadResultsToServerCustom(csvData);
       }
 
-    console.log("The new job id is "+ newJobId)
+
     setJobId(newJobId);
     setOldVariables(selectedVariables);
     }
@@ -248,8 +245,7 @@ const parseCSV = (queryResults: any[], selectedVariables: string[]): Record<stri
     return filteredRow;
   });
 };
-  const handleShowVisualSelector = (method: string) => {
-    console.log("Method to show is "+ method);
+  const handleShowVisualSelector = (method: 'umap' | 'tsne' | 'pca' ) => {
     setSelectedMethod(method)
     setShowVisualSelector(true)
   }
@@ -282,16 +278,16 @@ const parseCSV = (queryResults: any[], selectedVariables: string[]): Record<stri
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>Graph</DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
-              {/* *** MODIFIED CALL: Pass "graph2d" as the pending action type *** */}
+
               <DropdownMenuItem onClick={() => ensureGraph(handleGraph2D, "graph2d")}>
                 Graph in 2D
                 {!graphData && <span className="ml-2 text-xs text-gray-400">(build first)</span>}
               </DropdownMenuItem>
 
-              {/* *** MODIFIED CALL: Pass "graph3d" as the pending action type *** */}
+
               <DropdownMenuItem
                 onClick={() => ensureGraph(handleGraph3D, "graph3d")}
-                // Note: I removed the `disabled={showSelector}` as the new logic handles pending action gracefully
+
               >
                 Graph in 3D
                 {!graphData && <span className="ml-2 text-xs text-gray-400">(build first)</span>}
@@ -310,16 +306,6 @@ const parseCSV = (queryResults: any[], selectedVariables: string[]): Record<stri
               <DropdownMenuItem onClick={() => handleShowVisualSelector('umap')}>UMAP</DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleShowVisualSelector('tsne')}>t-SNE</DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleShowVisualSelector('pca')}>PCA</DropdownMenuItem>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-
-          {/* ---- Tables Section ---- */}
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Tables</DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuItem onClick={() => onMenuAction("show-table-scatter")}>Scatter</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onMenuAction("show-table-pie")}>Pie</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onMenuAction("show-table-histogram")}>Histogram</DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
         </DropdownMenuContent>

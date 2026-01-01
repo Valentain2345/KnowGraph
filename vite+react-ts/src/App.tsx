@@ -1,4 +1,3 @@
-import React from "react";
 import {SparqlQueryInterface} from "./SparqlQueryInterface"
 import { BrowserRouter as Router } from "react-router-dom";
 

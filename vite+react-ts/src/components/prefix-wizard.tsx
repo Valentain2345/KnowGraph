@@ -106,7 +106,7 @@ export function PrefixManager({ prefixes, setPrefixes, commonPrefixes }: PrefixM
                   <div className="flex items-center justify-center col-span-1">
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="default"
                       onClick={() => deletePrefix(prefix.id)}
                       className="h-8 w-8 text-zinc-400 hover:text-red-400 hover:bg-red-400/10"
                     >

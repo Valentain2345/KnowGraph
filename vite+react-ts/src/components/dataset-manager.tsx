@@ -184,7 +184,7 @@ export function DatasetManager({ datasets, setDatasets }: DatasetManagerProps) {
                   <div className="flex items-center justify-center">
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="default"
                       onClick={() => deleteDataset(dataset.id)}
                       className="h-8 w-8 text-zinc-400 hover:text-red-400 hover:bg-red-400/10"
                     >

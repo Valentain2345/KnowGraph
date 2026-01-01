@@ -8,14 +8,17 @@ import { ModelsButton } from "./models-button";
 import { useNavigate } from "react-router-dom";
 
 interface MenuBarProps {
-  onMenuAction: (action: string) => void;
+
   zIndex: number;
   variables: string[];
   queryResults: Array<Record<string, string>>;
   queryResponseRaw:string;
+  query:string;
+  setQuery:React.Dispatch<React.SetStateAction<string>>;
+   onMenuAction: (action: string) => void;
 }
 
-export function MenuBar({ onMenuAction, zIndex,variables,queryResults,queryResponseRaw }: MenuBarProps) {
+export function MenuBar({ onMenuAction, zIndex,variables,queryResults,queryResponseRaw,query,setQuery }: MenuBarProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
    const navigate = useNavigate();
 
@@ -40,7 +43,7 @@ export function MenuBar({ onMenuAction, zIndex,variables,queryResults,queryRespo
           onMenuAction={onMenuAction}
           open={openMenu === "visualization"}
           onOpenChange={(open) => setOpenMenu(open ? "visualization" : null)}
-          zIndex={zIndex + 1}
+
           variables={variables}
           queryResults={queryResults}
           queryResponseRaw={queryResponseRaw}
@@ -49,19 +52,18 @@ export function MenuBar({ onMenuAction, zIndex,variables,queryResults,queryRespo
           onMenuAction={onMenuAction}
           open={openMenu === "data"}
           onOpenChange={(open) => setOpenMenu(open ? "data" : null)}
-          zIndex={zIndex + 1}
+
         />
         <ModelsButton
           onMenuAction={onMenuAction}
           open={openMenu === "Models"}
           onOpenChange={(open) => setOpenMenu(open ? "Models" : null)}
-          zIndex={zIndex + 1}
         />
         <HelpButton
           onMenuAction={onMenuAction}
           open={openMenu === "help"}
           onOpenChange={(open) => setOpenMenu(open ? "help" : null)}
-          zIndex={zIndex + 1}
+          setQuery={setQuery}
         />
       </div>
     </div>

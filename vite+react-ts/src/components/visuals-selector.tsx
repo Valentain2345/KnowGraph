@@ -9,7 +9,7 @@ type DimReductionProps = {
   variables: string[];
   method: "umap" | "tsne" | "pca";
   onCancel: () => void;
-  onRun: (selectedVariables: string[], dims: number, method: "umap" | "tsne" | "pca") => void;
+  onRun: (selectedVariables: string[], dims: number, method: "umap" | "tsne" | "pca",isUpload:boolean) => Promise<void>;
 };
 
 export const DimReductionSelector: React.FC<DimReductionProps> = ({
@@ -75,7 +75,7 @@ export const DimReductionSelector: React.FC<DimReductionProps> = ({
               </div>
               <Button
                 variant="ghost"
-                size="icon"
+                size="default"
                 onClick={onCancel}
                 className="h-10 w-10 rounded-full text-white/60 hover:bg-white/10 hover:text-white"
               >

@@ -7,6 +7,7 @@ interface MessagePanelProps {
   message: string
   type: "info" | "success" | "error"
   onClear: () => void
+  zIndex?: number;
 }
 
 export function MessagePanel({ message, type, onClear }: MessagePanelProps) {
