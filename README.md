@@ -1,5 +1,4 @@
 
-````markdown
 # How to test the application
 
 ## Have Docker installed
@@ -20,4 +19,3 @@ docker compose up -d
 ## Finally, go to http://localhost/ in your browser and test the application
 ## Remember to have ports 80 (default), 8080, 5000, and 5001 available
 
-```
