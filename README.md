@@ -1,11 +1,11 @@
 
 # How to test the application
 
-## Have Docker installed
+### 1. Have Docker installed
 
-## Have the source code downloaded
+### 2. Have the source code downloaded
 
-## Open a terminal in the source code folder and run
+### 3. Open a terminal in the source code folder and run
 
 ```bash
 docker compose build
@@ -15,7 +15,7 @@ docker compose build
 docker compose up -d
 ```
 
-## Wait for the containers to finish starting
-## Finally, go to http://localhost/ in your browser and test the application
+### 4. Wait for the containers to finish starting
+### 5. Finally, go to http://localhost/ in your browser and test the application
 ## Remember to have ports 80 (default), 8080, 5000, and 5001 available
 
