@@ -1,0 +1,57 @@
+services:
+
+  importer:
+    build: ./Importer
+    container_name: importer-service
+    ports:
+      - "5001:5001"
+    networks:
+      - sparql-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  visualizer:
+    build: ./Visualization
+    container_name: visualizer-service
+    ports:
+      - "5000:5000"
+    networks:
+      - sparql-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  sparql-backend:
+    build: ./Sparql-Backend
+    container_name: sparql-backend-service
+    ports:
+      - "8080:8080"
+    networks:
+      - sparql-network
+    restart: unless-stopped
+
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: frontend-service
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    networks:
+      - sparql-network
+
+networks:
+  sparql-network:
+    driver: bridge
+

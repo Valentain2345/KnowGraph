@@ -1,0 +1,30 @@
+# Use Node.js Alpine image for minimal size
+FROM node:22-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json (if any)
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install --only=production
+
+# Install TypeScript for the build step
+RUN npm install -g typescript
+RUN npm install @types/node vite
+
+# Copy the rest of the app's source code
+COPY . .
+
+# Build the React app
+RUN npm run build
+
+# Install http-server globally
+RUN npm install -g http-server
+
+# Expose port 80
+EXPOSE 80
+
+# Start http-server to serve the built React app
+CMD ["http-server", "dist", "-p", "80"]
