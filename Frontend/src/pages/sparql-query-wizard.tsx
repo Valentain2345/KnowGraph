@@ -1,5 +1,3 @@
-"use client";
-
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
@@ -10,7 +8,7 @@ import { Button } from "../components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Checkbox } from "../components/ui/checkbox";
 import { Textarea } from "../components/ui/textarea";
-import { Code, ChevronDown, ChevronUp, Trash2,Plus } from "lucide-react"; // Added Trash2 icon
+import { Code, ChevronDown, ChevronUp, Trash2, Plus } from "lucide-react";
 import { PrefixManager } from "../components/prefix-wizard";
 import { DatasetManager } from "../components/dataset-manager";
 
@@ -68,7 +66,7 @@ interface SparqlQueryWizardProps {
   setMessage: (message: { text: string; type: "info" | "success" | "error" }) => void;
 }
 
-// Styled components
+// Styled components (unchanged)
 const Container = styled.div`
   margin: 0 auto;
   padding: 1rem;
@@ -95,7 +93,6 @@ const QueryHeader = styled(CardHeader)`
   border-bottom: 1px solid #e5e7eb;
 `;
 
-
 const QueryContent = styled(CardContent)`
   padding: 1rem;
   display: flex;
@@ -108,19 +105,19 @@ const QueryDescriptionContainer = styled.div`
   flex-direction: column;
   gap: 0.5rem;
 `;
-
 interface TableContainerProps {
-  rowsCount: number;
+  $rowsCount: number;
 }
 
 const TableContainer = styled.div<TableContainerProps>`
   position: relative;
   overflow-x: auto;
-  overflow-y: ${({ rowsCount }) => (rowsCount >= 4 ? "auto" : "visible")};
-  max-height: ${({ rowsCount }) => (rowsCount >= 4 ? "400px" : "auto")};
+  overflow-y: ${({ $rowsCount }) => ($rowsCount >= 4 ? "auto" : "visible")};
+  max-height: ${({ $rowsCount }) => ($rowsCount >= 4 ? "400px" : "none")};
   background: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
+
   scrollbar-width: thin;
   scrollbar-color: #d1d5db #f3f4f6;
 
@@ -128,15 +125,16 @@ const TableContainer = styled.div<TableContainerProps>`
     width: 8px;
     height: 8px;
   }
+
   &::-webkit-scrollbar-thumb {
     background-color: #d1d5db;
     border-radius: 4px;
   }
+
   &::-webkit-scrollbar-track {
     background-color: #f3f4f6;
   }
 `;
-
 
 const FieldWrapper = styled.div<{ width: string }>`
   width: ${(props) => props.width};
@@ -151,7 +149,6 @@ const ConceptPropertyContainer = styled.div`
   gap: 0.25rem;
   flex-shrink: 0;
 `;
-
 
 const TableHeader = styled.div`
   display: flex;
@@ -622,185 +619,7 @@ export function SparqlQueryWizard({ setQuery, setMessage }: SparqlQueryWizardPro
     });
   };
 
-  // Query generation
-  const generateQuery = () => {
-    let query = "";
-    const variablesInResult: string[] = [];
-    const triplesInWhere: string[] = [];
-    const filterConditions: string[] = [];
-    const orderList: string[] = [];
-    const groupByList: string[] = [];
-    const havingConditions: string[] = [];
-    const variablesForRDFType = new Set<string>();
-
-    if (queryDescription) {
-      query += `# ${queryDescription}\n\n`;
-    }
-
-    prefixes.forEach((prefix) => {
-      if (prefix.prefix && prefix.uri) {
-        query += `PREFIX ${prefix.prefix}: <${prefix.uri}>\n`;
-      } else if (!prefix.prefix && prefix.uri) {
-        query += `PREFIX <${prefix.uri}>\n`;
-      }
-    });
-    if (prefixes.length > 0) query += "\n";
-
-    const defaultGraphs = datasets.filter((d) => d.type === "default");
-    const namedGraphs = datasets.filter((d) => d.type === "named");
-    defaultGraphs.forEach((graph) => {
-      if (graph.uri) {
-        query += `FROM <${graph.uri}>\n`;
-      }
-    });
-    namedGraphs.forEach((graph) => {
-      if (graph.uri) {
-        query += `FROM NAMED <${graph.uri}>\n`;
-      }
-    });
-    if (defaultGraphs.length > 0 || namedGraphs.length > 0) query += "\n";
-
-    rows.forEach((row, rowIndex) => {
-      const questionVariable = `?${row.subject}`;
-      const questionAlias = `?${row.alias}`;
-      const concept = row.conceptPrefix ? `${row.conceptPrefix}:${row.concept}` : row.concept;
-      let property = row.propertyPrefix ? `${row.propertyPrefix}:${row.property}` : row.property;
-
-      if (row.propertyPath !== "none") {
-        if (row.propertyPath === "!uri" || row.propertyPath === "!^uri") {
-          property = `${row.propertyPath} <${row.property}>`;
-        } else {
-          property = `${property}${row.propertyPath}`;
-        }
-      }
-
-      let triplePattern = "";
-      if (row.subject && row.alias && !row.concept && !row.property) {
-        triplePattern = `${questionVariable} ${questionAlias} .`;
-      } else if (row.subject && row.concept && row.property && row.alias) {
-        const triples: string[] = [];
-        if (!variablesForRDFType.has(row.subject)) {
-          triples.push(`${questionVariable} rdf:type ${concept} .`);
-          variablesForRDFType.add(row.subject);
-        }
-        triples.push(`${questionVariable} ${property} ${questionAlias} .`);
-        triplePattern = triples.join("\n    ");
-      } else if (row.subject || row.concept || row.property || row.alias) {
-        setGeneratedQuery(
-          `# Error in row ${rowIndex + 1}: Incomplete row. Ensure subject, concept, property, and alias are provided, or use subject and alias for simple triple.`
-        );
-        setMessage({
-          text: `Error in row ${rowIndex + 1}: Incomplete row. Ensure subject, concept, property, and alias are provided.`,
-          type: "error",
-        });
-        return;
-      }
-
-      if (triplePattern) {
-        let wrappedPattern = triplePattern;
-        if (row.service) {
-          wrappedPattern = `SERVICE <${row.service}> { ${triplePattern} }`;
-        } else if (row.graph) {
-          wrappedPattern = `GRAPH <${row.graph}> { ${triplePattern} }`;
-        } else if (row.graphPattern === "Optional") {
-          wrappedPattern = `OPTIONAL { ${triplePattern} }`;
-        }
-        triplesInWhere.push(wrappedPattern);
-      }
-
-      if (row.visible && row.alias) {
-        if (row.function === "none" || row.function === "Where") {
-          variablesInResult.push(questionAlias);
-        } else if (row.function === "Group by") {
-          variablesInResult.push(questionAlias);
-          groupByList.push(questionAlias);
-        } else {
-          const resultVar = row.result || `result${rowIndex + 1}`;
-          variablesInResult.push(`(${functionTranslated(row.function)}(${questionAlias}) AS ?${resultVar})`);
-          if (row.operator && row.value) {
-            havingConditions.push(buildFilterExpression(row, `?${resultVar}`));
-          }
-        }
-      }
-
-      if (row.operator && row.value && row.function !== "Group by") {
-        filterConditions.push(buildFilterExpression(row, questionAlias));
-      } else if (row.value && !row.operator) {
-        setGeneratedQuery(`# Error in row ${rowIndex + 1}: Missing operator for value`);
-        setMessage({
-          text: `Error in row ${rowIndex + 1}: Missing operator for value`,
-          type: "error",
-        });
-        return;
-      }
-
-      if (row.order !== "none") {
-        orderList.push(row.order === "ascending" ? questionAlias : `DESC(${questionAlias})`);
-      }
-    });
-
-    if (generatedQuery.startsWith("# Error")) return;
-
-    query += `SELECT${distinct ? " DISTINCT" : ""} ${
-      variablesInResult.length > 0 ? variablesInResult.join(" ") : ""
-    }\nWHERE\n{\n`;
-    triplesInWhere.forEach((triple) => {
-      query += `  ${triple}\n`;
-    });
-
-    if (filterConditions.length > 0) {
-      query += "  FILTER (";
-      filterConditions.forEach((condition, idx) => {
-        query += condition;
-        if (idx < filterConditions.length - 1) query += " && ";
-      });
-      query += ")\n";
-    }
-
-    query += "}\n";
-
-    if (groupByList.length > 0) {
-      query += "GROUP BY ";
-      groupByList.forEach((variable, idx) => {
-        query += variable;
-        if (idx < groupByList.length - 1) query += ", ";
-      });
-      query += "\n";
-    }
-
-    if (havingConditions.length > 0) {
-      query += "HAVING (";
-      havingConditions.forEach((condition, idx) => {
-        query += condition;
-        if (idx < havingConditions.length - 1) query += " && ";
-      });
-      query += ")\n";
-    }
-
-    if (orderList.length > 0) {
-      query += "ORDER BY ";
-      orderList.forEach((order, idx) => {
-        query += order;
-        if (idx < orderList.length - 1) query += ", ";
-      });
-      query += "\n";
-    }
-
-    if (isLimitEnabled && limit > 0) {
-      query += `LIMIT ${limit}\n`;
-    }
-    if (isOffsetEnabled && offset > 0) {
-      query += `OFFSET ${offset}\n`;
-    }
-
-    setGeneratedQuery(query);
-    setQuery(query);
-    setMessage({
-      text: "Query copied to Query Executor",
-      type: "success",
-    });
-  };
-
+  // Helper functions for query generation
   const functionTranslated = (functionName: string) => {
     switch (functionName) {
       case "Average":
@@ -820,8 +639,43 @@ export function SparqlQueryWizard({ setQuery, setMessage }: SparqlQueryWizardPro
     }
   };
 
+  const formatValue = (value: string): string => {
+    // Check if it's already a URI with <>
+    if (value.startsWith("<") && value.endsWith(">")) {
+      return value;
+    }
+
+    // Check if it's a prefixed URI
+    if (value.includes(":")) {
+      return value;
+    }
+
+    // Check if it's a number
+    if (value.match(/^\d+$/)) {
+      return `"${value}"^^xsd:integer`;
+    }
+
+    // Check if it's a decimal
+    if (value.match(/^\d+\.\d+$/)) {
+      return `"${value}"^^xsd:decimal`;
+    }
+
+    // Check if it's a boolean
+    if (value === "true" || value === "false") {
+      return `"${value}"^^xsd:boolean`;
+    }
+
+    // Default: treat as string
+    return `"${value}"`;
+  };
+
   const buildFilterExpression = (row: QueryRow, variable: string) => {
     const { operator, value } = row;
+
+    if (!value.trim()) {
+      return "";
+    }
+
     if (operator === "contains") {
       return `regex(str(${variable}), "${value}", "i")`;
     } else if (operator === "starts with") {
@@ -831,22 +685,213 @@ export function SparqlQueryWizard({ setQuery, setMessage }: SparqlQueryWizardPro
     } else if (operator === "in" || operator === "not in") {
       const values = value
         .split(",")
-        .map((v) => `"${v.trim()}"`)
+        .map((v) => formatValue(v.trim()))
         .join(", ");
       return `${variable} ${operator.toUpperCase()} (${values})`;
+    } else if (operator === "=" || operator === "<>") {
+      // Handle equality operators
+      return `${variable} ${operator} ${formatValue(value)}`;
     } else {
-      let typedValue = value;
-      if (value.match(/^\d+$/)) {
-        typedValue = `"${value}"^^xsd:integer`;
-      } else if (value.match(/^\d+\.\d+$/)) {
-        typedValue = `"${value}"^^xsd:decimal`;
-      } else if (value === "true" || value === "false") {
-        typedValue = `"${value}"^^xsd:boolean`;
-      } else {
-        typedValue = `"${value}"`;
-      }
+      // Handle comparison operators (<, <=, >, >=)
+      const typedValue = formatValue(value);
       return `${variable} ${operator} ${typedValue}`;
     }
+  };
+
+  // Query generation - CORRECTED VERSION
+  const generateQuery = () => {
+    let query = "";
+    const variablesInResult: string[] = [];
+    const triplesInWhere: string[] = [];
+    const filterConditions: string[] = [];
+    const orderList: string[] = [];
+    const groupByList: string[] = [];
+    const havingConditions: string[] = [];
+
+    if (queryDescription) {
+      query += `# ${queryDescription}\n\n`;
+    }
+
+    // Add prefixes
+    prefixes.forEach((prefix) => {
+      if (prefix.prefix && prefix.uri) {
+        query += `PREFIX ${prefix.prefix}: <${prefix.uri}>\n`;
+      }
+    });
+    if (prefixes.length > 0) query += "\n";
+
+    // Add FROM clauses
+    const defaultGraphs = datasets.filter((d) => d.type === "default");
+    const namedGraphs = datasets.filter((d) => d.type === "named");
+    defaultGraphs.forEach((graph) => {
+      if (graph.uri) {
+        query += `FROM <${graph.uri}>\n`;
+      }
+    });
+    namedGraphs.forEach((graph) => {
+      if (graph.uri) {
+        query += `FROM NAMED <${graph.uri}>\n`;
+      }
+    });
+    if (defaultGraphs.length > 0 || namedGraphs.length > 0) query += "\n";
+
+    // Process each row to build query components
+    rows.forEach((row, rowIndex) => {
+      // Format variables (add ? if not present)
+      const subjectVar = row.subject.startsWith("?") ? row.subject : row.subject ? `?${row.subject}` : `?s${rowIndex + 1}`;
+      const aliasVar = row.alias.startsWith("?") ? row.alias : row.alias ? `?${row.alias}` : `?o${rowIndex + 1}`;
+
+      // Build concept and property with prefixes
+      const concept = row.conceptPrefix ? `${row.conceptPrefix}:${row.concept}` : row.concept;
+      let property = row.propertyPrefix ? `${row.propertyPrefix}:${row.property}` : row.property;
+
+      // Handle property paths
+      if (row.propertyPath === "!uri") {
+        property = `!<${property}>`;
+      } else if (row.propertyPath === "!^uri") {
+        property = `!^<${property}>`;
+      } else if (row.propertyPath !== "none") {
+        property = `${property}${row.propertyPath}`;
+      }
+
+      // Build triple patterns
+      if (row.subject && row.property && row.alias) {
+        let triplePattern = "";
+
+        if (row.concept) {
+          // Typed entity: ?subject rdf:type Concept . ?subject property ?alias .
+          triplePattern = `${subjectVar} rdf:type ${concept} .\n    ${subjectVar} ${property} ${aliasVar} .`;
+        } else {
+          // Simple triple: ?subject property ?alias
+          triplePattern = `${subjectVar} ${property} ${aliasVar} .`;
+        }
+
+        // Apply graph pattern wrappers
+        if (triplePattern) {
+          let wrappedPattern = triplePattern;
+
+          if (row.service) {
+            wrappedPattern = `SERVICE <${row.service}> {\n    ${triplePattern}\n  }`;
+          } else if (row.graph) {
+            wrappedPattern = `GRAPH <${row.graph}> {\n    ${triplePattern}\n  }`;
+          } else if (row.graphPattern === "Optional") {
+            wrappedPattern = `OPTIONAL {\n    ${triplePattern}\n  }`;
+          } else if (row.graphPattern === "Union") {
+            // For UNION, we need two patterns - using the same pattern twice as placeholder
+            wrappedPattern = `{ ${subjectVar} ${property} ${aliasVar} . } UNION { ${subjectVar} ${property} ${aliasVar} . }`;
+          } else if (row.graphPattern === "Minus") {
+            wrappedPattern = `MINUS {\n    ${triplePattern}\n  }`;
+          }
+
+          triplesInWhere.push(wrappedPattern);
+        }
+      }
+
+      // Handle result variables
+      if (row.visible) {
+        if (row.function === "none") {
+          // Regular variable in SELECT
+          if (row.alias) {
+            variablesInResult.push(aliasVar);
+          }
+        } else if (row.function === "Group by") {
+          // Variable used in GROUP BY
+          if (row.alias) {
+            variablesInResult.push(aliasVar);
+            groupByList.push(aliasVar);
+          }
+        } else {
+          // Aggregate function
+          const resultVar = row.result ? `?${row.result}` : `?result${rowIndex + 1}`;
+          const funcName = functionTranslated(row.function);
+          const aggregateExpr = `(${funcName}(${aliasVar}) AS ${resultVar})`;
+          variablesInResult.push(aggregateExpr);
+
+          // HAVING condition for aggregates
+          if (row.operator && row.value) {
+            const havingCondition = buildFilterExpression(row, resultVar);
+            if (havingCondition) {
+              havingConditions.push(havingCondition);
+            }
+          }
+        }
+      }
+
+      // FILTER conditions (for non-aggregate rows)
+      if (row.operator && row.value && row.function === "none") {
+        const filterCondition = buildFilterExpression(row, aliasVar);
+        if (filterCondition) {
+          filterConditions.push(filterCondition);
+        }
+      }
+
+      // ORDER BY
+      if (row.order !== "none" && row.alias) {
+        if (row.order === "ascending") {
+          orderList.push(aliasVar);
+        } else if (row.order === "descending") {
+          orderList.push(`DESC(${aliasVar})`);
+        }
+      }
+    });
+
+    // Build SELECT clause
+    query += `SELECT${distinct ? " DISTINCT" : ""} `;
+    if (variablesInResult.length > 0) {
+      query += variablesInResult.join(" ");
+    } else {
+      query += "*";
+    }
+    query += "\n";
+
+    // Build WHERE clause
+    if (triplesInWhere.length > 0 || filterConditions.length > 0) {
+      query += "WHERE\n{\n";
+
+      // Add triple patterns
+      triplesInWhere.forEach((triple) => {
+        query += `  ${triple}\n`;
+      });
+
+      // Add FILTER conditions
+      if (filterConditions.length > 0) {
+        query += `  FILTER (${filterConditions.join(" && ")})\n`;
+      }
+
+      query += "}\n";
+    }
+
+    // Add GROUP BY
+    if (groupByList.length > 0) {
+      query += `GROUP BY ${groupByList.join(" ")}\n`;
+    }
+
+    // Add HAVING
+    if (havingConditions.length > 0) {
+      query += `HAVING (${havingConditions.join(" && ")})\n`;
+    }
+
+    // Add ORDER BY
+    if (orderList.length > 0) {
+      query += `ORDER BY ${orderList.join(" ")}\n`;
+    }
+
+    // Add LIMIT and OFFSET
+    if (isLimitEnabled && limit > 0) {
+      query += `LIMIT ${limit}\n`;
+    }
+    if (isOffsetEnabled && offset > 0) {
+      query += `OFFSET ${offset}\n`;
+    }
+
+    // Set the generated query
+    const finalQuery = query.trim();
+    setGeneratedQuery(finalQuery);
+    setQuery(finalQuery);
+    setMessage({
+      text: "Query generated successfully",
+      type: "success",
+    });
   };
 
   return (
@@ -882,7 +927,7 @@ export function SparqlQueryWizard({ setQuery, setMessage }: SparqlQueryWizardPro
                 className="bg-zinc-200/50 border-zinc-300 text-black text-sm h-8"
               />
             </QueryDescriptionContainer>
-            <TableContainer rowsCount={rows.length}>
+            <TableContainer $rowsCount={rows.length}>
               <TableHeader>
                 <FieldWrapper width="80px">
                   <Label className="text-xs text-zinc-600 font-medium">Actions</Label>
