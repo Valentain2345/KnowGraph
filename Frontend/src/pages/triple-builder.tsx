@@ -636,7 +636,7 @@ export function TripleBuilder({ setQuery, setMessage }: TripleBuilderProps) {
     {/* Select - más estrecho */}
     <div className="w-[280px]">
       <Select value={graph} onValueChange={(value) => setGraph(value)}>
-        <BaseSelectTrigger className="w-full h-full bg-white border border-zinc-200 hover:border-gray-400 text-gray-800 hover:bg-zinc-300">
+        <BaseSelectTrigger className="w-full h-full bg-white border border-zinc-200 hover:border-zinc-200 text-gray-800 hover:bg-zinc-300">
             <SelectValue placeholder="Select graph..." />
         </BaseSelectTrigger>
         <SelectContent className="bg-white border border-zinc-200 shadow-lg">
@@ -661,7 +661,7 @@ export function TripleBuilder({ setQuery, setMessage }: TripleBuilderProps) {
             <Button
               onClick={resetGraphSelection}
               variant="outline"
-              className="px-4 border border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:border-gray-400 min-w-[48px]"
+              className="px-4 border border-zinc-200 text-gray-600 hover:bg-zinc-300 hover:text-gray-900 hover:border-gray-400 min-w-[48px]"
               title="Clear graph selection"
             >
               <RotateCcw className="w-4 h-4" />

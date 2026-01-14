@@ -162,31 +162,32 @@ const RemoveButton = styled.button`
     background: #dc2626; /* Darker red on hover */
   }
 `;
-
 const SubmitButton = styled.button`
   margin-top: 2rem;
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(90deg, #60a5fa, #a78bfa); /* Light gradient */
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6); /* more intense */
   color: white;
   font-weight: 600;
   font-size: 1.1rem;
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(96, 165, 250, 0.3);
+    box-shadow: 0 10px 24px rgba(59, 130, 246, 0.45);
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
   }
 `;
+
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -240,24 +241,25 @@ const ModalButtons = styled.div`
   margin-top: 1.5rem;
 `;
 
-const GeneratorButton= styled.button`
+const GeneratorButton = styled.button`
   margin-top: 2rem;
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(90deg, #60a5fa, #a78bfa);
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6); /* more intense */
   color: white;
-   font-weight: 600;
+  font-weight: 600;
   font-size: 1.1rem;
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(96, 165, 250, 0.3);
+    box-shadow: 0 10px 24px rgba(59, 130, 246, 0.45);
   }
 `;
+
 
 const ModalButton = styled.button`
   padding: 0.75rem 1.5rem;
@@ -463,12 +465,12 @@ const handleGenerateGraph = async () => {
 
   return (
     <Container>
-      <Title>Import Data Source</Title>
+      <Title>Import Data</Title>
 
       {/* === STRUCTURED DATA === */}
       <Section>
         <SectionTitle>Structured Data</SectionTitle>
-        <Subtitle>Upload files in common formats</Subtitle>
+        <Subtitle>Upload files in a structured formats</Subtitle>
         <Grid>
           <Card onClick={() => openFilePicker(structuredFileInputRef)}>
             <input
@@ -540,7 +542,7 @@ const handleGenerateGraph = async () => {
           onClick={() => submitSection("structured")}
           disabled={structuredFiles.length === 0 || uploadingStructured}
         >
-          {uploadingStructured ? "Uploading Structured Data..." : "Submit Structured Data"}
+          {uploadingStructured ? "Uploading Data..." : "Submit Data"}
         </SubmitButton>
       </Section>
 

@@ -1,4 +1,3 @@
-"use client"
 import React, { useState, useRef } from 'react'
 import {
   DropdownMenu,
@@ -270,96 +269,90 @@ const handleRemoveFile = (index: number) => {
 
       {/* Remote URL Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-opacity-0 flex justify-center items-center z-50 h-screen">
-          <div className="bg-black p-6 rounded-xl shadow-2xl max-w-lg w-full">
-            <h3 className="text-2xl font-semibold text-white mb-4">Enter Remote Dataset URL</h3>
-            <input
-              type="url"
-              placeholder="Enter URL here"
-              value={datasetURL}
-              onChange={(e) => setDatasetURL(e.target.value)}
-              className="w-full p-3 text-white bg-gray-800 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-            />
-            <div className="flex justify-end gap-4">
-              <button onClick={closeModal} className="px-6 py-2 text-white bg-gray-600 rounded-lg hover:bg-gray-700">Cancel</button>
-              <button onClick={handleOpenDatasetRemote} className="px-6 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700">Open Dataset</button>
-            </div>
-          </div>
-        </div>
+    <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50 h-screen">
+  <div className="bg-white p-6 rounded-xl shadow-2xl max-w-lg w-full border border-gray-200">
+    <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+      Enter Remote Dataset URL
+    </h3>
+
+    <input
+      type="url"
+      placeholder="Enter URL here"
+      value={datasetURL}
+      onChange={(e) => setDatasetURL(e.target.value)}
+      className="w-full p-3 text-gray-900 bg-gray-100 rounded-lg border border-gray-300
+                 placeholder-gray-500 focus:outline-none focus:ring-2
+                 focus:ring-blue-500 focus:border-blue-500 mb-4"
+    />
+
+    <div className="flex justify-end gap-4">
+      <button
+        onClick={closeModal}
+        className="px-6 py-2 text-gray-700 bg-gray-200 rounded-lg
+                   hover:bg-gray-300 transition"
+      >
+        Cancel
+      </button>
+
+      <button
+        onClick={handleOpenDatasetRemote}
+        className="px-6 py-2 text-white bg-blue-600 rounded-lg
+                   hover:bg-blue-700 transition"
+      >
+        Open Dataset
+      </button>
+    </div>
+  </div>
+</div>
+
       )}
 
 
-      {/* New "Open Many" Modal */}
+      {/* "Open Many" Modal */}
 {isManyModalOpen && (
-  <div className="fixed inset-0 bg-opacity-0 flex justify-center items-center z-50 h-screen">
-    <div className="bg-black p-6 rounded-xl shadow-2xl max-w-lg w-full">
-      <h3 className="text-2xl font-semibold text-white mb-4">Upload Datasets (Files or URLs)</h3>
+ <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50 h-screen">
+  <div className="bg-white p-6 rounded-xl shadow-2xl max-w-lg w-full border border-gray-200">
+    <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+      Upload Datasets (Files or URLs)
+    </h3>
 
-      {/* File upload section */}
-      <div className="mb-4">
-        <label className="block text-white mb-2 font-medium">Select Files</label>
+    {/* File upload section */}
+    <div className="mb-4">
+      <label className="block text-gray-800 mb-2 font-medium">
+        Select Files
+      </label>
 
-        {files.map((file, index) => (
-          <div key={index} className="flex items-center gap-2 mb-2">
-            <input
-              type="text"
-              value={file.name}
-              readOnly
-              className="flex-1 p-2 bg-gray-800 text-gray-300 rounded-lg border border-gray-700"
-            />
-            <button
-              onClick={() => handleRemoveFile(index)}
-              className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-            >
-              ✕
-            </button>
-          </div>
-        ))}
-
-        <div className="flex flex-col gap-2 mt-2">
-          {fileRows.map((_, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <input
-                type="file"
-                multiple
-                onChange={(e) => handleFileSelectRow(e)}
-                className="w-full text-white bg-gray-800 rounded-lg border border-gray-700 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {fileRows.length > 1 && (
-                <button
-                  onClick={() => removeFileRow(index)}
-                  className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          ))}
+      {files.map((file, index) => (
+        <div key={index} className="flex items-center gap-2 mb-2">
+          <input
+            type="text"
+            value={file.name}
+            readOnly
+            className="flex-1 p-2 bg-gray-100 text-gray-800 rounded-lg border border-gray-300"
+          />
           <button
-            onClick={addFileRow}
-            className="mt-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
+            onClick={() => handleRemoveFile(index)}
+            className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
           >
-            + Add another file
+            ✕
           </button>
         </div>
-      </div>
+      ))}
 
-      {/* URL section (unchanged) */}
-      <div className="mb-4">
-        <label className="block text-white mb-2 font-medium">Dataset URLs</label>
-        {urls.map((url, index) => (
-          <div key={index} className="flex gap-2 mb-2">
+      <div className="flex flex-col gap-2 mt-2">
+        {fileRows.map((_, index) => (
+          <div key={index} className="flex items-center gap-2">
             <input
-              type="url"
-              placeholder="Enter dataset URL"
-              value={url}
-              onChange={(e) => handleUrlChange(index, e.target.value)}
-              className="flex-1 p-2 text-white bg-gray-800 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              type="file"
+              multiple
+              onChange={(e) => handleFileSelectRow(e)}
+              className="w-full p-2 text-gray-800 bg-gray-100 rounded-lg border border-gray-300
+                         focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {urls.length > 1 && (
+            {fileRows.length > 1 && (
               <button
-                onClick={() => handleRemoveUrlField(index)}
-                className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                onClick={() => removeFileRow(index)}
+                className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
               >
                 ✕
               </button>
@@ -367,32 +360,72 @@ const handleRemoveFile = (index: number) => {
           </div>
         ))}
         <button
-          onClick={handleAddUrlField}
-          className="mt-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
+          onClick={addFileRow}
+          className="mt-2 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
         >
-          + Add another URL
-        </button>
-      </div>
-
-      <div className="flex justify-end gap-4">
-        <button
-          onClick={closeManyModal}
-          className="px-6 py-2 text-white bg-gray-600 rounded-lg hover:bg-gray-700"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSubmitMany}
-          disabled={isUploading}
-          className={`px-6 py-2 text-white rounded-lg focus:outline-none ${
-            isUploading ? 'bg-gray-500' : 'bg-blue-600 hover:bg-blue-700'
-          }`}
-        >
-          {isUploading ? 'Uploading...' : 'Upload'}
+          + Add another file
         </button>
       </div>
     </div>
+
+    {/* URL section */}
+    <div className="mb-4">
+      <label className="block text-gray-800 mb-2 font-medium">
+        Dataset URLs
+      </label>
+
+      {urls.map((url, index) => (
+        <div key={index} className="flex gap-2 mb-2">
+          <input
+            type="url"
+            placeholder="Enter dataset URL"
+            value={url}
+            onChange={(e) => handleUrlChange(index, e.target.value)}
+            className="flex-1 p-2 text-gray-800 bg-gray-100 rounded-lg border border-gray-300
+                       placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {urls.length > 1 && (
+            <button
+              onClick={() => handleRemoveUrlField(index)}
+              className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      ))}
+
+      <button
+        onClick={handleAddUrlField}
+        className="mt-2 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+      >
+        + Add another URL
+      </button>
+    </div>
+
+    <div className="flex justify-end gap-4">
+      <button
+        onClick={closeManyModal}
+        className="px-6 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition"
+      >
+        Cancel
+      </button>
+
+      <button
+        onClick={handleSubmitMany}
+        disabled={isUploading}
+        className={`px-6 py-2 text-white rounded-lg focus:outline-none transition ${
+          isUploading
+            ? 'bg-gray-400 cursor-not-allowed'
+            : 'bg-blue-600 hover:bg-blue-700'
+        }`}
+      >
+        {isUploading ? 'Uploading...' : 'Upload'}
+      </button>
+    </div>
   </div>
+</div>
+
 )}
 
     </div>

@@ -128,31 +128,42 @@ export function ModelsButton({ onMenuAction, open, onOpenChange }: ReasoningButt
 
       {/* Minimal dialog for Generic Reasoner */}
       {showDialog && (
-        <div className="fixed inset-0 bg-opacity-0 flex justify-center items-center z-50 h-screen">
-    <div className="bg-gray-900 text-gray-100 p-6 rounded-lg shadow-xl w-[90%] max-w-md border border-blue-600">
-      <h2 className="text-xl font-bold mb-4 text-white-400">Enter Rule Set</h2>
-      <textarea
-        value={rules}
-        onChange={(e) => setRules(e.target.value)}
-        className="w-full h-36 p-3 mb-4 rounded-lg bg-gray-800 border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-100 placeholder-gray-400 resize-none"
-        placeholder="Enter your inference rules here..."
-      />
-      <div className="flex justify-end gap-3">
-        <button
-          onClick={() => setShowDialog(false)}
-          className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSubmitRules}
-          className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 transition-colors text-white font-semibold"
-        >
-          Create
-        </button>
-      </div>
+      <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50 h-screen">
+  <div className="bg-white text-gray-900 p-6 rounded-lg shadow-xl w-[90%] max-w-md border border-blue-300">
+    <h2 className="text-xl font-bold mb-4 text-gray-900">
+      Enter Rule Set
+    </h2>
+
+    <textarea
+      value={rules}
+      onChange={(e) => setRules(e.target.value)}
+      className="w-full h-36 p-3 mb-4 rounded-lg bg-gray-100 border border-blue-300
+                 focus:outline-none focus:ring-2 focus:ring-blue-500
+                 text-gray-900 placeholder-gray-500 resize-none"
+      placeholder="Enter your inference rules here..."
+    />
+
+    <div className="flex justify-end gap-3">
+      <button
+        onClick={() => setShowDialog(false)}
+        className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700
+                   hover:bg-gray-300 transition-colors"
+      >
+        Cancel
+      </button>
+
+      <button
+        onClick={handleSubmitRules}
+        className="px-4 py-2 rounded-lg bg-blue-600
+                   hover:bg-blue-700 transition-colors
+                   text-white font-semibold"
+      >
+        Create
+      </button>
     </div>
   </div>
+</div>
+
       )}
     </>
   )
