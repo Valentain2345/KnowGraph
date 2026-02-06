@@ -15,7 +15,7 @@ FROM eclipse-temurin:21-jdk-jammy
 WORKDIR /app
 
 # Copy the built JAR from the build stage
-COPY --from=build /build/target/backend-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /build/target/backend-1.0.0.jar app.jar
 
 EXPOSE 8080
 

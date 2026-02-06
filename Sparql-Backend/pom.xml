@@ -10,7 +10,7 @@
 	<groupId>org.aplication</groupId>
 	<name>Know Graph Spring</name>
 	<description>Know Graph's Spring backend implementation</description>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 
 
 	<properties>
