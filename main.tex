@@ -3,9 +3,9 @@
 % Language setting
 % Replace `english' with e.g. `spanish' to change the document language
 \usepackage[english]{babel}
-
 % Set page size and margins
 \usepackage[a4paper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.5cm]{geometry}
+\usepackage[final]{listings}
 
 % Useful packages
 \usepackage{amsmath}
@@ -13,17 +13,38 @@
 \usepackage[colorlinks=true, allcolors=blue]{hyperref}
 
 \title{Informe de Proyecto Final:
-Ingenieria en Sistemas de Información}
+Ingeniería en Sistemas de Información}
 \author{Valentino Russo}
 
 \begin{document}
 \maketitle
 \begin{abstract}
-En este documento se proveera una descripcion detallada de las tecnologías utilizadas para el desarrollo de KnowGraph y el como fue desarrollado, un manual de usuario para conocer el comportamiento de las funcionalidades, y un manual para desarrolladores describiendo el funcionamiento del codigo
+En este documento se proveerá una descripción detallada de las tecnologías utilizadas para el desarrollo de KnowGraph y cómo fue desarrollado, un manual de usuario para conocer el comportamiento de las funcionalidades, y un manual para desarrolladores describiendo el funcionamiento del código.
 \end{abstract}
 
+\section{Motivación y proyectos similares}
 
-\section{Repaso sobre grafos y como represeentar conocimiento con ellos}
+KnowGraph es una aplicación diseñada para permitir la utilización de grafos de conocimiento de forma intuitiva y rápida, así como para realizar consultas sobre ellos y visualizar los resultados de manera clara y eficiente. Su finalidad es facilitar la exploración y explotación de datos interconectados sin requerir conocimientos profundos en lenguajes de consulta semántica o diseño de grafos de conocimiento.
+
+Existen varios proyectos y herramientas relacionados con la gestión, consulta y visualización de conocimiento estructurado o grafos semánticos, cada uno con enfoques particulares que los hacen relevantes como antecedentes o comparativas para KnowGraph:
+
+\subsection{Proyectos y herramientas relevantes}
+
+\begin{itemize}
+    \item \textit{Protégé}: es un editor de ontologías de código abierto y un sistema de gestión de conocimiento desarrollado por la Universidad de Stanford. Protégé permite definir modelos conceptuales formales (ontologías) y sus relaciones, facilitando la construcción de esquemas semánticos exportables a formatos como OWL y RDF, que pueden ser usados como base para grafos de conocimiento. 
+
+    \item \textit{MindBugs Discovery}: es una plataforma que integra técnicas de inteligencia artificial, minería de datos y análisis semántico para ayudar a investigadores, periodistas y analistas a explorar y comprender narrativas complejas —particularmente aquellas relacionadas con desinformación— mediante visualizaciones interactivas y grafos que muestran conexiones entre entidades, eventos y datos verificados. La herramienta construye un conocimiento estructurado a partir de fuentes verificadas y permite explorar relaciones semánticas entre conceptos dentro de un grafo interactivo. 
+
+    \item \textit{Stardog}: es una plataforma de base de datos semántica empresarial que permite almacenar y consultar grafos de conocimiento basados en RDF con capacidades avanzadas de razonamiento e integración de datos. Stardog incluye un motor que soporta consultas SPARQL complejas y razonamiento lógico sobre los datos, habilitando consultas federadas y análisis semántico profundo. 
+    \item \textit{Wikidata Query Creator}: vinculado a \textit{Wikidata}, una base de conocimiento abierta mantenida por la Fundación Wikimedia, permite realizar consultas complejas sobre una enorme red de entidades y relaciones utilizando SPARQL, facilitando la extracción de información interconectada y su análisis semántico. 
+
+    \item \textit{DBpedia Query Creator}: asociado a \textit{DBpedia}, un proyecto que extrae datos estructurados de Wikipedia y los convierte en un grafo de conocimiento accesible mediante consultas SPARQL. Esto permite explorar las relaciones semánticas entre miles de entidades extraídas de la enciclopedia, habilitando aplicaciones de consulta y visualización de datos. 
+\end{itemize}
+
+Estas herramientas y plataformas representan enfoques diversos dentro del ecosistema de conocimiento estructurado y grafos de conocimiento: desde editores y modeladores de ontologías (\textit{Protégé}), hasta plataformas que integran análisis semántico y visualizaciones avanzadas (\textit{MindBugs Discovery}) o potentes motores de almacenamiento y consulta de conocimiento (\textit{Stardog}, \textit{Wikidata} y \textit{DBpedia}). Todos ellos comparten el objetivo de organizar, interrogar y explotar datos interrelacionados, lo que los hace útiles para comparar, contrastar y fundamentar el desarrollo de KnowGraph.
+
+
+\section{Repaso sobre grafos y cómo representar conocimiento con ellos}
 Un grafo es una estructura matemática utilizada para modelar relaciones entre entidades. Formalmente, un grafo se compone de un conjunto de nodos (o vértices), que representan entidades u objetos, y un conjunto de aristas, que representan las relaciones existentes entre dichos nodos. Dependiendo de la naturaleza de las relaciones, los grafos pueden ser dirigidos o no dirigidos, así como etiquetados o no etiquetados.
 
 En el ámbito de la representación del conocimiento, los grafos resultan especialmente adecuados debido a su capacidad para modelar de manera explícita las relaciones semánticas entre conceptos. Cada nodo representa  a una entidad, un concepto o un recurso, mientras que cada arista indica el tipo de relación que los conecta, permitiendo así una estructura flexible y extensible para la organización de la información.
@@ -31,10 +52,10 @@ En el ámbito de la representación del conocimiento, los grafos resultan especi
 
 \section{Grafos de Conocimiento}
 
-Los \emph{grafos de conocimiento} son estructuras de representación del conocimiento que combinan la flexibilidad de los modelos de grafos con la semántica explícita de las relaciones y entidades, permitiendo modelar, integrar y explotar grandes volúmenes de información heterogénea. Han experimentado un crecimiento notable tanto en la investigación académica como en aplicaciones industriales, debido a su capacidad para representar datos interconectados a gran escala y facilitar operaciones de razonamiento, integración y consulta sobre estos datos.
+Los \textit{grafos de conocimiento} son estructuras de representación del conocimiento que combinan la flexibilidad de los modelos de grafos con la semántica explícita de las relaciones y entidades, permitiendo modelar, integrar y explotar grandes volúmenes de información heterogénea. Han experimentado un crecimiento notable tanto en la investigación académica como en aplicaciones industriales, debido a su capacidad para representar datos interconectados a gran escala y facilitar operaciones de razonamiento, integración y consulta sobre estos datos.
 \subsection{Definición y caracterización}
 
-Aunque no existe una definición única universalmente aceptada, los grafos de conocimiento se pueden entender, en términos generales, como estructuras de datos que representan \emph{entidades} explícitas y las \emph{relaciones} entre ellas mediante nodos y aristas en un grafo semántico. Además, incorporan mecanismos formales de vocabulario (esquemas o ontologías) y, en muchos casos, capacidades de razonamiento automático para derivar conocimiento implícito a partir de datos explícitos.
+Aunque no existe una definición única universalmente aceptada, los grafos de conocimiento se pueden entender, en términos generales, como estructuras de datos que representan \textit{entidades} explícitas y las \textit{relaciones} entre ellas mediante nodos y aristas en un grafo semántico. Además, incorporan mecanismos formales de vocabulario (esquemas o ontologías) y, en muchos casos, capacidades de razonamiento automático para derivar conocimiento implícito a partir de datos explícitos.
 
 En la literatura técnica revisada por Hogan et al., se identifican diversas perspectivas sobre qué constituye un grafo de conocimiento. Algunas definiciones se centran en componentes técnicos específicos, como una combinación de:
 \begin{itemize}
@@ -49,10 +70,10 @@ Este enfoque metodológico integra tanto la representación explícita de hechos
 
 Los grafos de conocimiento típicamente incluyen los siguientes elementos:
 \begin{itemize}
-    \item \textbf{Entidades:} Representan objetos del dominio de interés (personas, lugares, conceptos, eventos, etc.).
-    \item \textbf{Relaciones:} Aristas etiquetadas que describen interacciones o conexiones significativas entre entidades.
-    \item \textbf{Atributos y literales:} Valores asociados a entidades o relaciones que describen propiedades concretas.
-    \item \textbf{Esquemas u ontologías:} Vocabularios formales que definen clases, propiedades y restricciones, proporcionando una base semántica para la interpretación de los datos.
+    \item \textit{Entidades}: Representan objetos del dominio de interés (personas, lugares, conceptos, eventos, etc.).
+    \item \textit{Relaciones}: Aristas etiquetadas que describen interacciones o conexiones significativas entre entidades.
+    \item \textit{Atributos y literales}: Valores asociados a entidades o relaciones que describen propiedades concretas.
+    \item \textit{Esquemas u ontologías}: Vocabularios formales que definen clases, propiedades y restricciones, proporcionando una base semántica para la interpretación de los datos.
 \end{itemize}
 
 Estas estructuras suelen permitir tanto la consulta explícita de información como operaciones de razonamiento que derivan nuevo conocimiento a partir de hechos existentes, contribuyendo a la construcción de sistemas de inteligencia más ricos y expresivos.
@@ -65,10 +86,10 @@ Los grafos de conocimiento pueden formalizarse mediante modelos de datos basados
 
 La construcción de un grafo de conocimiento implica varias fases interrelacionadas:
 \begin{itemize}
-    \item \textbf{Extracción de conocimiento:} Identificación de entidades y relaciones relevantes a partir de fuentes heterogéneas de datos.
-    \item \textbf{Enriquecimiento y alineamiento:} Integración de datos nuevos y alineamiento con vocabularios o esquemas existentes.
-    \item \textbf{Evaluación de la calidad:} Verificación de consistencia, completitud y corrección de las declaraciones en el grafo.
-    \item \textbf{Publicación y mantenimiento:} Difusión del grafo de conocimiento a través de servicios, APIs o endpoints de consulta y su actualización continua conforme evolucionan los datos subyacentes.
+    \item \textit{Extracción de conocimiento}: Identificación de entidades y relaciones relevantes a partir de fuentes heterogéneas de datos.
+    \item \textit{Enriquecimiento y alineamiento}: Integración de datos nuevos y alineamiento con vocabularios o esquemas existentes.
+    \item \textit{Evaluación de la calidad}: Verificación de consistencia, completitud y corrección de las declaraciones en el grafo.
+    \item \textit{Publicación y mantenimiento}: Difusión del grafo de conocimiento a través de servicios, APIs o endpoints de consulta y su actualización continua conforme evolucionan los datos subyacentes.
 \end{itemize}
 Estas fases son críticas para garantizar que los grafos de conocimiento sean útiles, precisos y sostenibles en aplicaciones reales, especialmente cuando se trabaja con datos dinámicos o de gran escala.
 
@@ -85,27 +106,27 @@ Los grafos de conocimiento han sido adoptados en numerosos dominios, incluyendo:
 
 \section{Resource Description Framework y su conexión con los grafos}
 
-El **Resource Description Framework (RDF)** es un estándar recomendado por el *World Wide Web Consortium (W3C)* para la **representación y el intercambio de información en la Web Semántica**. Fue desarrollado con el propósito de proporcionar un **modelo de datos flexible, extensible y orientado a grafos** que permita describir recursos y sus relaciones de forma que puedan ser interpretados y procesados por máquinas de manera interoperable en entornos distribuidos. El estándar RDF ha evolucionado a lo largo del tiempo, con versiones aprobadas como RDF 1.0 y RDF 1.1, consolidándose como una de las piedras angulares de la Web Semántica y la infraestructura de datos enlazados (*Linked Data*).
+El \textit{Resource Description Framework (RDF)} es un estándar recomendado por el \textit{World Wide Web Consortium (W3C)} para la \textit{representación y el intercambio de información en la Web Semántica}. Fue desarrollado con el propósito de proporcionar un \textit{modelo de datos flexible, extensible y orientado a grafos} que permita describir recursos y sus relaciones de forma que puedan ser interpretados y procesados por máquinas de manera interoperable en entornos distribuidos. El estándar RDF ha evolucionado a lo largo del tiempo, con versiones aprobadas como RDF 1.0 y RDF 1.1, consolidándose como una de las piedras angulares de la Web Semántica y la infraestructura de datos enlazados (\textit{Linked Data}).
 
 \subsection{Modelo de datos RDF}
 
-La base del modelo RDF es un **grafo dirigido etiquetado** compuesto por estructuras denominadas **triplas** o *triples* (del inglés *triples*): cada tripla está formada por un **sujeto**, un **predicado** y un **objeto**, que conjuntamente representan una **afirmación semántica** sobre algún dominio de conocimiento. En esta representación:
+La base del modelo RDF es un \textit{grafo dirigido etiquetado} compuesto por estructuras denominadas \textit{triplas} o \textit{triples} (del inglés \textit{triples}): cada tripla está formada por un \textit{sujeto}, un \textit{predicado} y un \textit{objeto}, que conjuntamente representan una \textit{afirmación semántica} sobre algún dominio de conocimiento. En esta representación:
 
 \begin{itemize}
-    \item El **sujeto** identifica el recurso que se está describiendo.
-    \item El **predicado** (o propiedad) indica la **relación** o característica del sujeto.
-    \item El **objeto** corresponde al valor de esa característica o al recurso con el que se relaciona el sujeto.
+    \item El \textit{sujeto} identifica el recurso que se está describiendo.
+    \item El \textit{predicado} (o propiedad) indica la \textit{relación} o característica del sujeto.
+    \item El \textit{objeto} corresponde al valor de esa característica o al recurso con el que se relaciona el sujeto.
 \end{itemize}
 
-Cada uno de estos componentes puede ser identificado mediante un **Identificador de Recursos Uniforme (URI)**, lo que permite referenciar inequívocamente recursos distribuidos a lo largo de la Web. El objeto también puede ser un **valor literal** (por ejemplo, una cadena de texto, un número o una fecha).
+Cada uno de estos componentes puede ser identificado mediante un \textit{Identificador de Recursos Uniforme (URI)}, lo que permite referenciar inequívocamente recursos distribuidos a lo largo de la Web. El objeto también puede ser un \textit{valor literal} (por ejemplo, una cadena de texto, un número o una fecha).
 
-Conceptualmente, un conjunto de triples puede representarse como un **grafo RDF** en el que los nodos representan recursos o literales y las aristas etiquetadas representan las relaciones semánticas entre ellos. Esta estructura de grafo posibilita la representación de información compleja y altamente interconectada de forma natural y escalable.
+Conceptualmente, un conjunto de triples puede representarse como un \textit{grafo RDF} en el que los nodos representan recursos o literales y las aristas etiquetadas representan las relaciones semánticas entre ellos. Esta estructura de grafo posibilita la representación de información compleja y altamente interconectada de forma natural y escalable.
 
 \subsection{Formalización como Grafos}
 
-El modelo de datos RDF se define formalmente en términos de grafos abstractos, en los cuales cada tripla constituye una **arista dirigida y etiquetada** que conecta dos nodos. El conjunto de todas las triplas constituye un **grafo RDF**, que puede visualizarse como una red de relaciones entre entidades. Esta abstracción matemática permite aplicar técnicas de teoría de grafos y lógica para razonamiento, integración y consulta de información.
+El modelo de datos RDF se define formalmente en términos de grafos abstractos, en los cuales cada tripla constituye una \textit{arista dirigida y etiquetada} que conecta dos nodos. El conjunto de todas las triplas constituye un \textit{grafo RDF}, que puede visualizarse como una red de relaciones entre entidades. Esta abstracción matemática permite aplicar técnicas de teoría de grafos y lógica para razonamiento, integración y consulta de información.
 
-Un **grafo RDF** puede describir hechos simples, como por ejemplo:
+Un \textit{grafo RDF} puede describir hechos simples, como por ejemplo:
 
 \begin{center}
     (``Juan'', ``tieneNombre'', ``Juan Pérez'')
@@ -115,15 +136,15 @@ Esto se traduce en un nodo para ``Juan'', un nodo literal para ``Juan Pérez'', 
 
 \subsection{Propiedades semánticas y flexibilidad}
 
-Una de las ventajas fundamentales de RDF es su **capacidad para representar conocimiento sin imponer un esquema rígido** ni una ontología prescrita. Los grafos RDF pueden crecer de forma incremental y pueden integrar datos de múltiples fuentes heterogéneas, lo que facilita la **interoperabilidad**, la **extensibilidad** y la **reutilización** de información. Asimismo, dado que los nombres de recursos y propiedades están basados en URIs, es posible establecer enlaces entre datos distribuidos, característica esencial del paradigma *Linked Data*.
+Una de las ventajas fundamentales de RDF es su \textit{capacidad para representar conocimiento sin imponer un esquema rígido} ni una ontología prescrita. Los grafos RDF pueden crecer de forma incremental y pueden integrar datos de múltiples fuentes heterogéneas, lo que facilita la \textit{interoperabilidad}, la \textit{extensibilidad} y la \textit{reutilización} de información. Asimismo, dado que los nombres de recursos y propiedades están basados en URIs, es posible establecer enlaces entre datos distribuidos, característica esencial del paradigma \textit{Linked Data}.
 
-El modelo RDF también permite describir los datos en diferentes **formatos de serialización**, como RDF/XML, Turtle, N-Triples, JSON-LD, entre otros. Estos formatos permiten tanto la representación textual como la transmisión de datos RDF de manera legible por máquinas y estandarizada.
+El modelo RDF también permite describir los datos en diferentes \textit{formatos de serialización}, como RDF/XML, Turtle, N-Triples, JSON-LD, entre otros. Estos formatos permiten tanto la representación textual como la transmisión de datos RDF de manera legible por máquinas y estandarizada.
 
 \subsection{Conexión con grafos de conocimiento}
 
-La representación de información como grafos RDF es un **elemento central para la construcción de grafos de conocimiento**, ya que permite modelar de forma explícita las entidades y sus relaciones semánticas. Un *grafo de conocimiento* no es más que un conjunto de recursos interconectados mediante relaciones, formalizado como un **grafo RDF enriquecido con vocabularios y ontologías** que aportan semántica adicional. Esta estructura facilita no solo la **recuperación eficiente de información** mediante lenguajes de consulta como SPARQL, sino también la **inferencias de nuevo conocimiento**, especialmente cuando se combinan RDF con esquemas de ontologías (por ejemplo, RDFS y OWL) y mecanismos de razonamiento semántico.
+La representación de información como grafos RDF es un \textit{elemento central para la construcción de grafos de conocimiento}, ya que permite modelar de forma explícita las entidades y sus relaciones semánticas. Un \textit{grafo de conocimiento} no es más que un conjunto de recursos interconectados mediante relaciones, formalizado como un \textit{grafo RDF enriquecido con vocabularios y ontologías} que aportan semántica adicional. Esta estructura facilita no solo la \textit{recuperación eficiente de información} mediante lenguajes de consulta como SPARQL, sino también la \textit{inferencias de nuevo conocimiento}, especialmente cuando se combinan RDF con esquemas de ontologías (por ejemplo, RDFS y OWL) y mecanismos de razonamiento semántico.
 
-En este sentido, RDF actúa como una **capa base de representación** que proporciona la semántica estructural necesaria para que sistemas automatizados puedan integrar, enlazar y explotar datos de manera coherente en la Web Semántica. Esta capacidad de formalizar el significado y las relaciones entre recursos convierte a RDF en un pilar fundamental para la Web de Datos, facilitando aplicaciones avanzadas como motores de búsqueda semántica, asistentes inteligentes, análisis de redes de información y sistemas de integración de datos a gran escala.
+En este sentido, RDF actúa como una \textit{capa base de representación} que proporciona la semántica estructural necesaria para que sistemas automatizados puedan integrar, enlazar y explotar datos de manera coherente en la Web Semántica. Esta capacidad de formalizar el significado y las relaciones entre recursos convierte a RDF en un pilar fundamental para la Web de Datos, facilitando aplicaciones avanzadas como motores de búsqueda semántica, asistentes inteligentes, análisis de redes de información y sistemas de integración de datos a gran escala.
 
 
 
@@ -142,20 +163,20 @@ A diferencia de los modelos relacionales, donde las consultas se expresan sobre 
 \subsection{Características principales}
 
 \begin{itemize}
-    \item \textbf{Lenguaje declarativo orientado a grafos:}  
+    \item \textit{Lenguaje declarativo orientado a grafos}:  
     SPARQL permite describir qué información se desea obtener sin especificar cómo debe ejecutarse la consulta. Los patrones de triplas representan fragmentos del grafo RDF que deben coincidir con los datos almacenados.
 
-    \item \textbf{Sintaxis inspirada en SQL:}  
+    \item \textit{Sintaxis inspirada en SQL}:  
     Aunque conceptualmente distinto, SPARQL adopta una sintaxis familiar mediante cláusulas como \texttt{SELECT}, \texttt{WHERE}, \texttt{FILTER}, \texttt{OPTIONAL} y \texttt{UNION}, facilitando su comprensión por parte de usuarios con experiencia en bases de datos relacionales.
 
-    \item \textbf{Patrones de triplas y variables:}  
+    \item \textit{Patrones de triplas y variables}:  
     El núcleo de una consulta SPARQL está formado por patrones de la forma:
     \begin{verbatim}
     ?sujeto ?predicado ?objeto .
     \end{verbatim}
     donde las variables permiten capturar valores RDF que cumplen con las restricciones del patrón.
 
-    \item \textbf{Formas de consulta:}
+    \item \textit{Formas de consulta}:
     \begin{itemize}
         \item \texttt{SELECT}: Recupera un conjunto de resultados en forma tabular, vinculando variables a valores RDF.
         \item \texttt{CONSTRUCT}: Produce un nuevo grafo RDF a partir de las soluciones obtenidas, permitiendo la transformación y el enriquecimiento de datos.
@@ -163,7 +184,7 @@ A diferencia de los modelos relacionales, donde las consultas se expresan sobre 
         \item \texttt{DESCRIBE}: Genera un grafo RDF que describe recursos específicos, dependiendo de la implementación del motor SPARQL.
     \end{itemize}
 
-    \item \textbf{Extensiones de SPARQL 1.1:}  
+    \item \textit{Extensiones de SPARQL 1.1}:  
     La especificación SPARQL 1.1 amplía significativamente las capacidades del lenguaje mediante:
     \begin{itemize}
         \item Expresiones y funciones integradas (\texttt{BIND}, \texttt{IF}, \texttt{COALESCE}, \texttt{STR}, \texttt{LANG}, \texttt{DATATYPE}).
@@ -178,45 +199,45 @@ A diferencia de los modelos relacionales, donde las consultas se expresan sobre 
 \subsection{Aplicaciones de SPARQL}
 
 \begin{itemize}
-    \item \textbf{Consulta de repositorios RDF y triplestores:}  
+    \item \textit{Consulta de repositorios RDF y triplestores}:  
     SPARQL es el lenguaje estándar para interactuar con sistemas de almacenamiento RDF como Apache Jena, Virtuoso, GraphDB, Blazegraph y Stardog.
 
-    \item \textbf{Integración semántica de datos:}  
+    \item \textit{Integración semántica de datos}:  
     Gracias al uso de URIs y vocabularios compartidos, SPARQL facilita la integración de datos heterogéneos provenientes de múltiples dominios y fuentes, favoreciendo la interoperabilidad semántica.
 
-    \item \textbf{Exploración y análisis de grafos de conocimiento:}  
+    \item \textit{Exploración y análisis de grafos de conocimiento}:  
     SPARQL se utiliza extensamente en ontologías basadas en RDFS y OWL, así como en iniciativas de datos abiertos y grafos de conocimiento de gran escala, como DBpedia y Wikidata.
 
-    \item \textbf{Transformación y generación de conocimiento:}  
+    \item \textit{Transformación y generación de conocimiento}:  
     Mediante consultas \texttt{CONSTRUCT}, SPARQL permite derivar nuevos grafos RDF, extraer subgrafos relevantes y preparar datos para procesos posteriores de análisis o visualización.
 
-    \item \textbf{Soporte para inferencia y razonamiento semántico:}  
+    \item \textit{Soporte para inferencia y razonamiento semántico}:  
     Combinado con motores de inferencia, SPARQL permite formular consultas que explotan conocimiento implícito, como jerarquías de clases y propiedades, fortaleciendo las capacidades analíticas de los sistemas semánticos.
 \end{itemize}
 
 \section{Apache Jena}
 
-Apache Jena es un **marco de trabajo de código abierto para Java** diseñado para construir aplicaciones orientadas a la Web Semántica y Linked Data. Proporciona **APIs completas para la manipulación, almacenamiento, consulta y publicación de datos RDF**, así como soporte para ontologías, razonamiento y servicios SPARQL. Su diseño modular permite integrar múltiples componentes especializados que, en conjunto, constituyen una plataforma potente para desarrollar soluciones basadas en grafos de conocimiento y tecnologías semánticas.
+Apache Jena es un \textit{marco de trabajo de código abierto para Java} diseñado para construir aplicaciones orientadas a la Web Semántica y Linked Data. Proporciona \textit{APIs completas para la manipulación, almacenamiento, consulta y publicación de datos RDF}, así como soporte para ontologías, razonamiento y servicios SPARQL. Su diseño modular permite integrar múltiples componentes especializados que, en conjunto, constituyen una plataforma potente para desarrollar soluciones basadas en grafos de conocimiento y tecnologías semánticas.
 
 \subsection{Visión general y características principales}
 
 Apache Jena ofrece una arquitectura compuesta por varios subsistemas interrelacionados que permiten cubrir todo el ciclo de vida de los datos RDF y su explotación:
 
 \begin{itemize}
-    \item \textbf{RDF API:} Es la API central de Jena para crear, manipular y serializar grafos RDF. Proporciona abstracciones de más alto nivel como \texttt{Resource}, \texttt{Literal}, \texttt{Statement} y \texttt{Model}, facilitando la construcción y consulta de triplas RDF en memoria o en almacenamiento persistente.
-    \item \textbf{SPARQL (ARQ):} Jena integra un motor de consulta y actualización compatible con SPARQL 1.1 llamado ARQ, lo que permite ejecutar consultas SPARQL sobre modelos RDF locales o remotos y sobre datasets persistentes.
-    \item \textbf{TDB/TDB2:} Son componentes de almacenamiento de triplas RDF de alto rendimiento diseñados para persistir datos directamente en disco. Jena incluye TDB2 como su versión más reciente y optimizada de almacenamiento persistente, soportando transacciones y manejo eficiente de grandes volúmenes de datos RDF.
+    \item \textit{RDF API}: Es la API central de Jena para crear, manipular y serializar grafos RDF. Proporciona abstracciones de más alto nivel como \texttt{Resource}, \texttt{Literal}, \texttt{Statement} y \texttt{Model}, facilitando la construcción y consulta de triplas RDF en memoria o en almacenamiento persistente.
+    \item \textit{SPARQL (ARQ)}: Jena integra un motor de consulta y actualización compatible con SPARQL 1.1 llamado ARQ, lo que permite ejecutar consultas SPARQL sobre modelos RDF locales o remotos y sobre datasets persistentes.
+    \item \textit{TDB/TDB2}: Son componentes de almacenamiento de triplas RDF de alto rendimiento diseñados para persistir datos directamente en disco. Jena incluye TDB2 como su versión más reciente y optimizada de almacenamiento persistente, soportando transacciones y manejo eficiente de grandes volúmenes de datos RDF.
 
-    \item \textbf{Fuseki:} Es un **servidor SPARQL** que expone datasets RDF mediante **endpoints HTTP**, permitiendo consultas SPARQL y actualizaciones remotas conforme a los estándares SPARQL 1.1 y SPARQL Graph Store Protocol. El servidor puede ejecutarse como servicio independiente, aplicación web empaquetada (WAR) o integrado en otras aplicaciones.
+    \item \textit{Fuseki}: Es un \textit{servidor SPARQL} que expone datasets RDF mediante \textit{endpoints HTTP}, permitiendo consultas SPARQL y actualizaciones remotas conforme a los estándares SPARQL 1.1 y SPARQL Graph Store Protocol. El servidor puede ejecutarse como servicio independiente, aplicación web empaquetada (WAR) o integrado en otras aplicaciones.
 
-    \item \textbf{Ontología e inferencia:} Jena provee APIs específicas para trabajar con **ontologías OWL y RDFS**, así como un motor de inferencia que permite derivar conocimiento implícito a partir de hechos explícitos, mediante reglas de razonamiento predefinidas o personalizadas.
+    \item \textit{Ontología e inferencia}: Jena provee APIs específicas para trabajar con \textit{ontologías OWL y RDFS}, así como un motor de inferencia que permite derivar conocimiento implícito a partir de hechos explícitos, mediante reglas de razonamiento predefinidas o personalizadas.
 
-    \item \textbf{Otros módulos auxiliares:} Jena incluye funcionalidades adicionales como procesadores SHACL y ShEx para validación de esquemas, soporte GeoSPARQL para datos geoespaciales, búsqueda de texto indexado (Lucene/Solr), APIs para conexiones unificadas a datasets (\texttt{RDFConnection}), herramientas de línea de comandos y generadores de código (QueryBuilder).
+    \item \textit{Otros módulos auxiliares}: Jena incluye funcionalidades adicionales como procesadores SHACL y ShEx para validación de esquemas, soporte GeoSPARQL para datos geoespaciales, búsqueda de texto indexado (Lucene/Solr), APIs para conexiones unificadas a datasets (\texttt{RDFConnection}), herramientas de línea de comandos y generadores de código (QueryBuilder).
 \end{itemize}
 
 \subsection{Arquitectura y modelos de datos}
 
-La esencia de Jena radica en representar datos RDF como **grafos dirigidos de triplas** compuestos por sujetos, predicados y objetos. Su API de RDF abstrae estas estructuras de forma que aplicaciones Java puedan:
+La esencia de Jena radica en representar datos RDF como \textit{grafos dirigidos de triplas} compuestos por sujetos, predicados y objetos. Su API de RDF abstrae estas estructuras de forma que aplicaciones Java puedan:
 
 \begin{itemize}
     \item crear y modificar grafos RDF,
@@ -225,7 +246,7 @@ La esencia de Jena radica en representar datos RDF como **grafos dirigidos de tr
     \item integrar múltiples modelos en un dataset cohesivo.
 \end{itemize}
 
-El subsistema de inferencia permite **enriquecer datos** utilizando sistemas de reglas, ya sean basados en RDFS/OWL o personalizados, de modo que las conclusiones derivadas se reflejen en los modelos de forma transparente para el desarrollador.
+El subsistema de inferencia permite \textit{enriquecer datos} utilizando sistemas de reglas, ya sean basados en RDFS/OWL o personalizados, de modo que las conclusiones derivadas se reflejen en los modelos de forma transparente para el desarrollador.
 
 \subsection{SPARQL y la API ARQ}
 
@@ -253,7 +274,7 @@ Fuseki es el componente de Jena diseñado para publicar datos RDF como servicios
     \item despliegue flexible como servidor independiente, aplicación web o dentro de infraestructura corporativa.
 \end{itemize}
 
-Fuseki se posiciona como una pieza clave para **servir grafos de conocimiento en entornos distribuidos**, habilitando a los consumidores de datos (otros sistemas o aplicaciones) a acceder y manipular datos RDF de forma remota sin acoplamiento directo a los formatos de almacenamiento subyacentes.
+Fuseki se posiciona como una pieza clave para \textit{servir grafos de conocimiento en entornos distribuidos}, habilitando a los consumidores de datos (otros sistemas o aplicaciones) a acceder y manipular datos RDF de forma remota sin acoplamiento directo a los formatos de almacenamiento subyacentes.
 \subsection{Almacenamiento con TDB y TDB2}
 
 TDB y su versión evolucionada TDB2 son módulos de almacenamiento persistente en Jena que:
@@ -304,6 +325,25 @@ El framework facilita la definición de estos endpoints mediante el uso de anota
 
 Asimismo, Spring Boot proporciona mecanismos integrados para el manejo de dependencias, la validación de datos y el tratamiento de excepciones, contribuyendo a la creación de una arquitectura robusta, mantenible y escalable. Estas características hacen que Spring Boot sea una elección adecuada para el desarrollo de servicios web modernos y orientados a APIs REST.
 
+\section{Vite, Typescript y React para construir un frontend profesional}
+
+En el desarrollo frontend moderno, Vite, TypeScript y React son tecnologías que, utilizadas en conjunto, permiten crear aplicaciones web profesionales, escalables y de alto rendimiento. A continuación se presenta una breve explicación de cada una de estas tecnologías y su rol en el desarrollo de interfaces de usuario.
+
+\subsection{Vite}
+
+\textit{Vite} es una herramienta de construcción (\textit{build tool}) y servidor de desarrollo moderna orientada a proyectos web. Fue creada para proporcionar un flujo de desarrollo rápido y eficiente aprovechando los módulos ES nativos del navegador. Durante el desarrollo, Vite actúa como un servidor que sirve los archivos directamente sin necesidad de realizar un empaquetado completo, permitiendo tiempos de arranque casi instantáneos y recargas en caliente (Hot Module Replacement, HMR). Esto mejora considerablemente la experiencia del desarrollador. Para producción, Vite utiliza herramientas como Rollup para generar paquetes optimizados, con código más pequeño y eficiente.
+
+\subsection{TypeScript}
+
+\textit{TypeScript} es un lenguaje de programación de alto nivel que se basa en JavaScript pero añade tipado estático opcional. Fue desarrollado por Microsoft y permite a los desarrolladores definir tipos de datos para variables, parámetros y estructuras más complejas. Este sistema de tipos se verifica en tiempo de compilación, lo que ayuda a detectar errores antes de ejecutar la aplicación y mejora la mantenibilidad y claridad del código. TypeScript se transpila a JavaScript estándar para ser ejecutado por los navegadores o entornos como Node.js.
+
+\subsection{React}
+
+\textit{React} es una biblioteca de JavaScript de código abierto diseñada para construir interfaces de usuario (\textit{user interfaces}). Fue desarrollada por Meta (antes Facebook) y se utiliza ampliamente para crear aplicaciones web interactivas y dinámicas. React se basa en una arquitectura de componentes reutilizables: cada componente representa una parte específica de la interfaz de usuario y puede gestionar su propio estado. Además, React utiliza una representación virtual del DOM (\textit{Virtual DOM}) para actualizar de forma eficiente solo las partes de la interfaz que han cambiado, reduciendo el trabajo innecesario al interactuar con la página.
+
+La combinación de estas tres tecnologías conforma una base sólida para construir aplicaciones frontend profesionales, ya que aprovecha la velocidad de desarrollo, la seguridad de tipos y la modularidad de componentes.
+
+
 
 \section{Visualización de grafos}
 Para la visualización de grafos tanto en dos dimensiones (2D) como en tres dimensiones (3D) se empleó la librería \textit{ForceGraph}. Esta herramienta permite definir un grafo a partir de una lista de nodos y aristas, a partir de la cual se genera una simulación física que posibilita la disposición automática de los elementos y su posterior renderizado completo.
@@ -321,9 +361,9 @@ La visualización de datos multivariados, es decir, datos con tres o más variab
 La reducción de dimensionalidad consiste en proyectar un conjunto de datos de alta dimensión en un espacio de menor dimensión preservando, en la medida de lo posible, las relaciones relevantes entre los puntos de datos. Entre los métodos más empleados en visualización se encuentran:
 
 \begin{itemize}
-    \item \textbf{Análisis de Componentes Principales (PCA):} Técnica lineal que busca nuevas direcciones ortogonales (componentes principales) que expliquen la máxima varianza de los datos. La proyección en estas componentes permite reducir la dimensión original mientras se conserva la mayor parte de la información cuantitativa de los datos .
-    \item \textbf{t-Distributed Stochastic Neighbor Embedding (t-SNE):} Algoritmo no lineal diseñado específicamente para visualización de datos en espacios de baja dimensión. Su objetivo es preservar las relaciones locales entre puntos cercanos en el espacio de alta dimensión, asignando a cada punto una ubicación en un espacio 2D o 3D de forma que los puntos similares queden próximos entre sí .
-    \item \textbf{Uniform Manifold Approximation and Projection (UMAP):} Técnica basada en teoría de variedades y topología, capaz de capturar tanto la estructura local como global de los datos. UMAP ofrece una reducción de dimensionalidad eficiente y escalable, y suele generar proyecciones que preservan la estructura de los datos de forma más consistente incluso en grandes conjuntos de datos .
+    \item \textit{Análisis de Componentes Principales (PCA)}: Técnica lineal que busca nuevas direcciones ortogonales (componentes principales) que expliquen la máxima varianza de los datos. La proyección en estas componentes permite reducir la dimensión original mientras se conserva la mayor parte de la información cuantitativa de los datos .
+    \item \textit{t-Distributed Stochastic Neighbor Embedding (t-SNE)}: Algoritmo no lineal diseñado específicamente para visualización de datos en espacios de baja dimensión. Su objetivo es preservar las relaciones locales entre puntos cercanos en el espacio de alta dimensión, asignando a cada punto una ubicación en un espacio 2D o 3D de forma que los puntos similares queden próximos entre sí .
+    \item \textit{Uniform Manifold Approximation and Projection (UMAP)}: Técnica basada en teoría de variedades y topología, capaz de capturar tanto la estructura local como global de los datos. UMAP ofrece una reducción de dimensionalidad eficiente y escalable, y suele generar proyecciones que preservan la estructura de los datos de forma más consistente incluso en grandes conjuntos de datos .
 \end{itemize}
 
 Estas técnicas permiten obtener un conjunto de puntos en 2D o 3D que puede ser utilizado para elaborar visualizaciones significativas y detectar patrones, grupos o asociaciones dentro de los datos .
@@ -333,8 +373,8 @@ Estas técnicas permiten obtener un conjunto de puntos en 2D o 3D que puede ser 
 Una vez realizada la reducción de dimensionalidad, los resultados deben ser representados mediante tecnologías que permitan visualizar y manipular los puntos de datos de forma interactiva en navegadores web. Para ello, se emplean bibliotecas especializadas en gráficos:
 
 \begin{itemize}
-    \item \textbf{D3.js (Data-Driven Documents):} Biblioteca de JavaScript para crear visualizaciones dinámicas en 2D, utilizando estándares web como SVG, HTML y CSS. D3.js facilita la vinculación directa entre los datos y los elementos visuales, permitiendo la generación de diagramas de dispersión, ejes, colores y otras representaciones visuales basadas en datos.
-    \item \textbf{Three.js:} Biblioteca de JavaScript basada en WebGL que permite renderizar gráficos tridimensionales en tiempo real. Three.js es especialmente útil para visualizar conjuntos de puntos en 3D, ofreciendo soporte para rotación, zoom, iluminación y animaciones, lo que potencia la exploración interactiva de los datos reducidos.
+    \item \textit{D3.js (Data-Driven Documents)}: Biblioteca de JavaScript para crear visualizaciones dinámicas en 2D, utilizando estándares web como SVG, HTML y CSS. D3.js facilita la vinculación directa entre los datos y los elementos visuales, permitiendo la generación de diagramas de dispersión, ejes, colores y otras representaciones visuales basadas en datos.
+    \item \textit{Three.js}: Biblioteca de JavaScript basada en WebGL que permite renderizar gráficos tridimensionales en tiempo real. Three.js es especialmente útil para visualizar conjuntos de puntos en 3D, ofreciendo soporte para rotación, zoom, iluminación y animaciones, lo que potencia la exploración interactiva de los datos reducidos.
 \end{itemize}
 
 El uso de D3.js y Three.js permite transformar los puntos reducidos en gráficos interactivos que pueden ser explorados mediante un navegador web, facilitando la interpretación visual de patrones complejos en datos de múltiples variables.
@@ -386,7 +426,7 @@ El segundo botón, denominado \textit{Clear Results}, permite eliminar los resul
 \subsection{Introducción y Contexto}
 \label{subsec:sparql-intro}
 
-El desarrollo de consultas SPARQL (SPARQL Protocol and RDF Query Language) tradicionalmente requiere conocimiento especializado en la sintaxis del lenguaje, lo que representa una barrera de entrada para usuarios no técnicos. Para abordar este problema, se ha desarrollado un generador visual de consultas SPARQL que implementa un enfoque \emph{wizard} (asistente) para la construcción de consultas. Este sistema permite a usuarios sin experiencia en SPARQL construir consultas complejas a través de una interfaz gráfica intuitiva, mientras genera código SPARQL válido y optimizado en segundo plano.
+El desarrollo de consultas SPARQL (SPARQL Protocol and RDF Query Language) tradicionalmente requiere conocimiento especializado en la sintaxis del lenguaje, lo que representa una barrera de entrada para usuarios no técnicos. Para abordar este problema, se ha desarrollado un generador visual de consultas SPARQL que implementa un enfoque \textit{wizard} (asistente) para la construcción de consultas. Este sistema permite a usuarios sin experiencia en SPARQL construir consultas complejas a través de una interfaz gráfica intuitiva, mientras genera código SPARQL válido y optimizado en segundo plano.
 
 El sistema implementa el estándar SPARQL 1.1 completo, incluyendo características avanzadas como patrones de grafo, funciones de agregación, rutas de propiedades y consultas federadas, todo accesible a través de controles visuales.
 
@@ -396,9 +436,9 @@ El sistema implementa el estándar SPARQL 1.1 completo, incluyendo característi
 El generador de consultas se compone de tres módulos principales interconectados:
 
 \begin{enumerate}
-    \item \textbf{Gestor de Prefijos}: Administra las declaraciones de espacios de nombres (namespaces) utilizados en la consulta.
-    \item \textbf{Gestor de Conjuntos de Datos}: Configura los grafos RDF fuente (tanto grafos por defecto como nombrados).
-    \item \textbf{Constructor de Consultas}: Interfaz principal para la definición de patrones de triplas, filtros, funciones y cláusulas adicionales.
+    \item \textit{Gestor de Prefijos}: Administra las declaraciones de espacios de nombres (namespaces) utilizados en la consulta.
+    \item \textit{Gestor de Conjuntos de Datos}: Configura los grafos RDF fuente (tanto grafos por defecto como nombrados).
+    \item \textit{Constructor de Consultas}: Interfaz principal para la definición de patrones de triplas, filtros, funciones y cláusulas adicionales.
 \end{enumerate}
 
 Estos módulos trabajan de manera coordinada para producir consultas SPARQL válidas que pueden ejecutarse directamente en cualquier endpoint SPARQL compatible.
@@ -412,13 +452,13 @@ Estos módulos trabajan de manera coordinada para producir consultas SPARQL vál
 Antes de construir la consulta, el usuario debe definir los espacios de nombres mediante el Gestor de Prefijos. Cada prefijo consiste en:
 
 \begin{itemize}
-    \item \textbf{Nombre del Prefijo}: Identificador corto (ej. \texttt{foaf})
-    \item \textbf{URI del Espacio de Nombres}: URI completa del vocabulario (ej. \texttt{http://xmlns.com/foaf/0.1/})
+    \item \textit{Nombre del Prefijo}: Identificador corto (ej. \texttt{foaf})
+    \item \textit{URI del Espacio de Nombres}: URI completa del vocabulario (ej. \texttt{http://xmlns.com/foaf/0.1/})
 \end{itemize}
 
 El sistema incluye prefijos comunes predefinidos (RDF, RDFS, XSD, OWL, FOAF) que pueden añadirse con un clic. También se permite definir un espacio de nombres por defecto utilizando un prefijo vacío.
 
-\textbf{Ejemplo de configuración:}
+\textit{Ejemplo de configuración:}
 \begin{verbatim}
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -431,8 +471,8 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 El Gestor de Conjuntos de Datos permite especificar las fuentes de datos RDF mediante cláusulas \texttt{FROM} y \texttt{FROM NAMED}:
 
 \begin{itemize}
-    \item \textbf{Grafos por Defecto}: Fuentes principales de datos (cláusula \texttt{FROM})
-    \item \textbf{Grafos Nombrados}: Grafos específicos identificados por URI (cláusula \texttt{FROM NAMED})
+    \item \textit{Grafos por Defecto}: Fuentes principales de datos (cláusula \texttt{FROM})
+    \item \textit{Grafos Nombrados}: Grafos específicos identificados por URI (cláusula \texttt{FROM NAMED})
 \end{itemize}
 
 Esta configuración es opcional; si no se especifica, la consulta se ejecutará sobre el conjunto de datos por defecto del endpoint.
@@ -449,7 +489,7 @@ La interfaz principal presenta una tabla donde cada fila representa un component
 \label{tab:query-row-components}
 \begin{tabular}{|p{3cm}|p{4cm}|p{7cm}|}
 \hline
-\textbf{Componente} & \textbf{Descripción} & \textbf{Ejemplo} \\
+\textit{Componente} & \textit{Descripción} & \textit{Ejemplo} \\
 \hline
 Sujeto (\textit{Subject}) & Variable que representa la entidad & \texttt{?person} \\
 \hline
@@ -479,17 +519,17 @@ Servicio (\textit{Service}) & Endpoint SPARQL federado & \texttt{<http://dbpedia
 \end{table}
 
 \paragraph{Patrones de Triple Básicos:}
-Para construir una tripleta simple, el usuario completa:
+Para construir una tripla simple, el usuario completa:
 \begin{itemize}
-    \item \textbf{Sujeto}: Nombre de variable (sin el prefijo \texttt{?})
-    \item \textbf{Propiedad}: Predicado con prefijo opcional
-    \item \textbf{Alias}: Variable para el objeto
+    \item \textit{Sujeto}: Nombre de variable (sin el prefijo \texttt{?})
+    \item \textit{Propiedad}: Predicado con prefijo opcional
+    \item \textit{Alias}: Variable para el objeto
 \end{itemize}
 
 Ejemplo: \texttt{?person foaf:name ?personName}
 
 \paragraph{Entidades Tipadas:}
-Para consultar entidades de un tipo específico, se completa adicionalmente el campo \textit{Concepto}. El sistema genera automáticamente la tripleta de tipo RDF: \texttt{?person rdf:type foaf:Person}
+Para consultar entidades de un tipo específico, se completa adicionalmente el campo \textit{Concepto}. El sistema genera automáticamente la tripla de tipo RDF: \texttt{?person rdf:type foaf:Person}
 
 \paragraph{Filtros y Condiciones:}
 Los filtros se aplican mediante la combinación de:
@@ -517,10 +557,10 @@ Cuando se usa agregación, el sistema gestiona automáticamente las cláusulas \
 Finalmente, el usuario configura opciones que aplican a toda la consulta:
 
 \begin{itemize}
-    \item \textbf{DISTINCT}: Eliminar duplicados de los resultados
-    \item \textbf{LIMIT}: Número máximo de resultados (paginación)
-    \item \textbf{OFFSET}: Desplazamiento para paginación
-    \item \textbf{ORDER BY}: Ordenamiento basado en variables visibles
+    \item \textit{DISTINCT}: Eliminar duplicados de los resultados
+    \item \textit{LIMIT}: Número máximo de resultados (paginación)
+    \item \textit{OFFSET}: Desplazamiento para paginación
+    \item \textit{ORDER BY}: Ordenamiento basado en variables visibles
 \end{itemize}
 
 \subsection{Ejemplos de Uso}
@@ -529,7 +569,7 @@ Finalmente, el usuario configura opciones que aplican a toda la consulta:
 \subsubsection{Ejemplo 1: Consulta Básica de Personas}
 \label{subsubsec:example-basic}
 
-\textbf{Configuración:}
+\textit{Configuración:}
 \begin{itemize}
     \item Prefijos: \texttt{foaf}, \texttt{rdf}
     \item Fila única: 
@@ -543,7 +583,7 @@ Finalmente, el usuario configura opciones que aplican a toda la consulta:
     \item Opciones: LIMIT = 10
 \end{itemize}
 
-\textbf{Consulta Generada:}
+\textit{Consulta Generada:}
 \begin{verbatim}
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -559,7 +599,7 @@ LIMIT 10
 \subsubsection{Ejemplo 2: Consulta con Filtro y Agregación}
 \label{subsubsec:example-aggregation}
 
-\textbf{Configuración:}
+\textit{Configuración:}
 \begin{itemize}
     \item Fila 1: Sujeto=\texttt{person}, Propiedad=\texttt{age}, Alias=\texttt{personAge}, 
           Función=\texttt{Group by}, Visible=Sí
@@ -569,7 +609,7 @@ LIMIT 10
           Operador=\texttt{=}, Valor="Engineering", Visible=Sí
 \end{itemize}
 
-\textbf{Consulta Generada:}
+\textit{Consulta Generada:}
 \begin{verbatim}
 SELECT ?personAge (AVG(?personAge) AS ?avgAge) ?dept
 WHERE {
@@ -584,7 +624,7 @@ GROUP BY ?personAge
 \subsubsection{Ejemplo 3: Consulta Federada con Grafo Nombrado}
 \label{subsubsec:example-federated}
 
-\textbf{Configuración:}
+\textit{Configuración:}
 \begin{itemize}
     \item Dataset: Grafo nombrado \texttt{<http://empresa.com/datos>}
     \item Servicio: \texttt{<http://dbpedia.org/sparql>}
@@ -592,7 +632,7 @@ GROUP BY ?personAge
           Alias=\texttt{name}, Patrón=\texttt{Optional}
 \end{itemize}
 
-\textbf{Consulta Generada:}
+\textit{Consulta Generada:}
 \begin{verbatim}
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
@@ -615,7 +655,7 @@ WHERE {
 \subsection{Introducción y Propósito}
 \label{subsec:triple-intro}
 
-Mientras que la sección anterior abordaba la construcción de consultas SELECT para extraer información de grafos RDF, el \emph{Triple Builder} (Constructor de triplas) se enfoca en la creación de consultas de inserción de datos. Este módulo permite construir consultas \texttt{INSERT DATA} de SPARQL, que son fundamentales para la carga y actualización de datos en repositorios RDF. 
+Mientras que la sección anterior abordaba la construcción de consultas SELECT para extraer información de grafos RDF, el \textit{Triple Builder} (Constructor de triplas) se enfoca en la creación de consultas de inserción de datos. Este módulo permite construir consultas \texttt{INSERT DATA} de SPARQL, que son fundamentales para la carga y actualización de datos en repositorios RDF. 
 
 El sistema está diseñado para usuarios que necesitan insertar nuevas triplas RDF en un grafo específico, proporcionando una interfaz intuitiva que abstrae la complejidad sintáctica de SPARQL y garantiza la validez de las triplas construidas.
 
@@ -625,10 +665,10 @@ El sistema está diseñado para usuarios que necesitan insertar nuevas triplas R
 El Constructor de triplas implementa una arquitectura de tres componentes principales:
 
 \begin{enumerate}
-    \item \textbf{Gestor de Prefijos}: Heredado del sistema anterior, permite definir espacios de nombres para abreviar URIs en las triplas.
-    \item \textbf{Constructor de triplas Individuales}: Interfaz para definir cada componente de una tripleta RDF (sujeto, predicado, objeto).
-    \item \textbf{Administrador de triplas Construidas}: Panel donde se visualizan, organizan y gestionan todas las triplas antes de generar la consulta.
-    \item \textbf{Selector de Grafo Destino}: Mecanismo para especificar el grafo RDF donde se insertarán las triplas.
+    \item \textit{Gestor de Prefijos}: Heredado del sistema anterior, permite definir espacios de nombres para abreviar URIs en las triplas.
+    \item \textit{Constructor de triplas Individuales}: Interfaz para definir cada componente de una tripla RDF (sujeto, predicado, objeto).
+    \item \textit{Administrador de triplas Construidas}: Panel donde se visualizan, organizan y gestionan todas las triplas antes de generar la consulta.
+    \item \textit{Selector de Grafo Destino}: Mecanismo para especificar el grafo RDF donde se insertarán las triplas.
 \end{enumerate}
 
 \subsection{Flujo de Trabajo del Usuario}
@@ -640,8 +680,8 @@ El Constructor de triplas implementa una arquitectura de tres componentes princi
 Al igual que en el generador de consultas SELECT, el primer paso consiste en definir los prefijos necesarios. El sistema incluye prefijos comunes (RDF, RDFS, XSD, OWL, FOAF, EX) que pueden añadirse con un clic. Para cada prefijo se define:
 
 \begin{itemize}
-    \item \textbf{Nombre}: Abreviatura (ej. \texttt{foaf})
-    \item \textbf{URI}: Identificador completo del espacio de nombres (ej. \texttt{http://xmlns.com/foaf/0.1/})
+    \item \textit{Nombre}: Abreviatura (ej. \texttt{foaf})
+    \item \textit{URI}: Identificador completo del espacio de nombres (ej. \texttt{http://xmlns.com/foaf/0.1/})
 \end{itemize}
 
 Los prefijos permiten utilizar formas abreviadas en las triplas (ej. \texttt{foaf:Person} en lugar de \texttt{<http://xmlns.com/foaf/0.1/Person>}).
@@ -649,17 +689,17 @@ Los prefijos permiten utilizar formas abreviadas en las triplas (ej. \texttt{foa
 \subsubsection{Paso 2: Construcción de triplas Individuales}
 \label{subsubsec:triple-construction}
 
-Cada tripleta RDF se construye mediante tres campos, cada uno con controles específicos:
+Cada tripla RDF se construye mediante tres campos, cada uno con controles específicos:
 
 Para cada componente (sujeto, predicado, objeto), el usuario dispone de:
 
 \begin{itemize}
-    \item \textbf{Selector de Prefijo}: Lista desplegable con los prefijos definidos
-    \item \textbf{Campo de Texto}: Para ingresar el valor local del componente
-    \item \textbf{Lista de Sugerencias}: Valores predefinidos para acelerar la entrada
+    \item \textit{Selector de Prefijo}: Lista desplegable con los prefijos definidos
+    \item \textit{Campo de Texto}: Para ingresar el valor local del componente
+    \item \textit{Lista de Sugerencias}: Valores predefinidos para acelerar la entrada
 \end{itemize}
 
-\textbf{Ejemplo de construcción:}
+\textit{Ejemplo de construcción:}
 \begin{itemize}
     \item Sujeto: Prefijo = \texttt{ex}, Valor = \texttt{JohnDoe}
     \item Predicado: Prefijo = \texttt{foaf}, Valor = \texttt{name}
@@ -675,7 +715,7 @@ A medida que se construyen triplas, estas se agregan a un panel de visualizació
 
 \begin{itemize}
     \item Todas las triplas construidas en formato legible
-    \item La estructura completa de cada tripleta (sujeto, predicado, objeto)
+    \item La estructura completa de cada tripla (sujeto, predicado, objeto)
     \item Opciones para eliminar triplas individuales
     \item Contador de triplas totales
     \item Botón para eliminar todas las triplas (reinicio completo)
@@ -689,9 +729,9 @@ Esta organización permite revisar y modificar el conjunto de triplas antes de g
 Las triplas RDF pueden insertarse en grafos específicos mediante la cláusula \texttt{GRAPH}. El sistema ofrece:
 
 \begin{itemize}
-    \item \textbf{Campo de Texto}: Para ingresar manualmente la URI del grafo
-    \item \textbf{Lista Desplegable}: Con grafos predefinidos (ej. \texttt{http://example.org/graph/people})
-    \item \textbf{Botón de Reinicio}: Para limpiar la selección actual
+    \item \textit{Campo de Texto}: Para ingresar manualmente la URI del grafo
+    \item \textit{Lista Desplegable}: Con grafos predefinidos (ej. \texttt{http://example.org/graph/people})
+    \item \textit{Botón de Reinicio}: Para limpiar la selección actual
 \end{itemize}
 
 Si no se especifica un grafo, las triplas se insertan en el grafo por defecto del endpoint SPARQL.
@@ -702,7 +742,7 @@ Si no se especifica un grafo, las triplas se insertan en el grafo por defecto de
 Al hacer clic en "Generate INSERT DATA Query", el sistema:
 
 \begin{enumerate}
-    \item Valida que exista al menos una tripleta construida
+    \item Valida que exista al menos una tripla construida
     \item Genera las declaraciones \texttt{PREFIX} basadas en los prefijos definidos
     \item Construye la cláusula \texttt{INSERT DATA} con la estructura adecuada
     \item Incluye la cláusula \texttt{GRAPH} si se ha especificado un grafo destino
@@ -717,16 +757,16 @@ Al hacer clic en "Generate INSERT DATA Query", el sistema:
 \subsubsection{Ejemplo 1: Inserción de Datos de Persona}
 \label{subsubsec:example-person}
 
-\textbf{Configuración:}
+\textit{Configuración:}
 \begin{itemize}
     \item Prefijos: \texttt{foaf}, \texttt{ex}
-    \item Tripleta 1:
+    \item Tripla 1:
     \begin{itemize}
         \item Sujeto: \texttt{ex:JohnDoe}
         \item Predicado: \texttt{foaf:name}
         \item Objeto: \texttt{"John Doe"}
     \end{itemize}
-    \item Tripleta 2:
+    \item Tripla 2:
     \begin{itemize}
         \item Sujeto: \texttt{ex:JohnDoe}
         \item Predicado: \texttt{foaf:age}
@@ -735,7 +775,7 @@ Al hacer clic en "Generate INSERT DATA Query", el sistema:
     \item Grafo: \texttt{http://example.org/graph/people}
 \end{itemize}
 
-\textbf{Consulta Generada:}
+\textit{Consulta Generada:}
 \begin{verbatim}
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 PREFIX ex: <http://example.org/>
@@ -752,16 +792,16 @@ INSERT DATA {
 \subsubsection{Ejemplo 2: Inserción de Relaciones Organizacionales}
 \label{subsubsec:example-organization}
 
-\textbf{Configuración:}
+\textit{Configuración:}
 \begin{itemize}
     \item Prefijos: \texttt{ex}, \texttt{org}
-    \item Tripleta 1:
+    \item Tripla 1:
     \begin{itemize}
         \item Sujeto: \texttt{ex:JohnDoe}
         \item Predicado: \texttt{ex:worksFor}
         \item Objeto: \texttt{ex:CompanyXYZ}
     \end{itemize}
-    \item Tripleta 2:
+    \item Tripla 2:
     \begin{itemize}
         \item Sujeto: \texttt{ex:CompanyXYZ}
         \item Predicado: \texttt{ex:hasName}
@@ -770,7 +810,7 @@ INSERT DATA {
     \item Grafo: (ninguno - grafo por defecto)
 \end{itemize}
 
-\textbf{Consulta Generada:}
+\textit{Consulta Generada:}
 \begin{verbatim}
 PREFIX ex: <http://example.org/>
 PREFIX org: <http://example.org/ontology/org#>
@@ -784,7 +824,7 @@ INSERT DATA {
 \subsubsection{Ejemplo 3: Inserción Masiva con Tipado}
 \label{subsubsec:example-bulk}
 
-\textbf{Configuración:}
+\textit{Configuración:}
 \begin{itemize}
     \item Prefijos: \texttt{rdf}, \texttt{foaf}, \texttt{ex}
     \item Múltiples triplas para diferentes personas
@@ -792,7 +832,7 @@ INSERT DATA {
     \item Grafo: \texttt{http://example.org/graph/employees}
 \end{itemize}
 
-\textbf{Consulta Generada (fragmento):}
+\textit{Consulta Generada (fragmento):}
 \begin{verbatim}
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -836,7 +876,7 @@ El sistema detecta automáticamente el tipo de dato de los objetos literales:
 \begin{itemize}
     \item Verificación de que los tres componentes estén completos
     \item Validación de formato de URIs en los prefijos
-    \item Comprobación de que al menos una tripleta esté presente para generar la consulta
+    \item Comprobación de que al menos una tripla esté presente para generar la consulta
 \end{itemize}
 
 \subsection{Integración con el Sistema General}
@@ -845,10 +885,10 @@ El sistema detecta automáticamente el tipo de dato de los objetos literales:
 El Constructor de triplas se integra con el sistema general de gestión de consultas SPARQL de las siguientes maneras:
 
 \begin{enumerate}
-    \item \textbf{Compartición de Prefijos}: Los prefijos definidos en este módulo pueden ser utilizados por otros componentes del sistema.
-    \item \textbf{Flujo Unificado}: La consulta generada se envía automáticamente al ejecutor de SPARQL.
-    \item \textbf{Consistencia de Interfaz}: Mantiene el mismo diseño visual y patrones de interacción que el generador de consultas SELECT.
-    \item \textbf{Mensajería Unificada}: Utiliza el mismo sistema de notificaciones para informar sobre el estado de las operaciones.
+    \item \textit{Compartición de Prefijos}: Los prefijos definidos en este módulo pueden ser utilizados por otros componentes del sistema.
+    \item \textit{Flujo Unificado}: La consulta generada se envía automáticamente al ejecutor de SPARQL.
+    \item \textit{Consistencia de Interfaz}: Mantiene el mismo diseño visual y patrones de interacción que el generador de consultas SELECT.
+    \item \textit{Mensajería Unificada}: Utiliza el mismo sistema de notificaciones para informar sobre el estado de las operaciones.
 \end{enumerate}
 
 \section{Visualización de Datos en KnowGraph}
@@ -916,22 +956,22 @@ El uso de modelos de inferencia resulta fundamental para enriquecer los datos, d
 
 
 
-\section{Documentacion para desarrolladores}
+\section{Documentación para desarrolladores}
 
-Este documento constituye la documentación técnica completa de un sistema dockerizado para la gestión, consulta y visualización de grafos de conocimiento. El sistema se compone de un \textbf{frontend} construido con Vite, React y TypeScript; un \textbf{backend en Java} que utiliza Apache Jena para el razonamiento sobre grafos y Spring Boot para la exposición de servicios REST; y un \textbf{backend en Python} basado en Flask/Gunicorn, responsable de la importación de datos y de las transformaciones para su visualización. Esta documentación detalla la arquitectura, los componentes principales, los flujos de datos y las interacciones entre módulos.
+Este documento constituye la documentación técnica completa de un sistema dockerizado para la gestión, consulta y visualización de grafos de conocimiento. El sistema se compone de un \textit{frontend} construido con Vite, React y TypeScript; un \textit{backend en Java} que utiliza Apache Jena para el razonamiento sobre grafos y Spring Boot para la exposición de servicios REST; y un \textit{backend en Python} basado en Flask/Gunicorn, responsable de la importación de datos y de las transformaciones para su visualización. Esta documentación detalla la arquitectura, los componentes principales, los flujos de datos y las interacciones entre módulos.
 
 \section{Introducción y Arquitectura General}
 La aplicación es un sistema integral diseñado para trabajar con grafos de conocimiento (Knowledge Graphs). Sigue una arquitectura de microservicios contenerizados (Docker) que separa las responsabilidades en tres capas principales:
 
 \begin{itemize}
-    \item \textbf{Frontend}: Aplicación web interactiva construida con el framework Vite, utilizando React y TypeScript. Sirve una interfaz de usuario estática mediante \texttt{http-server}.
-    \item \textbf{Backend Java}: Servicio principal que maneja toda la lógica de ontologías y consultas. Utiliza \textbf{Apache Jena} para las operaciones sobre el grafo RDF y el razonamiento, y \textbf{Spring Boot} para estructurar la aplicación y exponer una API REST.
-    \item \textbf{Backend Python}: Conjunto de dos microservicios que amplían la funcionalidad:
+    \item \textit{Frontend}: Aplicación web interactiva construida con el framework Vite, utilizando React y TypeScript. Sirve una interfaz de usuario estática mediante \texttt{http-server}.
+    \item \textit{Backend Java}: Servicio principal que maneja toda la lógica de ontologías y consultas. Utiliza \textit{Apache Jena} para las operaciones sobre el grafo RDF y el razonamiento, y \textit{Spring Boot} para estructurar la aplicación y exponer una API REST.
+    \item \textit{Backend Python}: Conjunto de dos microservicios que amplían la funcionalidad:
     \begin{itemize}
-        \item \textbf{Importer}: Gestiona la importación de datos desde formatos estructurados (CSV, JSON, Excel, XML) y su conversión a RDF.
-        \item \textbf{Visualizer}: Realiza transformaciones de datos, específicamente reducción dimensional (PCA, t-SNE, UMAP), para habilitar visualizaciones avanzadas.
+        \item \textit{Importer}: Gestiona la importación de datos desde formatos estructurados (CSV, JSON, Excel, XML) y su conversión a RDF.
+        \item \textit{Visualizer}: Realiza transformaciones de datos, específicamente reducción dimensional (PCA, t-SNE, UMAP), para habilitar visualizaciones avanzadas.
     \end{itemize}
-    Ambos servicios están implementados con \textbf{Flask} y desplegados con \textbf{Gunicorn}.
+    Ambos servicios están implementados con \textit{Flask} y desplegados con \textit{Gunicorn}.
 \end{itemize}
 
 La comunicación entre el frontend y los backends se realiza exclusivamente a través de peticiones HTTP/REST.
@@ -954,9 +994,9 @@ Este patrón centraliza la lógica de ejecución:
 SparqlQueryExecutorFactory.getExecutor(Query query)
 \end{lstlisting}
 \begin{itemize}
-    \item \textbf{SparqlQueryExecutorFactory}: Analiza el tipo de consulta SPARQL y devuelve la instancia adecuada de un ejecutor concreto.
-    \item \textbf{SparqlQueryExecutor}: Interfaz que define el contrato común (\texttt{execute()}).
-    \item \textbf{Ejecutores Concretos}:
+    \item \textit{SparqlQueryExecutorFactory}: Analiza el tipo de consulta SPARQL y devuelve la instancia adecuada de un ejecutor concreto.
+    \item \textit{SparqlQueryExecutor}: Interfaz que define el contrato común (\texttt{execute()}).
+    \item \textit{Ejecutores Concretos}:
     \begin{itemize}
         \item \texttt{SelectQueryExecutor}: Para consultas SELECT (resultados tabulares).
         \item \texttt{ConstructQueryExecutor} y \texttt{DescribeQueryExecutor}: Para consultas que generan un nuevo modelo RDF.
@@ -968,16 +1008,16 @@ El flujo de una consulta es: Consulta SPARQL $\rightarrow$ \texttt{SparqlQueryEx
 \subsubsection{OntoManipulator e InferenceManipulator}
 \begin{description}
     \item[OntoManipulator:] Se encarga de crear y gestionar modelos ontológicos (OWL2, RDFS) con capacidades de inferencia integrada. Proporciona acceso a diferentes vistas del modelo: el modelo base, el modelo inferencial y el modelo ontológico completo. Soporta varios perfiles OWL2 (DL, Full, EL, QL, RL) y RDFS.
-    \item[InferenceManipulator:] Gestiona la creación de modelos de inferencia sobre datos RDF existentes. Permite usar \textit{reasoners} predefinidos (RDFS, OWL) o reglas personalizadas escritas en sintaxis Jena. Ofrece funcionalidades avanzadas como validación de consistencia, listado de tripletas inferidas y explicación de derivaciones (\texttt{explainDerivation}).
+    \item[InferenceManipulator:] Gestiona la creación de modelos de inferencia sobre datos RDF existentes. Permite usar \textit{reasoners} predefinidos (RDFS, OWL) o reglas personalizadas escritas en sintaxis Jena. Ofrece funcionalidades avanzadas como validación de consistencia, listado de triplas inferidas y explicación de derivaciones (\texttt{explainDerivation}).
 \end{description}
 
 \subsubsection{SparqlService}
 Es el servicio central (anotado con \texttt{@Service}) que orquesta las operaciones principales:
 \begin{itemize}
-    \item \textbf{Ejecución de consultas:} Expone el método \texttt{runSparqlQuery(String)} que sigue el flujo descrito anteriormente.
-    \item \textbf{Carga de datos:} Métodos para cargar o añadir datos RDF al dataset central desde archivos, URLs o streams, soportando múltiples formatos (RDF/XML, Turtle, JSON-LD, etc.).
-    \item \textbf{Exportación:} Permite exportar el grafo completo a diversos formatos de serialización RDF.
-    \item \textbf{Gestión del Dataset:} Mantiene el dataset Jena que contiene todos los grafos cargados.
+    \item \textit{Ejecución de consultas}: Expone el método \texttt{runSparqlQuery(String)} que sigue el flujo descrito anteriormente.
+    \item \textit{Carga de datos}: Métodos para cargar o añadir datos RDF al dataset central desde archivos, URLs o streams, soportando múltiples formatos (RDF/XML, Turtle, JSON-LD, etc.).
+    \item \textit{Exportación}: Permite exportar el grafo completo a diversos formatos de serialización RDF.
+    \item \textit{Gestión del Dataset}: Mantiene el dataset Jena que contiene todos los grafos cargados.
 \end{itemize}
 
 \subsection{Spring Boot: API REST y Configuración}
@@ -997,7 +1037,7 @@ Clase principal que arranca la aplicación. Implementa \texttt{CommandLineRunner
         \item Endpoints para cargar ejemplos predefinidos.
     \end{itemize}
     \item[OntModelController:] Expone \texttt{GET /ontmodel/createModel} para crear modelos ontológicos de diversos tipos, que luego se cargan en el \texttt{SparqlService}.
-    \item[InfModelController:] Expone endpoints en \texttt{/infmodel/*} para operaciones de inferencia: crear modelos con \textit{reasoners} predefinidos o reglas genéricas, validar consistencia, listar tripletas inferidas y explicar derivaciones.
+    \item[InfModelController:] Expone endpoints en \texttt{/infmodel/*} para operaciones de inferencia: crear modelos con \textit{reasoners} predefinidos o reglas genéricas, validar consistencia, listar triplas inferidas y explicar derivaciones.
 \end{description}
 
 \subsection{Maven}
@@ -1032,9 +1072,9 @@ GET    /rdf/download    # Descargar grafo RDF completo
 \end{verbatim}
 
 \subsubsection{Flujo de Trabajo}
-1. \textbf{Carga:} Los archivos se suben y almacenan en memoria como bytes.
-2. \textbf{Conversión:} Se detecta el tipo por extensión y se parsea con la librería adecuada (Pandas). Para CSV, se detecta automáticamente el delimitador.
-3. \textbf{Exportación RDF:} Cada fila del DataFrame se convierte en un sujeto con URI única (\texttt{http://example.org/filename\_index}). Cada columna no vacía se convierte en un predicado, y su valor en un objeto literal. Se genera un documento Turtle unificado.
+1. \textit{Carga}: Los archivos se suben y almacenan en memoria como bytes.
+2. \textit{Conversión}: Se detecta el tipo por extensión y se parsea con la librería adecuada (Pandas). Para CSV, se detecta automáticamente el delimitador.
+3. \textit{Exportación RDF}: Cada fila del DataFrame se convierte en un sujeto con URI única (\texttt{http://example.org/filename\_index}). Cada columna no vacía se convierte en un predicado, y su valor en un objeto literal. Se genera un documento Turtle unificado.
 
 \subsection{Visualizer (\texttt{visualizer.py})}
 Servicio Flask (puerto 5000) para reducción dimensional y generación de \textit{embeddings} visualizables.
@@ -1048,19 +1088,19 @@ Servicio Flask (puerto 5000) para reducción dimensional y generación de \texti
 
 \subsubsection{Algoritmos y Preprocesamiento}
 \begin{itemize}
-    \item \textbf{Preprocesamiento:} Detección automática de columna de etiqueta. Las columnas se clasifican en:
+    \item \textit{Preprocesamiento}: Detección automática de columna de etiqueta. Las columnas se clasifican en:
     \begin{itemize}
         \item Numéricas: Estandarizadas con \texttt{StandardScaler}.
         \item Categóricas (baja cardinalidad): Codificación one-hot.
         \item Texto: Vectorización TF-IDF.
     \end{itemize}
-    \item \textbf{Algoritmos:} Configuraciones por defecto para PCA, t-SNE (perplejidad: 30) y UMAP (vecinos: 15, distancia mínima: 0.1).
+    \item \textit{Algoritmos}: Configuraciones por defecto para PCA, t-SNE (perplejidad: 30) y UMAP (vecinos: 15, distancia mínima: 0.1).
 \end{itemize}
 
 \subsubsection{Flujo de la API}
 \begin{enumerate}
-    \item \textbf{POST /upload:} El cliente envía un CSV y parámetros. El servidor preprocesa los datos, genera un \texttt{job\_id} y los almacena, pero \textbf{no calcula embeddings aún}.
-    \item \textbf{GET /embeddings/<job\_id>/<método>/<dims>:} Primera solicitud para un método y dimensión específicos (e.g., \texttt{tsne\_3d}) dispara el cálculo, que se cachea. Solicitudes posteriores devuelven el resultado cacheado.
+    \item \textbf{POST /upload}: El cliente envía un CSV y parámetros. El servidor preprocesa los datos, genera un \texttt{job\_id} y los almacena, pero \textit{no calcula embeddings aún}.
+    \item \textbf{GET /embeddings/<job\_id>/<método>/<dims>}: Primera solicitud para un método y dimensión específicos (e.g., \texttt{tsne\_3d}) dispara el cálculo, que se cachea. Solicitudes posteriores devuelven el resultado cacheado.
 \end{enumerate}
 
 \subsubsection{Estructura de Almacenamiento}
@@ -1076,7 +1116,7 @@ El componente raíz es \texttt{SparqlQueryInterface.tsx}, que gestiona el enruta
 \begin{itemize}
     \item \texttt{/executor}: Ejecutor de consultas SPARQL.
     \item \texttt{/wizard}: Asistente visual para construir consultas.
-    \item \texttt{/builder}: Constructor de tripletas RDF.
+    \item \texttt{/builder}: Constructor de triplas RDF.
     \item \texttt{/graph2d}, \texttt{/graph3d}: Visualización de grafos.
     \item \texttt{/visuals2d}, \texttt{/visuals3d}: Visualización de reducción dimensional.
     \item \texttt{/importer}: Gestor de importación de datos.
@@ -1107,7 +1147,7 @@ El componente raíz es \texttt{SparqlQueryInterface.tsx}, que gestiona el enruta
 \subsubsection{Construcción de Consultas}
 \begin{description}
     \item[sparql-query-wizard.tsx:] Asistente visual tipo tabla que permite construir consultas SPARQL complejas (SELECT, filtros, agregaciones, patrones OPTIONAL/UNION) sin escribir código.
-    \item[triple-builder.tsx:] Constructor visual de tripletas RDF para generar sentencias \texttt{INSERT DATA}. Maneja prefijos y tipado automático de literales.
+    \item[triple-builder.tsx:] Constructor visual de triplas RDF para generar sentencias \texttt{INSERT DATA}. Maneja prefijos y tipado automático de literales.
 \end{description}
 
 \subsection{Componentes de Interfaz y Navegación}
@@ -1124,22 +1164,22 @@ El componente raíz es \texttt{SparqlQueryInterface.tsx}, que gestiona el enruta
 \section{Integración y Flujos de Trabajo}
 \subsection{Comunicación entre Componentes}
 \begin{itemize}
-    \item \textbf{Frontend $\leftrightarrow$ Backend Java (Puerto 8080):} Para todas las operaciones SPARQL, gestión del grafo RDF, y creación de modelos de razonamiento.
-    \item \textbf{Frontend $\leftrightarrow$ Backend Python - Importer (Puerto 5001):} Para subir archivos estructurados y obtener su representación RDF.
-    \item \textbf{Frontend $\leftrightarrow$ Backend Python - Visualizer (Puerto 5000):} Para enviar datos y obtener \textit{embeddings} 2D/3D.
+    \item \textit{Frontend $\leftrightarrow$ Backend Java (Puerto 8080)}: Para todas las operaciones SPARQL, gestión del grafo RDF, y creación de modelos de razonamiento.
+    \item \textit{Frontend $\leftrightarrow$ Backend Python - Importer (Puerto 5001)}: Para subir archivos estructurados y obtener su representación RDF.
+    \item \textit{Frontend $\leftrightarrow$ Backend Python - Visualizer (Puerto 5000)}: Para enviar datos y obtener \textit{embeddings} 2D/3D.
 \end{itemize}
 Los estados globales en React (consulta, resultados) son compartidos entre los componentes relacionados para una experiencia coherente.
 
 \subsection{Flujo de Trabajo Típico}
 \begin{enumerate}
-    \item \textbf{Importar Datos:} El usuario sube un archivo CSV mediante el \texttt{import-manager} (Python Importer) o carga un grafo RDF existente mediante el \texttt{data-button} (Java).
-    \item \textbf{Consultar/Explorar:} Construye una consulta en el \texttt{query-wizard} o \texttt{executor} y la ejecuta. Los resultados tabulares quedan disponibles.
-    \item \textbf{Visualizar:} Desde el \texttt{visualization-button}, elige:
+    \item \textit{Importar Datos}: El usuario sube un archivo CSV mediante el \texttt{import-manager} (Python Importer) o carga un grafo RDF existente mediante el \texttt{data-button} (Java).
+    \item \textit{Consultar/Explorar}: Construye una consulta en el \texttt{query-wizard} o \texttt{executor} y la ejecuta. Los resultados tabulares quedan disponibles.
+    \item \textit{Visualizar}: Desde el \texttt{visualization-button}, elige:
     \begin{itemize}
-        \item \textbf{Gráfico del Grafo:} Selecciona variables para nodos/enlaces y visualiza en 2D/3D.
-        \item \textbf{Reducción Dimensional:} Selecciona columnas y algoritmo. Los datos se envían al Visualizer de Python y los resultados se muestran en las vistas 2D/3D.
+        \item \textit{Gráfico del Grafo}: Selecciona variables para nodos/enlaces y visualiza en 2D/3D.
+        \item \textit{Reducción Dimensional}: Selecciona columnas y algoritmo. Los datos se envían al Visualizer de Python y los resultados se muestran en las vistas 2D/3D.
     \end{itemize}
-    \item \textbf{Exportar/Guardar:} Usa el \texttt{data-button} para exportar el grafo de conocimiento o los resultados en diversos formatos.
+    \item \textit{Exportar/Guardar}: Usa el \texttt{data-button} para exportar el grafo de conocimiento o los resultados en diversos formatos.
 \end{enumerate}
 
 
@@ -1152,10 +1192,10 @@ El proyecto utiliza Docker y Docker Compose para empaquetar, distribuir y orques
 El sistema se estructura en cuatro servicios independientes definidos en el archivo \texttt{docker-compose.yaml}:
 
 \begin{itemize}
-    \item \textbf{importer-service}: Contiene el microservicio Python de importación de datos (puerto 5001).
-    \item \textbf{visualizer-service}: Contiene el microservicio Python de reducción dimensional (puerto 5000).
-    \item \textbf{sparql-backend-service}: Contiene la aplicación Java Spring Boot con Apache Jena (puerto 8080).
-    \item \textbf{frontend-service}: Contiene la aplicación React/Vite servida mediante \texttt{http-server} (puerto 80).
+    \item \textit{importer-service}: Contiene el microservicio Python de importación de datos (puerto 5001).
+    \item \textit{visualizer-service}: Contiene el microservicio Python de reducción dimensional (puerto 5000).
+    \item \textit{sparql-backend-service}: Contiene la aplicación Java Spring Boot con Apache Jena (puerto 8080).
+    \item \textit{frontend-service}: Contiene la aplicación React/Vite servida mediante \texttt{http-server} (puerto 80).
 \end{itemize}
 
 \subsection{Configuración de Redes}
@@ -1202,22 +1242,22 @@ Todos los servicios están configurados con \texttt{restart: unless-stopped}, lo
 Cada servicio tiene su propio \texttt{Dockerfile} en su directorio correspondiente, permitiendo construcciones independientes. El flujo típico de despliegue es:
 
 \begin{enumerate}
-    \item \textbf{Construcción de imágenes}:
+    \item \textit{Construcción de imágenes}:
     \begin{lstlisting}[language=bash, basicstyle=\small\ttfamily]
     docker-compose build
     \end{lstlisting}
 
-    \item \textbf{Inicio de servicios}:
+    \item \textit{Inicio de servicios}:
     \begin{lstlisting}[language=bash, basicstyle=\small\ttfamily]
     docker-compose up -d
     \end{lstlisting}
 
-    \item \textbf{Monitoreo}:
+    \item \textit{Monitoreo}:
     \begin{lstlisting}[language=bash, basicstyle=\small\ttfamily]
     docker-compose logs -f
     \end{lstlisting}
 
-    \item \textbf{Detención}:
+    \item \textit{Detención}:
     \begin{lstlisting}[language=bash, basicstyle=\small\ttfamily]
     docker-compose down
     \end{lstlisting}
@@ -1227,26 +1267,26 @@ Cada servicio tiene su propio \texttt{Dockerfile} en su directorio correspondien
 La arquitectura basada en contenedores ofrece beneficios específicos para este sistema:
 
 \begin{itemize}
-    \item \textbf{Aislamiento de Dependencias}: Cada servicio tiene sus propias dependencias (Java JDK, Python 3.9, Node.js) sin conflictos.
+    \item \textit{Aislamiento de Dependencias}: Cada servicio tiene sus propias dependencias (Java JDK, Python 3.9, Node.js) sin conflictos.
 
-    \item \textbf{Escalabilidad Independiente}: Los servicios pueden escalarse por separado según la carga (ej: múltiples instancias del visualizer).
+    \item \textit{Escalabilidad Independiente}: Los servicios pueden escalarse por separado según la carga (ej: múltiples instancias del visualizer).
 
-    \item \textbf{Portabilidad}: El sistema completo puede ejecutarse en cualquier host con Docker, sin necesidad de instalar manualmente Java, Python o Node.js.
+    \item \textit{Portabilidad}: El sistema completo puede ejecutarse en cualquier host con Docker, sin necesidad de instalar manualmente Java, Python o Node.js.
 
-    \item \textbf{Versionado Consistente}: Las versiones exactas de cada dependencia se fijan en los Dockerfiles, garantizando reproducibilidad.
+    \item \textit{Versionado Consistente}: Las versiones exactas de cada dependencia se fijan en los Dockerfiles, garantizando reproducibilidad.
 
-    \item \textbf{Integración con CI/CD}: La contenerización facilita la implementación de pipelines de integración y despliegue continuo.
+    \item \textit{Integración con CI/CD}: La contenerización facilita la implementación de pipelines de integración y despliegue continuo.
 \end{itemize}
 
 \subsection{Consideraciones de Configuración}
 \begin{itemize}
-    \item \textbf{Persistencia de Datos}: Los contenedores son efímeros por defecto. Para producción, se deberían añadir volúmenes Docker para datos persistentes.
+    \item \textit{Persistencia de Datos}: Los contenedores son efímeros por defecto. Para producción, se deberían añadir volúmenes Docker para datos persistentes.
 
-    \item \textbf{Seguridad}: Los contenedores se ejecutan con usuarios no privilegiados cuando es posible, y solo los puertos necesarios están expuestos.
+    \item \textit{Seguridad}: Los contenedores se ejecutan con usuarios no privilegiados cuando es posible, y solo los puertos necesarios están expuestos.
 
-    \item \textbf{Rendimiento}: La red bridge ofrece buen rendimiento para comunicación inter-servicios, con latencia mínima.
+    \item \textit{Rendimiento}: La red bridge ofrece buen rendimiento para comunicación inter-servicios, con latencia mínima.
 
-    \item \textbf{Recursos}: Es posible limitar CPU y memoria por contenedor mediante configuraciones adicionales en el docker-compose.
+    \item \textit{Recursos}: Es posible limitar CPU y memoria por contenedor mediante configuraciones adicionales en el docker-compose.
 \end{itemize}
 
 \subsection{Ejemplo de Comunicación entre Contenedores}
@@ -1281,12 +1321,12 @@ RUN npm install -g http-server
 EXPOSE 80
 CMD ["http-server", "dist", "-p", "80"]
 \end{lstlisting}
-\textbf{Características clave:}
+\textit{Características clave:}
 \begin{itemize}
-\item \textbf{Tamaño reducido:} Utiliza la variante \texttt{alpine} de Node.js para minimizar la imagen final.
-\item \textbf{Construcción separada:} Instala las dependencias de producción, luego instala globalmente TypeScript y Vite necesarios para la construcción (\texttt{build}), y finalmente compila la aplicación React.
-\item \textbf{Servidor estático:} Utiliza \texttt{http-server} para servir los archivos estáticos generados en la carpeta \texttt{dist} en el puerto 80.
-\item \textbf{Optimización:} La instalación de dependencias se realiza antes de copiar el código fuente para aprovechar la caché de capas de Docker.
+\item \textit{Tamaño reducido}: Utiliza la variante \texttt{alpine} de Node.js para minimizar la imagen final.
+\item \textit{Construcción separada}: Instala las dependencias de producción, luego instala globalmente TypeScript y Vite necesarios para la construcción (\texttt{build}), y finalmente compila la aplicación React.
+\item \textit{Servidor estático}: Utiliza \texttt{http-server} para servir los archivos estáticos generados en la carpeta \texttt{dist} en el puerto 80.
+\item \textit{Optimización}: La instalación de dependencias se realiza antes de copiar el código fuente para aprovechar la caché de capas de Docker.
 \end{itemize}
 
 \subsubsection{Backend Java (Spring Boot con Apache Jena)}
@@ -1308,12 +1348,12 @@ COPY --from=build /build/target/backend-1.0.0.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
 \end{lstlisting}
-\textbf{Características clave:}
+\textit{Características clave:}
 \begin{itemize}
-\item \textbf{Construcción multi-etapa:} La primera etapa (\texttt{build}) usa Maven para compilar el proyecto y generar el archivo JAR. La segunda etapa (\texttt{runtime}) utiliza solo el JDK para ejecutar la aplicación.
-\item \textbf{Optimización de dependencias:} El comando \texttt{mvn dependency:go-offline} descarga y cachea las dependencias, acelerando construcciones posteriores.
-\item \textbf{Imagen de ejecución ligera:} La etapa de runtime solo incluye el JAR y el JDK, sin las herramientas de construcción (Maven).
-\item \textbf{Java 21:} Utiliza la distribución Eclipse Temurin de Java 21, asegurando compatibilidad con las últimas características del lenguaje y rendimiento.
+\item \textit{Construcción multi-etapa}: La primera etapa (\texttt{build}) usa Maven para compilar el proyecto y generar el archivo JAR. La segunda etapa (\texttt{runtime}) utiliza solo el JDK para ejecutar la aplicación.
+\item \textit{Optimización de dependencias}: El comando \texttt{mvn dependency:go-offline} descarga y cachea las dependencias, acelerando construcciones posteriores.
+\item \textit{Imagen de ejecución ligera}: La etapa de runtime solo incluye el JAR y el JDK, sin las herramientas de construcción (Maven).
+\item \textit{Java 21}: Utiliza la distribución Eclipse Temurin de Java 21, asegurando compatibilidad con las últimas características del lenguaje y rendimiento.
 \end{itemize}
 
 \subsubsection{Microservicios Python (Visualizer e Importer)}
@@ -1338,37 +1378,37 @@ CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "visualizer:app",
 "--workers", "2", "--threads", "4", "--log-level", "info"]
 \end{lstlisting}
-\textbf{Características clave:}
+\textit{Características clave:}
 \begin{itemize}
-\item \textbf{Imagen base ligera:} Se utiliza la variante \texttt{slim} de Python 3.13.5.
-\item \textbf{Dependencias del sistema:} Se instalan compiladores y bibliotecas matemáticas (\texttt{libopenblas-dev}) necesarias para el rendimiento óptimo de NumPy, SciPy y scikit-learn utilizados en los algoritmos de reducción dimensional.
-\item \textbf{Gestión de dependencias Python:} Se copia el archivo \texttt{requirements.txt} y se instalan las dependencias con \texttt{pip}, utilizando la bandera \texttt{--no-cache-dir} para reducir el tamaño de la imagen.
-\item \textbf{Seguridad:}
+\item \textit{Imagen base ligera}: Se utiliza la variante \texttt{slim} de Python 3.13.5.
+\item \textit{Dependencias del sistema}: Se instalan compiladores y bibliotecas matemáticas (\texttt{libopenblas-dev}) necesarias para el rendimiento óptimo de NumPy, SciPy y scikit-learn utilizados en los algoritmos de reducción dimensional.
+\item \textit{Gestión de dependencias Python}: Se copia el archivo \texttt{requirements.txt} y se instalan las dependencias con \texttt{pip}, utilizando la bandera \texttt{--no-cache-dir} para reducir el tamaño de la imagen.
+\item \textit{Seguridad}:
 \begin{itemize}
 \item Se establecen variables de entorno para desactivar el buffering de salida (\texttt{PYTHONUNBUFFERED}) y la escritura de bytecode (\texttt{PYTHONDONTWRITEBYTECODE}).
 \item Se crea y utiliza un usuario no privilegiado (\texttt{appuser}) para la ejecución de la aplicación, minimizando riesgos en caso de vulnerabilidades.
 \end{itemize}
-\item \textbf{Healthcheck integrado:} Cada contenedor incluye una verificación de salud a nivel de Docker que prueba la disponibilidad del endpoint raíz del servicio.
-\item \textbf{Servidor de producción:} Se utiliza \texttt{gunicorn} como servidor WSGI con configuración predefinida (2 workers, 4 threads) para manejar múltiples peticiones concurrentes de manera eficiente.
+\item \textit{Healthcheck integrado}: Cada contenedor incluye una verificación de salud a nivel de Docker que prueba la disponibilidad del endpoint raíz del servicio.
+\item \textit{Servidor de producción}: Se utiliza \texttt{gunicorn} como servidor WSGI con configuración predefinida (2 workers, 4 threads) para manejar múltiples peticiones concurrentes de manera eficiente.
 \end{itemize}
 
 \subsection{Integración de los Dockerfiles en el Flujo de Construcción}
 El archivo \texttt{docker-compose.yaml} referencia estos \texttt{Dockerfile} para construir (o descargar) las imágenes necesarias. Durante el desarrollo, se puede utilizar \texttt{docker-compose up --build} para reconstruir y relanzar todos los servicios. Esta configuración asegura que:
 
 \begin{itemize}
-\item \textbf{Dependencias Aisladas:} Cada servicio tiene su propio entorno con versiones específicas de Node.js, Java o Python, evitando conflictos.
-\item \textbf{Construcciones Reproducibles:} Los \texttt{Dockerfile} garantizan que cada construcción produzca una imagen idéntica, independientemente del entorno del desarrollador.
-\item \textbf{Despliegue Eficiente:} Las imágenes resultantes están optimizadas en tamaño (especialmente la etapa final del backend Java y el uso de variantes \texttt{alpine}/\texttt{slim}) y listas para producción.
+\item \textit{Dependencias Aisladas}: Cada servicio tiene su propio entorno con versiones específicas de Node.js, Java o Python, evitando conflictos.
+\item \textit{Construcciones Reproducibles}: Los \texttt{Dockerfile} garantizan que cada construcción produzca una imagen idéntica, independientemente del entorno del desarrollador.
+\item \textit{Despliegue Eficiente}: Las imágenes resultantes están optimizadas en tamaño (especialmente la etapa final del backend Java y el uso de variantes \texttt{alpine}/\texttt{slim}) y listas para producción.
 \end{itemize}
 
 \subsection{Consideraciones de Seguridad y Buenas Prácticas Implementadas}
 La configuración de los Dockerfiles sigue varias buenas prácticas de seguridad y rendimiento:
 
 \begin{itemize}
-\item \textbf{Usuarios no root:} Los servicios Python se ejecutan como un usuario sin privilegios (\texttt{appuser}). El frontend, al usar \texttt{http-server} en Alpine, también se ejecuta de manera no privilegiada por defecto. El backend Java hereda la configuración de usuario de la imagen base de Eclipse Temurin.
-\item \textbf{Minimización de capas:} Se combinan comandos relacionados (ej: \texttt{apt-get update && apt-get install}) y se limpian cachés innecesarias para reducir el número de capas y el tamaño de la imagen.
-\item \textbf{Variables de entorno:} Se configuran variables para optimizar el entorno de ejecución de Python (\texttt{PYTHONUNBUFFERED, PYTHONDONTWRITEBYTECODE}).
-\item \textbf{Healthchecks:} Implementados directamente en los Dockerfiles de Python y referenciados en el compose, permiten a Docker y a orquestadores supervisar el estado del servicio.
+\item \textit{Usuarios no root}: Los servicios Python se ejecutan como un usuario sin privilegios (\texttt{appuser}). El frontend, al usar \texttt{http-server} en Alpine, también se ejecuta de manera no privilegiada por defecto. El backend Java hereda la configuración de usuario de la imagen base de Eclipse Temurin.
+\item \textit{Minimización de capas}: Se combinan comandos relacionados (ej: \texttt{apt-get update && apt-get install}) y se limpian cachés innecesarias para reducir el número de capas y el tamaño de la imagen.
+\item \textit{Variables de entorno}: Se configuran variables para optimizar el entorno de ejecución de Python (\texttt{PYTHONUNBUFFERED, PYTHONDONTWRITEBYTECODE}).
+\item \textit{Healthchecks}: Implementados directamente en los Dockerfiles de Python y referenciados en el compose, permiten a Docker y a orquestadores supervisar el estado del servicio.
 \end{itemize}
 
 
