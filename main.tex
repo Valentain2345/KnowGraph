@@ -12,6 +12,8 @@
 \usepackage{graphicx}
 \usepackage[colorlinks=true, allcolors=blue]{hyperref}
 
+
+
 \title{Informe de Proyecto Final:
 Ingeniería en Sistemas de Información}
 \author{Valentino Russo}
@@ -49,10 +51,19 @@ Un grafo es una estructura matemática utilizada para modelar relaciones entre e
 
 En el ámbito de la representación del conocimiento, los grafos resultan especialmente adecuados debido a su capacidad para modelar de manera explícita las relaciones semánticas entre conceptos. Cada nodo representa  a una entidad, un concepto o un recurso, mientras que cada arista indica el tipo de relación que los conecta, permitiendo así una estructura flexible y extensible para la organización de la información.
 
+\section{Linked Data}
+
+Linked Data es un conjunto de buenas prácticas para la publicación y conexión de datos estructurados en la Web, con el objetivo de facilitar su reutilización e interoperabilidad. Este enfoque se basa en el uso de estándares abiertos que permiten que los datos sean comprensibles tanto para humanos como para máquinas, promoviendo una Web de datos interconectados en lugar de documentos aislados.
+
+Los principios fundamentales de Linked Data incluyen el uso de identificadores URI para nombrar recursos, el acceso a dichos recursos mediante el protocolo HTTP, la representación de la información utilizando modelos de datos estándar como RDF, y la inclusión de enlaces hacia otros recursos relacionados. Estos principios permiten integrar información proveniente de diferentes fuentes, creando un ecosistema de datos enlazados que puede ser explorado y combinado de manera automática.
+
+La adopción de Linked Data aporta beneficios como una mayor interoperabilidad entre sistemas, la mejora en la calidad y el contexto de los datos, y la posibilidad de descubrir nuevo conocimiento a partir de la conexión entre conjuntos de datos distribuidos. Por estas razones, Linked Data es un componente clave dentro de la Web Semántica y de las iniciativas modernas de gestión y publicación de datos.
+
 
 \section{Grafos de Conocimiento}
 
 Los \textit{grafos de conocimiento} son estructuras de representación del conocimiento que combinan la flexibilidad de los modelos de grafos con la semántica explícita de las relaciones y entidades, permitiendo modelar, integrar y explotar grandes volúmenes de información heterogénea. Han experimentado un crecimiento notable tanto en la investigación académica como en aplicaciones industriales, debido a su capacidad para representar datos interconectados a gran escala y facilitar operaciones de razonamiento, integración y consulta sobre estos datos.
+
 \subsection{Definición y caracterización}
 
 Aunque no existe una definición única universalmente aceptada, los grafos de conocimiento se pueden entender, en términos generales, como estructuras de datos que representan \textit{entidades} explícitas y las \textit{relaciones} entre ellas mediante nodos y aristas en un grafo semántico. Además, incorporan mecanismos formales de vocabulario (esquemas o ontologías) y, en muchos casos, capacidades de razonamiento automático para derivar conocimiento implícito a partir de datos explícitos.
@@ -103,6 +114,16 @@ Los grafos de conocimiento han sido adoptados en numerosos dominios, incluyendo:
 \item soporte para razonamiento automático y explicabilidad en sistemas de inteligencia artificial.
 \end{itemize}
 
+\section{Knowledge Graph de Google}
+
+El Knowledge Graph de Google es una base de conocimiento semántico introducida en 2012 con el objetivo de mejorar la comprensión de las consultas realizadas por los usuarios y ofrecer resultados de búsqueda más relevantes y contextuales. A diferencia de los motores de búsqueda tradicionales, centrados principalmente en la coincidencia de palabras clave, el Knowledge Graph se basa en la identificación de entidades del mundo real —como personas, lugares, organizaciones y conceptos— y en el modelado de las relaciones que existen entre ellas.
+
+Este sistema permite a Google interpretar la intención detrás de una consulta y establecer conexiones semánticas entre distintos elementos de información, integrando datos provenientes de múltiples fuentes estructuradas y no estructuradas. De este modo, el Knowledge Graph posibilita la generación de resultados enriquecidos, como paneles de información, respuestas directas y sugerencias relacionadas, que proporcionan al usuario una visión más completa y contextualizada del tema buscado.
+
+Desde el punto de vista conceptual, el Knowledge Graph adopta principios fundamentales de la Web Semántica, como el uso de identificadores únicos para representar entidades y la definición explícita de relaciones entre ellas. Sin embargo, a diferencia de las iniciativas clásicas de Linked Data, el Knowledge Graph no se presenta como un conjunto de datos abiertos ni completamente accesibles, sino como una infraestructura propietaria controlada por Google.
+
+La influencia del Knowledge Graph se extiende también al ámbito del desarrollo web y la optimización para motores de búsqueda (SEO). A través de iniciativas como \textit{schema.org}, Google incentiva a los propietarios de sitios web a describir su contenido mediante datos estructurados, facilitando así la extracción de significado y la asociación de dicho contenido con las entidades presentes en su base de conocimiento. Este enfoque ha contribuido a la adopción masiva de prácticas inspiradas en la Web Semántica, aunque bajo un modelo centralizado.
+
 
 \section{Resource Description Framework y su conexión con los grafos}
 
@@ -144,8 +165,8 @@ El modelo RDF también permite describir los datos en diferentes \textit{formato
 
 La representación de información como grafos RDF es un \textit{elemento central para la construcción de grafos de conocimiento}, ya que permite modelar de forma explícita las entidades y sus relaciones semánticas. Un \textit{grafo de conocimiento} no es más que un conjunto de recursos interconectados mediante relaciones, formalizado como un \textit{grafo RDF enriquecido con vocabularios y ontologías} que aportan semántica adicional. Esta estructura facilita no solo la \textit{recuperación eficiente de información} mediante lenguajes de consulta como SPARQL, sino también la \textit{inferencias de nuevo conocimiento}, especialmente cuando se combinan RDF con esquemas de ontologías (por ejemplo, RDFS y OWL) y mecanismos de razonamiento semántico.
 
-En este sentido, RDF actúa como una \textit{capa base de representación} que proporciona la semántica estructural necesaria para que sistemas automatizados puedan integrar, enlazar y explotar datos de manera coherente en la Web Semántica. Esta capacidad de formalizar el significado y las relaciones entre recursos convierte a RDF en un pilar fundamental para la Web de Datos, facilitando aplicaciones avanzadas como motores de búsqueda semántica, asistentes inteligentes, análisis de redes de información y sistemas de integración de datos a gran escala.
 
+En este sentido, RDF actúa como una \textit{capa base de representación} que proporciona la semántica estructural necesaria para que sistemas automatizados puedan integrar, enlazar y explotar datos de manera coherente en la Web Semántica. Esta capacidad de formalizar el significado y las relaciones entre recursos convierte a RDF en un pilar fundamental para la Web de Datos, facilitando aplicaciones avanzadas como motores de búsqueda semántica, asistentes inteligentes, análisis de redes de información y sistemas de integración de datos a gran escala.
 
 
 \section{SPARQL}
@@ -990,7 +1011,7 @@ Jena es la biblioteca principal para manipular el modelo RDF/OWL y ejecutar cons
 
 \subsubsection{Fábrica y Ejecutores de Consultas (Patrón Factory)}
 Este patrón centraliza la lógica de ejecución:
-\begin{lstlisting}[language=Java, basicstyle=\small\ttfamily, backgroundcolor=\color{gray!10}]
+\begin{lstlisting}[language=Java, basicstyle=\small\ttfamily]
 SparqlQueryExecutorFactory.getExecutor(Query query)
 \end{lstlisting}
 \begin{itemize}
@@ -1200,7 +1221,7 @@ El sistema se estructura en cuatro servicios independientes definidos en el arch
 
 \subsection{Configuración de Redes}
 Los servicios se comunican a través de una red puente personalizada llamada \texttt{sparql-network}:
-\begin{lstlisting}[language=yaml, basicstyle=\small\ttfamily]
+\begin{lstlisting}[language=java, basicstyle=\small\ttfamily]
 networks:
   sparql-network:
     driver: bridge
@@ -1214,7 +1235,7 @@ Esta configuración permite:
 
 \subsection{Configuración de Salud (Health Checks)}
 Los servicios Python (\texttt{importer} y \texttt{visualizer}) incluyen verificaciones de salud automáticas:
-\begin{lstlisting}[language=yaml, basicstyle=\small\ttfamily]
+\begin{lstlisting}[language=java, basicstyle=\small\ttfamily]
 healthcheck:
   test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/', timeout=3)"]
   interval: 30s
@@ -1292,7 +1313,7 @@ La arquitectura basada en contenedores ofrece beneficios específicos para este 
 \subsection{Ejemplo de Comunicación entre Contenedores}
 Dentro del ecosistema Docker, los servicios se comunican usando los nombres definidos:
 
-\begin{lstlisting}[language=javascript, basicstyle=\small\ttfamily]
+\begin{lstlisting}[language=java, basicstyle=\small\ttfamily]
 // Desde el frontend, llamar al backend Java
 fetch('http://sparql-backend-service:8080/sparql/runQuery', ...)
 
@@ -1309,7 +1330,7 @@ Cada servicio cuenta con un \texttt{Dockerfile} específico optimizado para sus 
 
 \subsubsection{Frontend (React/Vite)}
 El contenedor del frontend se construye a partir de una imagen ligera de Node.js Alpine y sigue un proceso de construcción en dos etapas:
-\begin{lstlisting}[language=docker, basicstyle=\small\ttfamily]
+\begin{lstlisting}[language=java, basicstyle=\small\ttfamily]
 FROM node:22-alpine
 WORKDIR /app
 COPY package*.json ./
@@ -1331,7 +1352,7 @@ CMD ["http-server", "dist", "-p", "80"]
 
 \subsubsection{Backend Java (Spring Boot con Apache Jena)}
 El backend Java utiliza una construcción multi-etapa para separar la fase de compilación de la de ejecución, reduciendo el tamaño final de la imagen:
-\begin{lstlisting}[language=docker, basicstyle=\small\ttfamily]
+\begin{lstlisting}[language=java, basicstyle=\small\ttfamily]
 ---------- Build stage ----------
 
 FROM maven:3.9.6-eclipse-temurin-21 AS build
@@ -1358,7 +1379,7 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 
 \subsubsection{Microservicios Python (Visualizer e Importer)}
 Ambos servicios Python comparten una configuración similar, optimizada para desempeño y seguridad:
-\begin{lstlisting}[language=docker, basicstyle=\small\ttfamily]
+\begin{lstlisting}[language=java, basicstyle=\small\ttfamily]
 FROM python:3.13.5-slim
 WORKDIR /app
 RUN apt-get update &&
@@ -1406,10 +1427,12 @@ La configuración de los Dockerfiles sigue varias buenas prácticas de seguridad
 
 \begin{itemize}
 \item \textit{Usuarios no root}: Los servicios Python se ejecutan como un usuario sin privilegios (\texttt{appuser}). El frontend, al usar \texttt{http-server} en Alpine, también se ejecuta de manera no privilegiada por defecto. El backend Java hereda la configuración de usuario de la imagen base de Eclipse Temurin.
-\item \textit{Minimización de capas}: Se combinan comandos relacionados (ej: \texttt{apt-get update && apt-get install}) y se limpian cachés innecesarias para reducir el número de capas y el tamaño de la imagen.
-\item \textit{Variables de entorno}: Se configuran variables para optimizar el entorno de ejecución de Python (\texttt{PYTHONUNBUFFERED, PYTHONDONTWRITEBYTECODE}).
 \item \textit{Healthchecks}: Implementados directamente en los Dockerfiles de Python y referenciados en el compose, permiten a Docker y a orquestadores supervisar el estado del servicio.
 \end{itemize}
+
+\nocite{*}  
+\bibliographystyle{unsrturl}  
+\bibliography{cites}        
 
 
 \end{document}
