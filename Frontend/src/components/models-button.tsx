@@ -20,11 +20,12 @@ interface ReasoningButtonProps {
 export function ModelsButton({ onMenuAction, open, onOpenChange }: ReasoningButtonProps) {
   const [showDialog, setShowDialog] = useState(false)
   const [rules, setRules] = useState("")
+  const sparqlUrl = import.meta.env.VITE_SPARQL_BACKEND_URL
 
   // --- Handlers ---
   const handleCreateOntModel = async (ontType: string) => {
     try {
-      const response = await fetch(`http://localhost:8080/ontmodel/createModel?type=${ontType}`, {
+      const response = await fetch(`${sparqlUrl}/ontmodel/createModel?type=${ontType}`, {
         method: "GET",
       })
       if (!response.ok) throw new Error(`Failed to create ontology model: ${response.statusText}`)
@@ -38,7 +39,7 @@ export function ModelsButton({ onMenuAction, open, onOpenChange }: ReasoningButt
 
   const handleCreateInfModel = async (infType: string) => {
     try {
-      const response = await fetch(`http://localhost:8080/infmodel/createModel?type=${infType}`, {
+      const response = await fetch(`${sparqlUrl}/infmodel/createModel?type=${infType}`, {
         method: "GET",
       })
       if (!response.ok) throw new Error(`Failed to create inference model: ${response.statusText}`)
@@ -58,7 +59,7 @@ export function ModelsButton({ onMenuAction, open, onOpenChange }: ReasoningButt
   // Submit dialog
   const handleSubmitRules = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/infmodel/createGenericModel`, {
+      const response = await fetch(`${sparqlUrl}/infmodel/createGenericModel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rules }),

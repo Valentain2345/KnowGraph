@@ -16,17 +16,19 @@ interface HelpButtonProps {
 }
 
 export function HelpButton({ onMenuAction, open, onOpenChange,setQuery }: HelpButtonProps) {
+  const sparqlUrl = import.meta.env.VITE_SPARQL_BACKEND_URL
+
   const handleLoadExample= async (exampleName:string)=>{
     let response;
     try{
       if(exampleName==="example1"){
-        response = await fetch('http://localhost:8080/sparql/loadExample1')
-        const queryEx = await fetch('http://localhost:8080/sparql/loadExampleQuery1')
+        response = await fetch(`${sparqlUrl}/sparql/loadExample1`)
+        const queryEx = await fetch(`${sparqlUrl}/sparql/loadExampleQuery1`)
         const queryT= await queryEx.text()
         setQuery(queryT)
       }else{
-        response = await fetch('http://localhost:8080/sparql/loadExample2')
-        const queryEx = await fetch('http://localhost:8080/sparql/loadExampleQuery2')
+        response = await fetch(`${sparqlUrl}/sparql/loadExample2`)
+        const queryEx = await fetch(`${sparqlUrl}/sparql/loadExampleQuery2`)
         const queryT= await queryEx.text()
         setQuery(queryT)
       }

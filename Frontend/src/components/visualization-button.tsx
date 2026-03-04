@@ -51,6 +51,7 @@ export function VisualizationButton({
   queryResponseRaw,
 }: VisualizationButtonProps) {
   const navigate = useNavigate();
+  const visualizerUrl = import.meta.env.VITE_VISUALIZER_URL
 
   // ---------- Graph building state ----------
   const [showSelector, setShowSelector] = useState(false);
@@ -67,7 +68,6 @@ export function VisualizationButton({
   const handleComplete = (config: GraphOutput) => {
     setGraphData(config);
     setShowSelector(false);
-    console.log("Graph built:", config);
 
     // *** NEW LOGIC: Check for and execute a pending action ***
     if (pendingAction === "graph2d") {
@@ -127,7 +127,7 @@ const uploadResultsToServer = async ():Promise<string> => {
     formData.append('csv', blob, 'data.csv');
 
     // Send the FormData object to the server
-    const response = await fetch('http://127.0.0.1:5000/upload', {
+    const response = await fetch(`${visualizerUrl}/upload`, {
       method: 'POST',
       body: formData,
     });
@@ -135,8 +135,7 @@ const uploadResultsToServer = async ():Promise<string> => {
     // Check if the response is successful
     if (response.ok) {
       const jsonResponse = await response.json();
-      console.log('Upload successful:', jsonResponse);
-      console.log("The jod id is "+ jsonResponse.job_id);
+
       const newJobId = jsonResponse.job_id as string;
       return newJobId;
     } else {
@@ -163,7 +162,7 @@ const uploadResultsToServerCustom = async (newCsvData: string):Promise<string> =
     formData.append('csv', blob, 'data.csv');
 
     // Send the FormData object to the server
-    const response = await fetch('http://127.0.0.1:5000/upload', {
+    const response = await fetch(`${visualizerUrl}/upload`, {
       method: 'POST',
       body: formData,
     });
@@ -171,8 +170,6 @@ const uploadResultsToServerCustom = async (newCsvData: string):Promise<string> =
     // Check if the response is successful
     if (response.ok) {
       const jsonResponse = await response.json();
-      console.log('Upload successful:', jsonResponse);
-      console.log("The job id is " + jsonResponse.job_id);
       const newJobId = jsonResponse.job_id as string;
       return newJobId;
     } else {
@@ -208,7 +205,6 @@ const arrayToCSV = (array: Record<string, string>[], selectedVariables: string[]
     method: "umap" | "tsne" | "pca",
     isUpload: boolean
   ) => {
-    console.log("The method is"+ method)
     let newJobId=jobId;
     if(!jobId || selectedVariables!==oldVariables ){
       if (isUpload) {

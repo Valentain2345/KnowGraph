@@ -107,7 +107,7 @@ export const DimReductionSelector: React.FC<DimReductionProps> = ({
               variant="ghost"
               size="sm"
               onClick={toggleSelectAll}
-              className="text-gray-600 hover:text-gray-800"
+              className="text-gray-600 hover:text-zinc-300"
             >
               {selectedVariables.length === variables.length
                 ? "Deselect All"

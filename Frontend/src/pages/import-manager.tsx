@@ -12,7 +12,7 @@ const Container = styled.div`
   margin: 0 auto;
   padding: 2.5rem 1rem;
   animation: ${fadeIn} 0.5s ease-out;
-  color: #1f2937; /* Darker gray for text to ensure contrast */
+  color: #1f2937;
 `;
 
 const Title = styled.h1`
@@ -27,12 +27,12 @@ const Title = styled.h1`
 `;
 
 const Section = styled.div`
-  background: rgba(255, 255, 255, 0.85); /* Light background */
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(16px);
   border-radius: 20px;
   padding: 2.5rem;
-  border: 1px solid rgba(200, 200, 200, 0.2); /* Soft light border */
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Light shadow */
+  border: 1px solid rgba(200, 200, 200, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
 `;
 
@@ -41,13 +41,13 @@ const SectionTitle = styled.h2`
   font-weight: 700;
   text-align: center;
   margin-bottom: 2rem;
-  color: #2d3748; /* Darker text for better readability */
+  color: #2d3748;
 `;
 
 const Subtitle = styled.h3`
   font-size: 1.25rem;
   font-weight: 600;
-  color: #4a5568; /* Soft gray text */
+  color: #4a5568;
   margin-bottom: 1rem;
 `;
 
@@ -66,8 +66,8 @@ const Card = styled.label<{ $dragOver?: boolean; $disabled?: boolean }>`
   gap: 1rem;
   padding: 2.5rem 1.5rem;
   border-radius: 16px;
-  border: 2px dashed ${({ $dragOver }) => ($dragOver ? "#60a5fa" : "#cbd5e1")}; /* Soft blue for hover */
-  background: ${({ $dragOver }) => ($dragOver ? "rgba(96, 165, 250, 0.1)" : "rgba(248, 250, 252, 0.9)")}; /* Lighter background */
+  border: 2px dashed ${({ $dragOver }) => ($dragOver ? "#60a5fa" : "#cbd5e1")};
+  background: ${({ $dragOver }) => ($dragOver ? "rgba(96, 165, 250, 0.1)" : "rgba(248, 250, 252, 0.9)")};
   cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   opacity: ${({ $disabled }) => ($disabled ? 0.5 : 1)};
@@ -76,7 +76,7 @@ const Card = styled.label<{ $dragOver?: boolean; $disabled?: boolean }>`
     border-color: #60a5fa;
     background: rgba(96, 165, 250, 0.1);
     transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(96, 165, 250, 0.15); /* Soft glow on hover */
+    box-shadow: 0 12px 24px rgba(96, 165, 250, 0.15);
   }
 
   input {
@@ -96,17 +96,17 @@ const Card = styled.label<{ $dragOver?: boolean; $disabled?: boolean }>`
 
 const Emoji = styled.div`
   font-size: 3.5rem;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1)); /* Lighter shadow */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 `;
 
 const CardTitle = styled.div`
   font-weight: 700;
   font-size: 1.1rem;
-  color: #1f2937; /* Darker text for visibility */
+  color: #1f2937;
 `;
 
 const CardNote = styled.small`
-  color: #6b7280; /* Soft gray */
+  color: #6b7280;
   font-size: 0.875rem;
 `;
 
@@ -123,7 +123,7 @@ const FileRow = styled.div`
   gap: 1rem;
   align-items: center;
   padding: 0.75rem 1rem;
-  background: rgba(245, 245, 245, 0.8); /* Light gray background */
+  background: rgba(245, 245, 245, 0.8);
   border-radius: 12px;
   border: 1px solid rgba(200, 200, 200, 0.2);
 `;
@@ -139,14 +139,14 @@ const FileName = styled.span`
 const FormatSelect = styled.select`
   padding: 0.5rem;
   border-radius: 8px;
-  border: 1px solid #cbd5e1; /* Light gray border */
-  background: #f9fafb; /* Soft light background */
-  color: #1f2937; /* Darker text */
+  border: 1px solid #cbd5e1;
+  background: #f9fafb;
+  color: #1f2937;
   font-size: 0.9rem;
 `;
 
 const RemoveButton = styled.button`
-  background: #ef4444; /* Red background */
+  background: #ef4444;
   color: white;
   border: none;
   width: 32px;
@@ -159,14 +159,15 @@ const RemoveButton = styled.button`
   justify-content: center;
 
   &:hover {
-    background: #dc2626; /* Darker red on hover */
+    background: #dc2626;
   }
 `;
+
 const SubmitButton = styled.button`
   margin-top: 2rem;
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6); /* more intense */
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
   color: white;
   font-weight: 600;
   font-size: 1.1rem;
@@ -188,11 +189,10 @@ const SubmitButton = styled.button`
   }
 `;
 
-
 const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3); /* Light dark overlay */
+  background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(8px);
   display: flex;
   justify-content: center;
@@ -201,12 +201,12 @@ const ModalOverlay = styled.div`
 `;
 
 const Modal = styled.div`
-  background: #f9fafb; /* Light background */
+  background: #f9fafb;
   padding: 2rem;
   border-radius: 16px;
   width: 90%;
   max-width: 500px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); /* Soft shadow */
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 `;
 
 const ModalTitle = styled.h3`
@@ -245,7 +245,7 @@ const GeneratorButton = styled.button`
   margin-top: 2rem;
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6); /* more intense */
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
   color: white;
   font-weight: 600;
   font-size: 1.1rem;
@@ -254,12 +254,18 @@ const GeneratorButton = styled.button`
   cursor: pointer;
   transition: all 0.2s ease;
 
-  &:hover {
+  &:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 10px 24px rgba(59, 130, 246, 0.45);
   }
-`;
 
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+`;
 
 const ModalButton = styled.button`
   padding: 0.75rem 1.5rem;
@@ -275,22 +281,23 @@ const ModalButton = styled.button`
 `;
 
 const CancelButton = styled(ModalButton)`
-  background: #d1d5db; /* Light gray background */
+  background: #d1d5db;
   color: #1f2937;
 
   &:hover:not(:disabled) {
-    background: #9ca3af; /* Slightly darker gray on hover */
+    background: #9ca3af;
   }
 `;
 
 const ConfirmButton = styled(ModalButton)`
-  background: #3b82f6; /* Blue background */
+  background: #3b82f6;
   color: white;
 
   &:hover:not(:disabled) {
-    background: #2563eb; /* Darker blue on hover */
+    background: #2563eb;
   }
 `;
+
 // Types
 interface SelectedFile {
   file?: File;
@@ -300,12 +307,12 @@ interface SelectedFile {
 }
 
 interface ImportManagerProps {
-     setMessage: React.Dispatch<
+  setMessage: React.Dispatch<
     React.SetStateAction<{ text: string; type: "info" | "success" | "error" }>
-  >
+  >;
 }
 
-export const ImportManager = ({setMessage}:ImportManagerProps) => {
+export const ImportManager = ({ setMessage }: ImportManagerProps) => {
   // Structured Data
   const [structuredFiles, setStructuredFiles] = useState<SelectedFile[]>([]);
   const [showSQLDbModal, setShowSQLDbModal] = useState(false);
@@ -313,6 +320,7 @@ export const ImportManager = ({setMessage}:ImportManagerProps) => {
   const [sqlDbUrl, setSqlDbUrl] = useState("");
   const [mongoDbUrl, setMongoDbUrl] = useState("");
   const structuredFileInputRef = useRef<HTMLInputElement>(null);
+  const importerUrl = import.meta.env.VITE_IMPORTER_URL;
 
   // Unstructured Data
   const [unstructuredFiles, setUnstructuredFiles] = useState<SelectedFile[]>([]);
@@ -321,6 +329,7 @@ export const ImportManager = ({setMessage}:ImportManagerProps) => {
 
   // Upload states
   const [uploadingStructured, setUploadingStructured] = useState(false);
+  const [structuredSubmitted, setStructuredSubmitted] = useState(false);
 
   // Auto-detect format from file extension
   const detectFormat = (file: File): string => {
@@ -331,9 +340,9 @@ export const ImportManager = ({setMessage}:ImportManagerProps) => {
       case "xlsx":
       case "xls":
         return "Excel";
-       case 'jsonl':
-      case 'ndjson':
-      case 'jl':
+      case "jsonl":
+      case "ndjson":
+      case "jl":
       case "json":
         return "JSON";
       case "xml":
@@ -350,42 +359,34 @@ export const ImportManager = ({setMessage}:ImportManagerProps) => {
         return "Unknown";
     }
   };
-const handleGenerateGraph = async () => {
-  const response = await fetch("http://localhost:5001/dataframes");
 
-  if (!response.ok) {
-    setMessage({ text: "Error generating graph", type: "error" });
-    return;
-  }
+  const handleGenerateGraph = async () => {
+    const response = await fetch(`${importerUrl}/dataframes`);
 
-  const res = await fetch("http://localhost:5001/rdf/download");
+    if (!response.ok) {
+      setMessage({ text: "Error generating graph", type: "error" });
+      return;
+    }
 
-  if (!res.ok) {
-    setMessage({ text: "An error occurred generating graph", type: "error" });
-    return;
-  }
+    const res = await fetch(`${importerUrl}/rdf/download`);
 
-  // Read file
-  const blob = await res.blob();
+    if (!res.ok) {
+      setMessage({ text: "An error occurred generating graph", type: "error" });
+      return;
+    }
 
-  // Create download link
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "generatedGraph.ttl";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
 
-  // Optional: set filename if server does not send Content-Disposition
-  a.download = "generatedGraph.ttl";
-
-  document.body.appendChild(a);
-  a.click();
-
-  // Cleanup
-  a.remove();
-  window.URL.revokeObjectURL(url);
-
-  setMessage({ text: "Graph generated correctly", type: "success" });
-};
-
+    setMessage({ text: "Graph generated correctly", type: "success" });
+  };
 
   // Handle file selection (Structured)
   const handleStructuredFileSelect = (e: React.ChangeEvent<HTMLInputElement>, format: string) => {
@@ -400,8 +401,6 @@ const handleGenerateGraph = async () => {
       e.target.value = "";
     }
   };
-
-
 
   const openFilePicker = (ref: React.RefObject<HTMLInputElement | null>) => {
     ref.current?.click();
@@ -427,7 +426,7 @@ const handleGenerateGraph = async () => {
     const files = section === "structured" ? structuredFiles : unstructuredFiles;
     if (files.length === 0) return;
 
-    const setUploading = setUploadingStructured ;
+    const setUploading = setUploadingStructured;
     setUploading(true);
 
     const formData = new FormData();
@@ -442,26 +441,28 @@ const handleGenerateGraph = async () => {
     });
 
     try {
-      const response = await fetch("http://localhost:5001/upload", {
+      const response = await fetch(`${importerUrl}/upload`, {
         method: "POST",
         body: formData,
       });
 
       if (response.ok) {
         setMessage({
-            text: `${section === "structured" ? "Structured" : "Unstructured"} data uploaded successfully!`,
-            type: "success",
-          });
+          text: `${section === "structured" ? "Structured" : "Unstructured"} data uploaded successfully!`,
+          type: "success",
+        });
+        if (section === "structured") {
+          setStructuredSubmitted(true);
+        }
       } else {
-        setMessage({ text: "Error uploading files", type: "error" })
+        setMessage({ text: "Error uploading files", type: "error" });
       }
-    } catch (error:any) {
-      setMessage({ text: `Upload error: ${error.message}`, type: "error" })
+    } catch (error: any) {
+      setMessage({ text: `Upload error: ${error.message}`, type: "error" });
     } finally {
       setUploading(false);
     }
   };
-
 
   return (
     <Container>
@@ -480,7 +481,7 @@ const handleGenerateGraph = async () => {
             />
             <Emoji>CSV</Emoji>
             <CardTitle>CSV File</CardTitle>
-              <CardNote>Also accepts TSV and SSV</CardNote>
+            <CardNote>Also accepts TSV and SSV</CardNote>
           </Card>
 
           <Card onClick={() => openFilePicker(structuredFileInputRef)}>
@@ -513,7 +514,6 @@ const handleGenerateGraph = async () => {
             <Emoji>XML</Emoji>
             <CardTitle>XML File</CardTitle>
           </Card>
-
         </Grid>
 
         {/* Selected Files */}
@@ -530,7 +530,6 @@ const handleGenerateGraph = async () => {
                   <option value="JSON">JSON</option>
                   <option value="Excel">Excel</option>
                   <option value="XML">XML</option>
-
                 </FormatSelect>
                 <RemoveButton onClick={() => removeFile("structured", index)}>×</RemoveButton>
               </FileRow>
@@ -545,8 +544,6 @@ const handleGenerateGraph = async () => {
           {uploadingStructured ? "Uploading Data..." : "Submit Data"}
         </SubmitButton>
       </Section>
-
-
 
       {/* === DATABASE URL MODAL === */}
       {showSQLDbModal && (
@@ -584,8 +581,7 @@ const handleGenerateGraph = async () => {
         </ModalOverlay>
       )}
 
-
-       {showMongoDbModal && (
+      {showMongoDbModal && (
         <ModalOverlay onClick={() => setShowMongoDbModal(false)}>
           <Modal onClick={(e) => e.stopPropagation()}>
             <ModalTitle>Enter Mongo Database URL</ModalTitle>
@@ -619,9 +615,6 @@ const handleGenerateGraph = async () => {
           </Modal>
         </ModalOverlay>
       )}
-
-
-
 
       {/* === WEB URL MODAL === */}
       {showUrlModal && (
@@ -657,10 +650,14 @@ const handleGenerateGraph = async () => {
             </ModalButtons>
           </Modal>
         </ModalOverlay>
-
-
       )}
-      <GeneratorButton onClick={()=>handleGenerateGraph()}>Generate Graph</GeneratorButton>
+
+      <GeneratorButton
+        onClick={handleGenerateGraph}
+        disabled={!structuredSubmitted || uploadingStructured}
+      >
+        Generate Graph
+      </GeneratorButton>
     </Container>
   );
 };

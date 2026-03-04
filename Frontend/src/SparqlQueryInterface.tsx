@@ -63,23 +63,27 @@ export function SparqlQueryInterface() {
             <Route path="/" element={
               <PageTransition>
               <QueryExecutor
-              setQuery={setQuery}
-              query={query}
-              setMessage={setMessage}
-              setVariables={setVariables}
-              setQueryResults={setQueryResults}
-              setQueryResponseRaw={setQueryResponseRaw}
+                setMessage={setMessage}
+                query={query}
+                setQuery={setQuery}
+                variables={variables}
+                setVariables={setVariables}
+                queryResults={queryResults}
+                setQueryResults={setQueryResults}
+                setQueryResponseRaw={setQueryResponseRaw}
               />
               </PageTransition>} />
             <Route path="/executor" element={<PageTransition>
               <QueryExecutor
-              setMessage={setMessage}
-              query={query}
-              setQuery={setQuery}
-              setVariables={setVariables}
-              setQueryResults={setQueryResults}
-              setQueryResponseRaw={setQueryResponseRaw}
-              / >
+                setMessage={setMessage}
+                query={query}
+                setQuery={setQuery}
+                variables={variables}
+                setVariables={setVariables}
+                queryResults={queryResults}
+                setQueryResults={setQueryResults}
+                setQueryResponseRaw={setQueryResponseRaw}
+              />
               </PageTransition>} />
             <Route path="/wizard" element={<PageTransition>
               <SparqlQueryWizard setQuery={setQuery} setMessage={setMessage}/>

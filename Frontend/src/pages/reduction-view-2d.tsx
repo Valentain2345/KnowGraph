@@ -17,8 +17,6 @@ interface VisualsParamsOut {
 const Visualization2d: React.FC = () => {
   const location = useLocation();
   const { jobId, method } = location.state as VisualsParamsOut;
-
-
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -30,9 +28,7 @@ const Visualization2d: React.FC = () => {
   const [hoveredLabel, setHoveredLabel] = useState<string | null>(null);
   const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number } | null>(null);
   const [isRectSelect, setIsRectSelect] = useState(false);
-  const endpoint = `http://127.0.0.1:5000/embeddings/${jobId}/${method}/2d`;
   const rectCurrentRef = useRef<[number, number] | null>(null);
-
   const zoomRef = useRef<d3.ZoomBehavior<HTMLCanvasElement, unknown> | null>(null);
   const transformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
   const rectStartRef = useRef<[number, number] | null>(null);
@@ -41,33 +37,77 @@ const Visualization2d: React.FC = () => {
     return `M${x},${y} l${w},0 l0,${h} l${-w},0z`;
   };
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      setData([]);
-      setSelectedIndices([]);
-      try {
-        const resp = await fetch(endpoint);
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const payload = await resp.json();
-        const points: EmbeddingPoint[] = payload.data;
-        if (isMounted) {
-          setData(points);
-          setLoading(false);
-        }
-      } catch (e: any) {
-        if (isMounted) {
-          setError(e.message ?? 'Unknown error');
-          setLoading(false);
-        }
-      }
-    };
-    fetchData();
-    return () => { isMounted = false; };
-  }, [jobId, method, endpoint]);
+ useEffect(() => {
+  let isMounted = true;
+  const visualizerUrl = import.meta.env.VITE_VISUALIZER_URL
 
+  const fetchData = async () => {
+    try {
+      const resp = await fetch(`${visualizerUrl}/embeddings/${jobId}/${method}/2d`);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const payload = await resp.json();
+      if (isMounted) {
+        setData(payload.data);
+        setLoading(false);
+      }
+    } catch (e: any) {
+      if (isMounted) {
+        setError(e.message ?? 'Unknown error');
+        setLoading(false);
+
+      }
+    }
+  };
+
+  const checkStatus = async (): Promise<boolean> => {
+    try {
+      const resp = await fetch(
+        `${visualizerUrl}/status/${jobId}?method=${method}&dim=2d`
+      );
+      if (!resp.ok) {
+        if (resp.status === 404) return false;
+        throw new Error(`Status check failed: ${resp.status}`);
+      }
+      const data = await resp.json();
+      return data.status === 'ready';
+    } catch (e) {
+      console.error('Status poll error:', e);
+      return false;
+    }
+  };
+
+  const poll = async () => {
+    let attempts = 0;
+    const maxAttempts = 30;
+    const baseDelay = 1000;
+
+    while (attempts < maxAttempts) {
+      const ready = await checkStatus();
+      if (ready) {
+        if (isMounted) {
+
+          fetchData();
+        }
+        return;
+      }
+      attempts++;
+      const delay = Math.min(baseDelay * Math.pow(1.5, attempts), 10000);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    if (isMounted) {
+
+      setError('Job processing timed out. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  setLoading(true);
+  poll();
+
+  return () => {
+    isMounted = false;
+  };
+}, [jobId, method]);
   const getExtent = (points: EmbeddingPoint[], key: 'x' | 'y'): [number, number] => {
     let min = Infinity, max = -Infinity;
     points.forEach(p => {
@@ -572,21 +612,44 @@ const render = useCallback(() => {
       )}
 
       {loading && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 20,
-            left: 20,
-            background: 'rgba(0,0,0,0.7)',
-            color: '#fff',
-            padding: '8px 12px',
-            borderRadius: 4,
-            zIndex: 10,
-          }}
-        >
-          Loading...
-        </div>
-      )}
+  <div
+    style={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'rgba(255, 255, 255, 0.7)',
+      backdropFilter: 'blur(4px)',
+      zIndex: 1000,
+      color: '#1e293b',
+      fontSize: '1.2rem',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+    }}
+  >
+    <div
+      style={{
+        width: '48px',
+        height: '48px',
+        border: '4px solid #e2e8f0',
+        borderTopColor: '#3b82f6',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite',
+        marginBottom: '16px',
+      }}
+    />
+    <div>Computing embeddings…</div>
+    <style>{`
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    `}</style>
+  </div>
+)}
       {error && (
         <div
           style={{

@@ -17,5 +17,5 @@ docker compose up -d
 
 ### 4. Wait for the containers to finish starting
 ### 5. Finally, go to http://localhost/ in your browser and test the application
-## Remember to have ports 80 (default), 8080, 5000, and 5001 available
+## Remember to have port 80 (default) available
 

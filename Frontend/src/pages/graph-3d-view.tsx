@@ -78,7 +78,7 @@ const ForceGraph3d: React.FC<ForceGraphProps> = ({ graphData }) => {
           node,
           3000
         );
-        console.log(`Clicked on node ${node.id}`);
+
       });
 
       const resizeGraph = () => {

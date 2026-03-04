@@ -1,7 +1,7 @@
 \documentclass{article}
 
 % Language setting
-\usepackage[english, spanish]{babel}
+\usepackage[spanish, es-tabla]{babel}
 % Set page size and margins
 \usepackage[a4paper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.5cm]{geometry}
 \usepackage[final]{listings}
@@ -9,29 +9,23 @@
 \usepackage{graphicx}
 \usepackage[colorlinks=true, allcolors=blue]{hyperref}
 \usepackage{enumitem}
-\usepackage{pgffor} % Para generar el cronograma (requiere pgf, instalado como 'tlmgr install pgf')
+\usepackage{pgffor}
 
-% Configuración de español
-\addto\captionsspanish{\renewcommand{\abstractname}{Resumen}}
-\addto\captionsspanish{\renewcommand{\contentsname}{Contenido}}
+% Silabación manual para "usabilidad" (corte: u-sa-bi-li-dad)
+\hyphenation{usa-bi-li-dad}
 
-\title{Propuesta de Plan de Proyecto Final: Ingeniería en Sistemas de Información}
-\author{Valentino Russo \\ LU: 139907 \\ \href{mailto:valentinori870@gmail.com}{valentinori870@gmail.com}}
-\date{Bahía Blanca, 14 de Agosto de 2025}
-
+\title{Propuesta de Plan de Proyecto Final: Ingeniería en Sistemas de Información - Plan 2012}
 \begin{document}
-\maketitle
-
 % --- Carta de presentación ---
 \thispagestyle{empty}
 \vspace{2cm}
 
 \begin{flushright}
-Bahía Blanca, 14 de Agosto de 2025
+Bahía Blanca, \today
 \end{flushright}
 
 \vspace{0.5cm}
-
+\noindent
 Señor Director Decano\\
 Departamento de Ciencias e Ingeniería de la Computación\\
 Dr. Diego C. Martínez\\
@@ -54,20 +48,18 @@ email: \href{mailto:valentinori870@gmail.com}{valentinori870@gmail.com}
 \newpage
 
 % --- Propuesta de plan de proyecto final ---
-\section*{Propuesta de plan de proyecto final}
-\textbf{Ingeniería en Sistemas de Información - Plan 2012}
-
+\maketitle
 \subsection*{Título/Tema}
 \textbf{KnowGraph: Desarrollo de una Aplicación para la Gestión, Consulta y Visualización de Grafos de Conocimiento}
 
 \subsection*{Área o Dominio de Aplicación}
-Ingeniería de Software – Bases de Datos – Web Semántica
+Ingeniería de Software – Web Semántica
 
 \subsection*{Alumno}
 Russo, Valentino (LU: 139907)
 
 \subsection*{Director}
-Gomez, Sergio
+Dr. Gomez, Sergio Alejandro
 
 \subsection*{Introducción}
 Los grafos de conocimiento se han convertido en una herramienta fundamental para organizar y explotar grandes volúmenes de información interconectada, permitiendo representar entidades y sus relaciones de manera semántica. Sin embargo, las herramientas existentes suelen estar orientadas a usuarios expertos o requieren conocimientos profundos en lenguajes como SPARQL y tecnologías de la Web Semántica.
@@ -77,7 +69,7 @@ Este proyecto propone el desarrollo de \textbf{KnowGraph}, una aplicación web i
 KnowGraph se construirá siguiendo una arquitectura de microservicios dockerizados: un backend en Java con Spring Boot y Apache Jena para el manejo de RDF y consultas SPARQL; un backend en Python con Flask para la importación de datos estructurados y la generación de embeddings mediante técnicas de reducción dimensional (PCA, t-SNE, UMAP); y un frontend en React con TypeScript y Vite, utilizando bibliotecas como ForceGraph, Three.js y D3.js para las visualizaciones. La aplicación se distribuirá como un conjunto de contenedores Docker para facilitar su despliegue y replicabilidad.
 
 \subsection*{Objetivos}
-Desarrollar una aplicación web funcional y extensible que permita la gestión integral de grafos de conocimiento, desde la carga de datos hasta su consulta, visualización y razonamiento, siguiendo las mejores prácticas de la Web Semántica y la ingeniería de software moderno.
+Desarrollar una aplicación web funcional y extensible que permita la gestión integral de grafos de conocimiento, desde la carga de datos hasta su consulta, visualización y razonamiento, siguiendo las mejores prácticas de la Web Semántica y la Ingeniería de Software moderno.
 
 \subsection*{Objetivos específicos}
 \begin{itemize}[leftmargin=*]
@@ -113,7 +105,7 @@ El proyecto se desarrollará siguiendo un enfoque iterativo e incremental, con l
 \subsection*{Actividades y cronograma tentativo}
 La codificación del programa abarcará aproximadamente 7 semanas y se concentrará en las actividades A3, A4 y A5. El cronograma tentativo para las 16 semanas de duración del proyecto se presenta en la Tabla~\ref{tab:cronograma}. Cada celda marcada con \textbullet\ indica la semana en que la actividad estará activa.
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \caption{Distribución tentativa de actividades a lo largo de 16 semanas.}
 \label{tab:cronograma}
@@ -142,7 +134,7 @@ A8 &  &  &  &  &  &  &  &  &  &  &  & \textbullet & \textbullet & \textbullet & 
 \end{tabular}
 \end{table}
 
-\begin{description}[leftmargin=*, font=\normalfont]
+\begin{description}[font=\normalfont, leftmargin=2cm, labelwidth=1.5cm, labelsep=0.5cm]
     \item[A1] Análisis de requisitos y estudio de tecnologías (Web Semántica, RDF, SPARQL, Apache Jena, React, etc.)
     \item[A2] Diseño de arquitectura y definición de APIs
     \item[A3] Implementación del backend Java (Spring Boot + Jena)
@@ -152,5 +144,9 @@ A8 &  &  &  &  &  &  &  &  &  &  &  & \textbullet & \textbullet & \textbullet & 
     \item[A7] Dockerización y elaboración de documentación técnica
     \item[A8] Redacción del informe final y preparación de la presentación
 \end{description}
+
+\subsection*{Vinculación con Proyectos de Investigación del DCIC}
+La propuesta presentada se vincula con un proyecto activo del DCIC, este es
+\href{https://uns.edu.ar/investigacion/proyectos/busqueda\_proy.php?i1=43768\&proyecto=80020230400001SU\&vigentes=V}{ONTOLOGiAS Y MODELADO PARA GESTION DE LA INFORMACION EN INTELIGENCIA ARTIFICIAL}
 
 \end{document}

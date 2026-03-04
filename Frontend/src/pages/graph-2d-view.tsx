@@ -92,7 +92,6 @@ const ForceGraph2d: React.FC<ForceGraph2DProps> = ({ graphData }) => {
     Graph.onNodeClick(node => {
       Graph.centerAt(node.x, node.y, 1000);
       Graph.zoom(4, 1000);
-      console.log('Clicked on node ' + node.id);
     });
 
     function resizeGraph() {

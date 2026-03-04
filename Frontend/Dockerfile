@@ -1,30 +1,39 @@
-# Use Node.js Alpine image for minimal size
-FROM node:22-alpine
+# Stage 1: Build the React/Vite app
+FROM node:22-alpine AS build
 
-# Set working directory
+# Accept build arguments for Vite environment variables
+ARG VITE_SPARQL_BACKEND_URL
+ARG VITE_IMPORTER_URL
+ARG VITE_VISUALIZER_URL
+
+# Set them as environment variables so Vite can embed them at build time
+ENV VITE_SPARQL_BACKEND_URL=$VITE_SPARQL_BACKEND_URL \
+    VITE_IMPORTER_URL=$VITE_IMPORTER_URL \
+    VITE_VISUALIZER_URL=$VITE_VISUALIZER_URL
+
 WORKDIR /app
 
-# Copy package.json and package-lock.json (if any)
+# Copy package files and install dependencies
 COPY package*.json ./
+RUN npm install
 
-# Install dependencies
-RUN npm install --only=production
-
-# Install TypeScript for the build step
-RUN npm install -g typescript
-RUN npm install @types/node vite
-
-# Copy the rest of the app's source code
+# Copy the rest of the source code
 COPY . .
 
-# Build the React app
+# Build the app (Vite will embed the env vars)
 RUN npm run build
 
-# Install http-server globally
-RUN npm install -g http-server
+# Stage 2: Serve with nginx
+FROM nginx:alpine
+
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Copy the built static files from the build stage
+COPY --from=build /app/dist /usr/share/nginx/html
 
 # Expose port 80
 EXPOSE 80
 
-# Start http-server to serve the built React app
-CMD ["http-server", "dist", "-p", "80"]
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

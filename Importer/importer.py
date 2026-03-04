@@ -4,13 +4,15 @@ import csv
 import pandas as pd
 import json
 import os
+import tempfile
 
 app = Flask(__name__)
 
 
 uploaded_files = {}
 dataframes = {}
-
+DATA_DIR = "/app/data"
+os.makedirs(DATA_DIR, exist_ok=True)
 
 @app.route('/upload', methods=['POST'])
 def upload_files():
@@ -97,20 +99,20 @@ def rdf_all():
 
 
 
+
 @app.route('/rdf/download', methods=['GET'])
 def download_rdf_graph():
-    ttl_filename = "generatedGraph.ttl"
+    filename = "generatedGraph.ttl"
+    filepath = save_all_rdf_turtle(filename)
 
-    save_all_rdf_turtle(ttl_filename)
-
-    if not os.path.exists(ttl_filename):
+    if not os.path.exists(filepath):
         return jsonify({"error": "RDF file not found"}), 404
 
     return send_file(
-        ttl_filename,
+        filepath,
         mimetype="text/turtle",
         as_attachment=True,
-        download_name="generatedGraph.ttl"
+        download_name=filename
     )
 
 def detect_file_type(filename):
@@ -261,13 +263,10 @@ def generate_rdf_for_all_dataframes():
 
 def save_all_rdf_turtle(filename="generatedGraph.ttl"):
     ttl_content = generate_rdf_for_all_dataframes()
-
-    with open(filename, "w", encoding="utf-8") as f:
+    filepath = os.path.join(DATA_DIR, filename)
+    with open(filepath, "w", encoding="utf-8") as f:
         f.write(ttl_content)
-
-    return {"message": f"RDF graph saved as {filename}"}
-
-
+    return filepath
 
 
 if __name__ == '__main__':

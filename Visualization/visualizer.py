@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-mixed_embedding_api.py
-----------------------------
-Lazy embedding computation: preprocess on upload, compute embeddings on request.
-"""
 from flask import Flask, request, jsonify
 import uuid
 import numpy as np
@@ -259,6 +253,19 @@ def list_jobs():
         "job_ids": job_ids,
         "count": len(job_ids)
     })
+
+@app.route("/status/<job_id>", methods=["GET"])
+def job_status(job_id):
+    if job_id not in RESULTS:
+        return jsonify({"status": "not_found"}), 404
+
+    method = request.args.get("method")
+    dim = request.args.get("dim")
+    if method and dim:
+        cache_key = f"{method}_{dim}"
+        cached = cache_key in RESULTS[job_id]["cache"]
+        return jsonify({"status": "ready", "cached": cached, "job_id": job_id})
+    return jsonify({"status": "ready", "job_id": job_id})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=False)

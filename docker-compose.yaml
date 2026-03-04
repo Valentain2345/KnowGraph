@@ -1,15 +1,18 @@
 services:
-
   importer:
     build: ./Importer
     container_name: importer-service
-    ports:
-      - "5001:5001"
+    expose:
+      - "5001"
     networks:
       - sparql-network
     restart: unless-stopped
+    environment:
+      - SPARQL_BACKEND_URL=http://sparql-backend:8080
+    volumes:
+      - importer-data:/app/data
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/', timeout=3)"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/', timeout=3)"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -18,11 +21,13 @@ services:
   visualizer:
     build: ./Visualization
     container_name: visualizer-service
-    ports:
-      - "5000:5000"
+    expose:
+      - "5000"
     networks:
       - sparql-network
     restart: unless-stopped
+    environment:
+      - SPARQL_BACKEND_URL=http://sparql-backend:8080
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/', timeout=3)"]
       interval: 30s
@@ -33,25 +38,29 @@ services:
   sparql-backend:
     build: ./Sparql-Backend
     container_name: sparql-backend-service
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     networks:
       - sparql-network
     restart: unless-stopped
-
 
   frontend:
     build:
-      context: ./Frontend
-      dockerfile: Dockerfile
+        context: ./Frontend
+        dockerfile: Dockerfile
+        args:
+            VITE_SPARQL_BACKEND_URL: /api/sparql
+            VITE_IMPORTER_URL: /api/importer
+            VITE_VISUALIZER_URL: /api/visualizer
     container_name: frontend-service
     ports:
-      - "80:80"
+        - "80:80"
     restart: unless-stopped
     networks:
-      - sparql-network
+        - sparql-network
 
 networks:
   sparql-network:
     driver: bridge
-
+volumes:
+  importer-data:

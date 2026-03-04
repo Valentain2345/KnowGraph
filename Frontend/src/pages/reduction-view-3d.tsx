@@ -15,8 +15,8 @@ interface EmbeddingPoint {
 }
 
 interface VisualsParamsOut {
-  jobId:string
-   method: 'umap' | 'tsne' | 'pca';
+  jobId: string;
+  method: 'umap' | 'tsne' | 'pca';
 }
 
 /* -------------------------------------------------------------------------- */
@@ -25,22 +25,19 @@ interface VisualsParamsOut {
 const Visualization3d: React.FC = () => {
   const location = useLocation();
   const { jobId, method } = location.state as VisualsParamsOut;
-  console.log('Job ID:', jobId);
-  console.log('Method:', method);
   const mountRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const endpoint = `http://127.0.0.1:5000/embeddings/${jobId}/${method}/3d`;
+  const visualizerUrl = import.meta.env.VITE_VISUALIZER_URL
 
   useEffect(() => {
-
     if (!mountRef.current) return;
 
     let isMounted = true;
     let renderer: THREE.WebGLRenderer | null = null;
     let frameId: number | null = null;
+    const pollTimeouts: number[] = [];
     const container = mountRef.current;
 
     /* -------------------------- Tooltip helpers -------------------------- */
@@ -55,12 +52,43 @@ const Visualization3d: React.FC = () => {
       tooltipRef.current.style.display = 'block';
     };
 
-    const fetchAndRender = async () => {
-      console.debug('[Viz3D] Fetch →', endpoint);
-      setLoading(true);
-      setError(null);
-      hideTooltip();
+    /* -------------------------- Poll status until ready ------------------ */
 
+  const waitForJob = async (): Promise<boolean> => {
+    const statusUrl = `${visualizerUrl}/status/${jobId}?method=${method}&dim=3d`;
+    let attempts = 0;
+    const maxAttempts = 30;
+    const baseDelay = 1000;
+
+    while (attempts < maxAttempts) {
+      if (!isMounted) return false;
+      try {
+        const resp = await fetch(statusUrl);
+        if (resp.status === 404) {
+          // continue polling
+        } else if (resp.ok) {
+          const data = await resp.json();
+          if (data.status === 'ready') {
+            return true;
+          }
+        }
+      } catch (err) {
+        console.warn('[Viz3D] Status poll error:', err);
+      }
+
+      attempts++;
+      const delay = Math.min(baseDelay * Math.pow(1.5, attempts), 10000);
+      await new Promise(resolve => {
+        const id = window.setTimeout(resolve, delay); // ✅ use window.setTimeout
+        pollTimeouts.push(id);
+      });
+    }
+    return false;
+  };
+
+    /* -------------------------- Fetch data and build scene -------------- */
+    const initScene = async () => {
+      console.debug('[Viz3D] Fetch →', endpoint);
       try {
         const resp = await fetch(endpoint);
         if (!resp.ok) {
@@ -74,12 +102,11 @@ const Visualization3d: React.FC = () => {
         /* ----- Remove previous canvas ----- */
         if (renderer?.domElement?.parentNode === container) {
           container.removeChild(renderer.domElement);
-          console.debug('[Viz3D] Removed previous canvas');
         }
 
         /* ----- Three.js setup ----- */
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xf8fafc); // Light background color
+        scene.background = new THREE.Color(0xf8fafc);
 
         const camera = new THREE.PerspectiveCamera(
           75,
@@ -94,16 +121,13 @@ const Visualization3d: React.FC = () => {
         renderer.setClearColor(0xf8fafc, 1);
         renderer.setPixelRatio(window.devicePixelRatio);
         container.appendChild(renderer.domElement);
-        console.debug('[Viz3D] Canvas appended');
 
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
 
-
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
-
 
         const extent = (arr: EmbeddingPoint[], k: 'x' | 'y' | 'z'): [number, number] => {
           let min = Infinity, max = -Infinity;
@@ -136,10 +160,10 @@ const Visualization3d: React.FC = () => {
 
           const material = new THREE.MeshStandardMaterial({
             color,
-            roughness: 0.4, // Reduced roughness for more shine
-            metalness: 0.1, // Reduced metalness
+            roughness: 0.4,
+            metalness: 0.1,
             emissive: color,
-            emissiveIntensity: 0.1, // Reduced emissive intensity for lighter theme
+            emissiveIntensity: 0.1,
           });
 
           const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.02, 32, 32), material);
@@ -153,15 +177,12 @@ const Visualization3d: React.FC = () => {
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
         directionalLight.position.set(5, 5, 5);
-        directionalLight.castShadow = true;
         scene.add(directionalLight);
 
-        // Additional fill light
         const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
         fillLight.position.set(-5, -5, -5);
         scene.add(fillLight);
 
-        // Rim light for better edge definition
         const rimLight = new THREE.DirectionalLight(0xffffff, 0.2);
         rimLight.position.set(0, 0, 5);
         scene.add(rimLight);
@@ -214,11 +235,11 @@ const Visualization3d: React.FC = () => {
         resizeObserver.observe(container);
         window.addEventListener('resize', onResize);
 
-        /* ----- Cleanup ----- */
-        const cleanup = () => {
-          console.debug('[Viz3D] Cleanup');
-          isMounted = false;
-          if (frameId) cancelAnimationFrame(frameId);
+        setLoading(false);
+        setError(null);
+
+        // Return cleanup function for this scene
+        return () => {
           resizeObserver.disconnect();
           window.removeEventListener('resize', onResize);
           renderer?.domElement.removeEventListener('mousemove', onMouseMove);
@@ -230,100 +251,142 @@ const Visualization3d: React.FC = () => {
           scene.clear();
           hideTooltip();
         };
-
-        setLoading(false);
-        return cleanup;
-      } catch (e: any) {
-        console.error('[Viz3D] Error:', e);
+      } catch (err: any) {
+        console.error('[Viz3D] Error:', err);
         if (isMounted) {
-          setError(e.message ?? 'Unknown error');
+          setError(err.message ?? 'Unknown error');
           setLoading(false);
         }
       }
     };
 
-    const cleanupPromise = fetchAndRender();
+    /* -------------------------- Main flow ------------------------------- */
+    const endpoint = `${visualizerUrl}/embeddings/${jobId}/${method}/3d`;
+    let sceneCleanup: (() => void) | undefined;
 
-    return () => {
-      console.debug('[Viz3D] Unmount');
-      isMounted = false;
-      cleanupPromise.then(c => c?.());
+    const run = async () => {
+      setLoading(true);
+      setError(null);
+      hideTooltip();
+
+      const ready = await waitForJob();
+      if (!ready) {
+        if (isMounted) {
+          setError('Job processing timed out. Please try again.');
+          setLoading(false);
+        }
+        return;
+      }
+
+      // Job is ready – now fetch data and build the scene
+      sceneCleanup = await initScene();
     };
-  }, [jobId, method]);
+
+    run();
+
+    /* -------------------------- Cleanup everything ---------------------- */
+    return () => {
+    console.debug('[Viz3D] Unmount');
+    isMounted = false;
+    pollTimeouts.forEach(id => clearTimeout(id));
+    if (frameId) cancelAnimationFrame(frameId);
+    if (sceneCleanup) sceneCleanup();
+    };
+  }, [jobId, method, visualizerUrl]);
 
   /* ---------------------------------------------------------------------- */
   /* Render */
   /* ---------------------------------------------------------------------- */
   return (
-     <div
-    ref={mountRef}
+    <div
+      ref={mountRef}
+      style={{
+        position: 'relative',
+        width: '100vw',
+        height: '100vh',
+        overflow: 'hidden',
+        background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+      }}
+    >
+      {/* Tooltip */}
+      <div
+        ref={tooltipRef}
+        style={{
+          position: 'absolute',
+          background: '#ffffff',
+          color: '#1e293b',
+          padding: '6px 12px',
+          borderRadius: 6,
+          fontSize: 12,
+          pointerEvents: 'none',
+          display: 'none',
+          zIndex: 100,
+          maxWidth: 300,
+          wordBreak: 'break-all',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+        }}
+      />
+
+      {loading && (
+  <div
     style={{
-      position: 'relative',
-      width: '100vw',
-      height: '100vh',
-      overflow: 'hidden',
-      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', // Light gradient background
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'rgba(255, 255, 255, 0.7)',
+      backdropFilter: 'blur(4px)',
+      zIndex: 1000,
+      color: '#1e293b',
+      fontSize: '1.2rem',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
     }}
   >
-    {/* Tooltip */}
     <div
-      ref={tooltipRef}
       style={{
-        position: 'absolute',
-        background: '#ffffff', // White background
-        color: '#1e293b', // Dark text
-        padding: '6px 12px',
-        borderRadius: 6,
-        fontSize: 12,
-        pointerEvents: 'none',
-        display: 'none',
-        zIndex: 100,
-        maxWidth: 300,
-        wordBreak: 'break-all',
-        border: '1px solid #e2e8f0', // Light border
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+        width: '48px',
+        height: '48px',
+        border: '4px solid #e2e8f0',
+        borderTopColor: '#3b82f6',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite',
+        marginBottom: '16px',
       }}
     />
-
-    {loading && (
-      <div
-        style={{
-          position: 'absolute',
-          top: 20,
-          left: 20,
-          background: 'rgba(255, 255, 255, 0.95)', // Semi-transparent white
-          color: '#334155', // Dark text
-          padding: '10px 16px',
-          borderRadius: 6,
-          zIndex: 10,
-          border: '1px solid #e2e8f0', // Light border
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-          backdropFilter: 'blur(4px)',
-        }}
-      >
-        Loading…
-      </div>
-    )}
-
-    {error && (
-      <div
-        style={{
-          position: 'absolute',
-          top: 20,
-          left: 20,
-          background: '#fef2f2', // Light red background
-          color: '#dc2626', // Red text
-          padding: '10px 16px',
-          borderRadius: 6,
-          zIndex: 10,
-          border: '1px solid #fecaca', // Red border
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-        }}
-      >
-        Error: {error}
-      </div>
-    )}
+    <div>Computing embeddings…</div>
+    <style>{`
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    `}</style>
   </div>
+)}
+
+      {error && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 20,
+            left: 20,
+            background: '#fef2f2',
+            color: '#dc2626',
+            padding: '10px 16px',
+            borderRadius: 6,
+            zIndex: 10,
+            border: '1px solid #fecaca',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+          }}
+        >
+          Error: {error}
+        </div>
+      )}
+    </div>
   );
 };
 

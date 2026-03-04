@@ -15,28 +15,30 @@ import {
 import styled from "styled-components"
 
 interface QueryExecutorProps {
-  setMessage: React.Dispatch<
-    React.SetStateAction<{ text: string; type: "info" | "success" | "error" }>
-  >
-  query: string
-  setQuery: React.Dispatch<React.SetStateAction<string>>
-  setVariables: React.Dispatch<React.SetStateAction<string[]>>
-  setQueryResults: React.Dispatch<React.SetStateAction<Array<Record<string, string>>>>
-  setQueryResponseRaw:React.Dispatch<React.SetStateAction<string>>
+  setMessage: React.Dispatch<React.SetStateAction<{ text: string; type: "info" | "success" | "error" }>>;
+  query: string;
+  setQuery: React.Dispatch<React.SetStateAction<string>>;
+  variables: string[];                    // current columns
+  setVariables: React.Dispatch<React.SetStateAction<string[]>>;
+  queryResults: Array<Record<string, string>>;  // current results
+  setQueryResults: React.Dispatch<React.SetStateAction<Array<Record<string, string>>>>;
+  setQueryResponseRaw: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export const QueryExecutor: React.FC<QueryExecutorProps> = ({
   setMessage,
   query,
   setQuery,
+  variables,
   setVariables,
+  queryResults,
   setQueryResults,
   setQueryResponseRaw,
 }) => {
-  const [isLoading, setIsLoading] = useState(false)
-  const [results, setResults] = useState<Array<Record<string, string>>>([])
-  const [columns, setColumns] = useState<string[]>([])
-  const [showChat, setShowChat] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const sparqlUrl = import.meta.env.VITE_SPARQL_BACKEND_URL;
+
 
 
   // ---- EXECUTE QUERY ----
@@ -45,7 +47,7 @@ export const QueryExecutor: React.FC<QueryExecutorProps> = ({
     setMessage({ text: "Fetching and parsing results of query...", type: "info" })
 
     try {
-      const response = await fetch("http://localhost:8080/sparql/runQuery", {
+      const response = await fetch(`${sparqlUrl}/sparql/runQuery`, {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
         body: query,
@@ -62,12 +64,9 @@ export const QueryExecutor: React.FC<QueryExecutorProps> = ({
           const parsedData = result.data as Array<Record<string, string>>
 
           const parsedColumns = result.meta.fields || []
-          console.log(parsedData)
-          console.log(parsedColumns)
-          setResults(parsedData)
+
           setVariables(parsedColumns)
           setQueryResults(parsedData)
-          setColumns(parsedColumns)
           setMessage({
             text: `Query executed successfully. ${parsedData.length} results found.`,
             type: "success",
@@ -118,79 +117,77 @@ export const QueryExecutor: React.FC<QueryExecutorProps> = ({
 
   // ---- RESULTS HANDLERS ----
   const handleClearResults = () => {
-    setResults([])
-    setColumns([])
-    setMessage({ text: "Results cleared", type: "info" })
+    setQueryResults([]);
+    setVariables([]);
+    setMessage({ text: "Results cleared", type: "info" });
+  };
+
+ const handleSaveResults = (format: "json" | "csv") => {
+  if (format === "json") {
+    const dataStr = JSON.stringify(queryResults, null, 2);
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `sparql-results-${Date.now()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setMessage({ text: "Results saved as JSON successfully", type: "success" });
+  } else if (format === "csv") {
+    const csvHeader = variables.join(",");
+    const csvRows = queryResults.map((row) =>
+      variables
+        .map((col) => {
+          const value = row[col] || "";
+          // Escape if needed
+          if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+            return `"${value.replace(/"/g, '""')}"`;
+          }
+          return value;
+        })
+        .join(",")
+    );
+    const csvContent = [csvHeader, ...csvRows].join("\n");
+    const dataBlob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `sparql-results-${Date.now()}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setMessage({ text: "Results saved as CSV successfully", type: "success" });
   }
+};
 
-  const handleSaveResults = (format: "json" | "csv") => {
-    if (format === "json") {
-      const dataStr = JSON.stringify(results, null, 2)
-      const dataBlob = new Blob([dataStr], { type: "application/json" })
-      const url = URL.createObjectURL(dataBlob)
-      const link = document.createElement("a")
-      link.href = url
-      link.download = `sparql-results-${Date.now()}.json`
-      link.click()
-      URL.revokeObjectURL(url)
-      setMessage({ text: "Results saved as JSON successfully", type: "success" })
-    } else if (format === "csv") {
-      const csvHeader = columns.join(",")
-      const csvRows = results.map((row) =>
-        columns
-          .map((col) => {
-            const value = row[col] || ""
-            if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-              return `"${value.replace(/"/g, '""')}"`
-            }
-            return value
-          })
-          .join(",")
-      )
+  const handleChangeQuery = (newQuery: string) => setQuery(newQuery);
 
-      const csvContent = [csvHeader, ...csvRows].join("\n")
-      const dataBlob = new Blob([csvContent], { type: "text/csv" })
-      const url = URL.createObjectURL(dataBlob)
-      const link = document.createElement("a")
-      link.href = url
-      link.download = `sparql-results-${Date.now()}.csv`
-      link.click()
-      URL.revokeObjectURL(url)
-      setMessage({ text: "Results saved as CSV successfully", type: "success" })
-    }
-  }
 
- const handleChangeQuery = (newQuery: string) => {
-   setQuery(newQuery);
-}
 
   return (
     <div className="max-w-4xl mx-auto bg-white p-6 space-y-6 relative rounded-lg shadow-lg">
-        <Card className="bg-white border border-zinc-200 rounded-lg shadow-lg">
-            <CardHeader className="bg-white">
-        <CardTitle className="text-zinc-900 text-lg font-semibold">Query Executor</CardTitle>
-        <CardDescription className="text-zinc-600 text-sm">
-          Execute SPARQL queries and view results in table format.
-        </CardDescription>
-      </CardHeader>
+      <Card className="bg-white border border-zinc-200 rounded-lg shadow-lg">
+        <CardHeader className="bg-white">
+          <CardTitle className="text-zinc-900 text-lg font-semibold">Query Executor</CardTitle>
+          <CardDescription className="text-zinc-600 text-sm">
+            Execute SPARQL queries and view results in table format.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 bg-white">
+          <QueryEditor query={query} onChange={handleChangeQuery} />
 
-          <CardContent className="space-y-4 bg-white">
-            <QueryEditor query={query} onChange={handleChangeQuery} />
-
-            <div className="flex items-center justify-between">
-              <QueryActions onLoad={handleLoadQuery} onSave={handleSaveQuery} />
-
-              <div className="flex gap-2">
-                <FancyButton onClick={() => setShowChat((prev) => !prev)} className="bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none rounded-lg px-4 py-2 transition duration-300">
-                  <span className="text-zinc-600 text-sm">Ask an LLM</span>
-                </FancyButton>
-                <ExecuteButton onClick={handleExecuteQuery} isLoading={isLoading} />
-              </div>
+          <div className="flex items-center justify-between">
+            <QueryActions onLoad={handleLoadQuery} onSave={handleSaveQuery} />
+            <div className="flex gap-2">
+              <FancyButton onClick={() => setShowChat((prev) => !prev)} className="bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none rounded-lg px-4 py-2 transition duration-300">
+                <span className="text-zinc-600 text-sm">Ask an LLM</span>
+              </FancyButton>
+              <ExecuteButton onClick={handleExecuteQuery} isLoading={isLoading} />
             </div>
+          </div>
 
           <ResultsTable
-            results={results}
-            columns={columns.map((col) => ({
+            results={queryResults}
+            columns={variables.map((col) => ({
               id: col,
               label: col.charAt(0).toUpperCase() + col.slice(1),
               accessor: col,
@@ -201,12 +198,10 @@ export const QueryExecutor: React.FC<QueryExecutorProps> = ({
         </CardContent>
       </Card>
 
-      {showChat && (
-        <ChatWidget setShowChat={setShowChat}/>
-      )}
+      {showChat && <ChatWidget setShowChat={setShowChat} />}
     </div>
-  )
-}
+  );
+};
 
 
 
