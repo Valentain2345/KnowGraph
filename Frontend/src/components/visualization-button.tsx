@@ -69,13 +69,11 @@ export function VisualizationButton({
     setGraphData(config);
     setShowSelector(false);
 
-    // *** NEW LOGIC: Check for and execute a pending action ***
     if (pendingAction === "graph2d") {
         navigate("/graph2d", { state: { graphData: config } });
     } else if (pendingAction === "graph3d") {
         navigate("/graph3d", { state: { graphData: config } });
     }
-    // Clear the action after execution
     setPendingAction(null);
   };
 
@@ -93,12 +91,10 @@ export function VisualizationButton({
   const openGraphBuilder = () => setShowSelector(true);
 
   // ---------- Helper: ensure a graph exists ----------
-  // *** MODIFIED to accept the requested visualization type ***
   const ensureGraph = (next: () => void, actionType: PendingGraphAction) => {
     if (!isGraphDataEmpty) {
       next(); // graph already built → go straight to the view
     } else {
-      // No graph → store the requested action and force the user to build one
       setPendingAction(actionType);
       openGraphBuilder();
     }
@@ -325,7 +321,13 @@ const parseCSV = (queryResults: any[], selectedVariables: string[]): Record<stri
          <DimReductionSelector
           variables={variables}
           method={selectedMethod}
-          onCancel={() => setShowVisualSelector(false)}
+          onCancel={() =>
+            {
+              setShowVisualSelector(false)
+
+            }
+
+          }
           onRun={handleDimReductionRun}
         />
 

@@ -20,7 +20,8 @@ export const DimReductionSelector: React.FC<DimReductionProps> = ({
 }) => {
   const [selectedVariables, setSelectedVariables] = useState<string[]>([]);
   const [dims, setDims] = useState<number>(2); // Default to 2D
-
+  const [error, setError] = useState<string | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
   const toggleVariable = (variable: string) => {
     setSelectedVariables((prev) =>
       prev.includes(variable)
@@ -37,21 +38,36 @@ export const DimReductionSelector: React.FC<DimReductionProps> = ({
     }
   };
 
-  const handleRun = () => {
-    if (selectedVariables.length === 0) {
-      alert("Please select at least one variable");
-      return;
-    }
+const handleRun = async () => {
+  if (selectedVariables.length === 0) {
+    setError("Please select at least one variable.");
+    return;
+  }
 
-    // If all variables are selected, trigger the upload function
+  if (selectedVariables.length < dims) {
+    setError(
+      "The number of variables selected should be greater or equal to the dimensions to visualize"
+    );
+    return;
+  }
+
+  setError(null);
+  setIsRunning(true);
+
+  try {
     if (selectedVariables.length === variables.length) {
-      onRun([], dims, method, true); // Passing true to indicate upload
+      await onRun([], dims, method, true);
     } else {
-      onRun(selectedVariables, dims, method, false); // Parsing CSV
+      await onRun(selectedVariables, dims, method, false);
     }
 
-    onCancel();
-  };
+    onCancel(); // Close only after success
+  } catch (err) {
+    setError("Something went wrong while running dimensionality reduction.");
+  } finally {
+    setIsRunning(false);
+  }
+};
 
   return (<div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm p-4 h-screen">
   <div className="relative w-full max-w-2xl animate-in fade-in zoom-in duration-300">
@@ -107,7 +123,7 @@ export const DimReductionSelector: React.FC<DimReductionProps> = ({
               variant="ghost"
               size="sm"
               onClick={toggleSelectAll}
-              className="text-gray-600 hover:text-zinc-300"
+              className="text-zinc-600 hover:bg-teal-600 hover:text-white"
             >
               {selectedVariables.length === variables.length
                 ? "Deselect All"
@@ -138,14 +154,21 @@ export const DimReductionSelector: React.FC<DimReductionProps> = ({
               ))}
             </div>
           </ScrollArea>
-
+          {error && (
+            <div className="rounded-xl bg-red-100 border border-red-300 text-red-700 px-4 py-3 text-sm font-medium">
+              {error}
+            </div>
+          )}
           <Button
             onClick={handleRun}
+             disabled={isRunning}
             className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-pink-600 to-orange-600 py-6 text-lg font-bold text-white shadow-lg shadow-pink-500/50 transition-all hover:shadow-xl hover:shadow-pink-500/60 hover:scale-[1.02]"
           >
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              Run {method}
-              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+             <span className="relative z-10 flex items-center justify-center gap-2">
+              {isRunning ? "Uploading..." : `Run ${method}`}
+              {!isRunning && (
+                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+              )}
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-orange-500 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none" />
           </Button>
