@@ -4,7 +4,7 @@
 This document explains how to run the application using **Docker** and how to run each service locally for development.
 
 
-# Running the Application with Docker (Recommended)
+# Running the Application with Docker 
 
 ## Prerequisites
 
