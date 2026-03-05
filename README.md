@@ -256,7 +256,7 @@ python importer.py
 #  Notes
 
 * Ensure all required ports are available before starting the services.
-* Docker setup is recommended for a fully integrated environment and easy of use of the app.
+* Docker setup is recommended for a fully integrated environment and ease of use of the app.
 * Local development is ideal for debugging or developing on individual services.
 
 ---
