@@ -385,7 +385,11 @@ export const ImportManager = ({ setMessage }: ImportManagerProps) => {
     a.remove();
     window.URL.revokeObjectURL(url);
 
-    setMessage({ text: "Graph generated correctly", type: "success" });
+    const clear = await fetch(`${importerUrl}/clear`);
+    if(!clear.ok)
+      setMessage({ text: "An error occurred in the server", type: "error" });
+    else
+      setMessage({ text: "Graph generated correctly", type: "success" });
   };
 
   // Handle file selection (Structured)

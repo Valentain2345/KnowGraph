@@ -82,6 +82,7 @@ def use_file(filename):
 @app.route('/clear', methods=['GET'])
 def clear_files():
     uploaded_files.clear()
+    dataframes.clear()
     return jsonify({'message': 'All files cleared from memory'})
 
 @app.route('/remove/<filename>', methods=['GET'])
@@ -89,6 +90,7 @@ def remove_file(filename):
     if filename not in uploaded_files:
         return jsonify({'error': 'File not found'}), 404
     uploaded_files.pop(filename)
+    dataframes.pop(filename)
     return jsonify({'message': f'{filename} deleted correctly'})
 
 
