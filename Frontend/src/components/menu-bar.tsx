@@ -22,7 +22,7 @@ export function MenuBar({ onMenuAction, zIndex,variables,queryResults,queryRespo
    const navigate = useNavigate();
 
    const handleHome= ()=>{
-     navigate("/")
+     navigate("/executor")
   }
 
   return (

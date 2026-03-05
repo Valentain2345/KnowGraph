@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { MenuBar } from "./components/menu-bar";
 import { MessagePanel } from "./components/message-panel";
 import { SparqlQueryWizard } from "./pages/sparql-query-wizard";
@@ -23,8 +23,29 @@ export function SparqlQueryInterface() {
   const [variables,setVariables]=useState<string[]>([]);
   const [queryResults,setQueryResults]=useState<Array<Record<string, string>>>([]);
   const navigate = useNavigate();
+  const location = useLocation();
   const isNonQueryView = location.pathname === "/graph3d" || location.pathname==="/graph2d"||
   location.pathname === "/importer" || location.pathname === "/usage" || location.pathname === "/visuals3d" || location.pathname === "/visuals2d" ;
+  const isExecutor = location.pathname === "/" || location.pathname === "/executor";
+
+
+  const executorElement = (
+  <PageTransition>
+    <QueryExecutor
+      setMessage={setMessage}
+      query={query}
+      setQuery={setQuery}
+      variables={variables}
+      setVariables={setVariables}
+      queryResults={queryResults}
+      setQueryResults={setQueryResults}
+      setQueryResponseRaw={setQueryResponseRaw}
+    />
+  </PageTransition>
+);
+
+
+
   return (
   <div className="flex flex-col h-screen bg-white text-zinc-900 relative">
       <MenuBar
@@ -41,7 +62,7 @@ export function SparqlQueryInterface() {
             <NavButton
               label="Query Executor"
               onClick={() => navigate("/executor")}
-              $active={location.pathname === "/executor"}
+             $active={isExecutor}
             />
             <NavButton
               label="Query Wizard"
@@ -60,31 +81,8 @@ export function SparqlQueryInterface() {
       <div className="flex-1 overflow-auto relative z-10">
         <AnimatePresence mode="wait">
           <Routes>
-            <Route path="/" element={
-              <PageTransition>
-              <QueryExecutor
-                setMessage={setMessage}
-                query={query}
-                setQuery={setQuery}
-                variables={variables}
-                setVariables={setVariables}
-                queryResults={queryResults}
-                setQueryResults={setQueryResults}
-                setQueryResponseRaw={setQueryResponseRaw}
-              />
-              </PageTransition>} />
-            <Route path="/executor" element={<PageTransition>
-              <QueryExecutor
-                setMessage={setMessage}
-                query={query}
-                setQuery={setQuery}
-                variables={variables}
-                setVariables={setVariables}
-                queryResults={queryResults}
-                setQueryResults={setQueryResults}
-                setQueryResponseRaw={setQueryResponseRaw}
-              />
-              </PageTransition>} />
+            <Route index element={executorElement} />
+            <Route path="executor" element={executorElement} />
             <Route path="/wizard" element={<PageTransition>
               <SparqlQueryWizard setQuery={setQuery} setMessage={setMessage}/>
               </PageTransition>} />
