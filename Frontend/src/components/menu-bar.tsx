@@ -32,7 +32,12 @@ export function MenuBar({ onMenuAction, zIndex,variables,queryResults,queryRespo
     >
       <div className="flex items-center gap-2 mr-4">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-          <span className="text-white font-bold text-sm" onClick={handleHome}>KG</span>
+          <span
+        className="text-white font-bold text-sm select-none cursor-pointer"
+        onClick={handleHome}
+      >
+        KG
+      </span>
         </div>
         <span className="text-sm font-semibold text-zinc-900">KnowGraph</span>
       </div>

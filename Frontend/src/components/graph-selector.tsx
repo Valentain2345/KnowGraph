@@ -252,11 +252,11 @@ const toggleConnection = (src: string, tgt: string, edge: string) => {
                         className="rounded-xl border border-gray-200 bg-gray-100 p-4 transition-all hover:border-gray-300 hover:bg-gray-200"
                       >
                         <div className="mb-3 flex items-center gap-2 text-gray-900">
-                          <span className="rounded-lg bg-teal-500/20 px-3 py-1 text-sm font-semibold text-teal-300">
+                          <span className="rounded-lg  px-3 py-1 text-sm font-semibold text-[#20313C]"   style={{ backgroundColor: "#86BBD8" }}>
                             {src}
                           </span>
                           <ArrowRight className="h-4 w-4 text-gray-400" />
-                          <span className="rounded-lg bg-teal-500/20 px-3 py-1 text-sm font-semibold text-teal-300">
+                          <span className="rounded-lg px-3 py-1 text-sm font-semibold text-[#20313C]"   style={{ backgroundColor: "#86BBD8" }}>
                             {tgt}
                           </span>
                         </div>
@@ -286,8 +286,8 @@ const toggleConnection = (src: string, tgt: string, edge: string) => {
             <div className="flex gap-3">
               <Button
                 onClick={() => setStep(1)}
-                variant="outline"
-                className="flex-1 rounded-2xl border-gray-200 bg-gray-100 py-6 text-lg font-semibold text-gray-900 hover:bg-gray-200"
+                variant="ghost"
+                className="group relative flex-1 overflow-hidden rounded-2xl bg-gradient-to-r from-orange-600 to-pink-600 py-6 text-lg font-bold text-white shadow-lg shadow-pink-500/50 transition-all hover:shadow-xl hover:shadow-pink-500/60 hover:scale-[1.02]"
               >
                 Back
               </Button>

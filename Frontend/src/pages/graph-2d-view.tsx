@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 interface Node {
   id: string | number;
@@ -25,7 +25,6 @@ interface ForceGraph2DProps {
 
 const ForceGraph2d: React.FC<ForceGraph2DProps> = ({ graphData }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const navigate = useNavigate();
   const location = useLocation();
 
   const effectiveGraphData =
@@ -134,35 +133,7 @@ const ForceGraph2d: React.FC<ForceGraph2DProps> = ({ graphData }) => {
         }}
       />
 
-      {/* Back Button */}
-      <button
-        onClick={() => navigate("/")}
-        style={{
-          position: "absolute",
-          top: "20px",
-          left: "20px",
-          backgroundColor: "#1f1f3a",
-          color: "#fff",
-          border: "none",
-          borderRadius: "8px",
-          padding: "10px 20px",
-          fontSize: "16px",
-          fontWeight: "500",
-          cursor: "pointer",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
-          transition: "background 0.3s ease, transform 0.1s ease",
-        }}
-        onMouseOver={(e) =>
-          (e.currentTarget.style.backgroundColor = "#29295a")
-        }
-        onMouseOut={(e) =>
-          (e.currentTarget.style.backgroundColor = "#1f1f3a")
-        }
-        onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.96)")}
-        onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-      >
-        ⬅ Back Home
-      </button>
+
     </div>
   );
 };
