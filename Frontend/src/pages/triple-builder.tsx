@@ -124,7 +124,7 @@ export function TripleBuilder({ setQuery, setMessage }: TripleBuilderProps) {
   const addTriple = () => {
     if (currentTriple.subject && currentTriple.predicate && currentTriple.object) {
       // Detectar automáticamente el tipo de objeto
-      let objectType: 'uri' | 'literal' = currentTriple.objectType
+      const objectType: 'uri' | 'literal' = currentTriple.objectType
       let datatype: string | undefined = undefined
 
       // Si el usuario no especificó, intentar detectar

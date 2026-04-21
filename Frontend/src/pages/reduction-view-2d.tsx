@@ -269,150 +269,142 @@ const render = useCallback(() => {
     };
   }, []);
 
-  const startSelection = (start: [number, number]) => {
-    rectStartRef.current = start;
-    rectCurrentRef.current = start;
-    const path = selectionPathRef.current;
-    if (path) {
-      d3.select(path)
-        .attr('d', rectPath(start[0], start[1], 0, 0))
-        .attr('visibility', 'visible');
-    }
-    setIsRectSelect(true);
-  };
+const startSelection = useCallback((start: [number, number]) => {
+  rectStartRef.current = start;
+  rectCurrentRef.current = start;
+  const path = selectionPathRef.current;
+  if (path) {
+    d3.select(path)
+      .attr('d', rectPath(start[0], start[1], 0, 0))
+      .attr('visibility', 'visible');
+  }
+  setIsRectSelect(true);
+}, []); // No dependencies because it only uses refs and a pure helper
 
- const moveSelection = (start: [number, number], moved: [number, number]) => {
-    rectCurrentRef.current = moved;  // <-- Make sure this line exists
-    const path = selectionPathRef.current;
-    if (path) {
-        d3.select(path).attr(
-        'd',
-        rectPath(start[0], start[1], moved[0] - start[0], moved[1] - start[1])
-        );
-    }
-    };
+const moveSelection = useCallback((start: [number, number], moved: [number, number]) => {
+  rectCurrentRef.current = moved;
+  const path = selectionPathRef.current;
+  if (path) {
+    d3.select(path).attr(
+      'd',
+      rectPath(start[0], start[1], moved[0] - start[0], moved[1] - start[1])
+    );
+  }
+}, []); // Only uses refs and rectPath
 
-  const endSelection = () => {
-    const path = selectionPathRef.current;
-    if (path) d3.select(path).attr('visibility', 'hidden');
-    setIsRectSelect(false);
+const endSelection = useCallback(() => {
+  const path = selectionPathRef.current;
+  if (path) d3.select(path).attr('visibility', 'hidden');
+  setIsRectSelect(false);
 
-    if (!rectStartRef.current || !rectCurrentRef.current) {
-
-      rectStartRef.current = null;
-      rectCurrentRef.current = null;
-      return;
-    }
-
-    const start = rectStartRef.current;
-    const end = rectCurrentRef.current;
-
-    const x1 = Math.min(start[0], end[0]);
-    const y1 = Math.min(start[1], end[1]);
-    const x2 = Math.max(start[0], end[0]);
-    const y2 = Math.max(start[1], end[1]);
-
-
-    const canvas = canvasRef.current!;
-    const scales = (canvas as any).__scales__;
-    const data = (canvas as any).__data__;
-    if (!scales || !data) {
-      rectStartRef.current = null;
-      rectCurrentRef.current = null;
-      return;
-    }
-
-    const selected: number[] = [];
-    data.forEach((p: EmbeddingPoint, i: number) => {
-      const px = scales.xScale(p.x);
-      const py = scales.yScale(p.y);
-      if (px >= x1 && px <= x2 && py >= y1 && py <= y2) selected.push(i);
-    });
-
-
-
-    setSelectedIndices(prev => {
-      const set = new Set(prev);
-      selected.forEach(i => set.add(i));
-      return Array.from(set);
-    });
-
+  if (!rectStartRef.current || !rectCurrentRef.current) {
     rectStartRef.current = null;
     rectCurrentRef.current = null;
+    return;
+  }
+
+  const start = rectStartRef.current;
+  const end = rectCurrentRef.current;
+
+  const x1 = Math.min(start[0], end[0]);
+  const y1 = Math.min(start[1], end[1]);
+  const x2 = Math.max(start[0], end[0]);
+  const y2 = Math.max(start[0], end[0]);
+
+  const canvas = canvasRef.current!;
+  const scales = (canvas as any).__scales__;
+  const dataPoints = (canvas as any).__data__;
+  if (!scales || !dataPoints) {
+    rectStartRef.current = null;
+    rectCurrentRef.current = null;
+    return;
+  }
+
+  const selected: number[] = [];
+  dataPoints.forEach((p: EmbeddingPoint, i: number) => {
+    const px = scales.xScale(p.x);
+    const py = scales.yScale(p.y);
+    if (px >= x1 && px <= x2 && py >= y1 && py <= y2) selected.push(i);
+  });
+
+  setSelectedIndices(prev => {
+    const set = new Set(prev);
+    selected.forEach(i => set.add(i));
+    return Array.from(set);
+  });
+
+  rectStartRef.current = null;
+  rectCurrentRef.current = null;
+}, []); // Dependencies: setSelectedIndices is stable, canvasRef is stable, __scales__/__data__ are updated via render
+
+ useEffect(() => {
+  const canvas = canvasRef.current;
+  if (!canvas) return;
+
+  const mousedown = (e: MouseEvent) => {
+    if (!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+
+    const start: [number, number] = [e.offsetX, e.offsetY];
+    startSelection(start);
+
+    const subject = d3.select(window);
+    subject
+      .on('mousemove.selection', (moveEvent: any) => {
+        const rect = canvas.getBoundingClientRect();
+        const moved: [number, number] = [
+          moveEvent.clientX - rect.left,
+          moveEvent.clientY - rect.top
+        ];
+        moveSelection(start, moved);
+      })
+      .on('mouseup.selection', () => {
+        endSelection();
+        subject.on('mousemove.selection', null).on('mouseup.selection', null);
+      });
   };
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const mousedown = (e: MouseEvent) => {
-      if (!e.ctrlKey && !e.metaKey) return;
-      e.preventDefault();
-
-      const start: [number, number] = [e.offsetX, e.offsetY];
+  canvas.addEventListener('mousedown', mousedown);
+  return () => canvas.removeEventListener('mousedown', mousedown);
+}, [data, startSelection, moveSelection, endSelection]);
 
 
-      startSelection(start);
+useEffect(() => {
+  const canvas = canvasRef.current;
+  if (!canvas) return;
 
-     const subject = d3.select(window);
-        subject
-        .on('mousemove.selection', (moveEvent: any) => {
-            const rect = canvas.getBoundingClientRect();
-            const moved: [number, number] = [
-                moveEvent.clientX - rect.left,
-                moveEvent.clientY - rect.top
-            ];
+  const touchstart = (e: TouchEvent) => {
+    if (e.touches.length !== 2) return;
+    e.preventDefault();
 
-            moveSelection(start, moved);  // This should update rectCurrentRef
-            })
-        .on('mouseup.selection', () => {
+    const touch = e.changedTouches[0];
+    const id = touch.identifier;
+    const rect = canvas.getBoundingClientRect();
+    const start: [number, number] = [
+      touch.clientX - rect.left,
+      touch.clientY - rect.top,
+    ];
 
-          endSelection();
-          subject.on('mousemove.selection', null).on('mouseup.selection', null);
-        });
-    };
+    startSelection(start);
 
-    canvas.addEventListener('mousedown', mousedown);
-    return () => canvas.removeEventListener('mousedown', mousedown);
-  }, [data]);
+    const subject = d3.select(canvas);
+    subject
+      .on(`touchmove.${id}`, (moveEvent: TouchEvent) => {
+        const t = Array.from(moveEvent.changedTouches).find(touch => touch.identifier === id);
+        if (t) {
+          const moved: [number, number] = [t.clientX - rect.left, t.clientY - rect.top];
+          moveSelection(start, moved);
+        }
+      })
+      .on(`touchend.${id}`, () => {
+        endSelection();
+        subject.on(`touchmove.${id}`, null).on(`touchend.${id}`, null);
+      });
+  };
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const touchstart = (e: TouchEvent) => {
-      if (e.touches.length !== 2) return;
-      e.preventDefault();
-
-      const touch = e.changedTouches[0];
-      const id = touch.identifier;
-      const rect = canvas.getBoundingClientRect();
-      const start: [number, number] = [
-        touch.clientX - rect.left,
-        touch.clientY - rect.top,
-      ];
-
-      startSelection(start);
-
-      const subject = d3.select(canvas);
-      subject
-        .on(`touchmove.${id}`, (moveEvent: TouchEvent) => {
-          const t = Array.from(moveEvent.changedTouches).find(touch => touch.identifier === id);
-          if (t) {
-            const moved: [number, number] = [t.clientX - rect.left, t.clientY - rect.top];
-            moveSelection(start, moved);
-          }
-        })
-        .on(`touchend.${id}`, () => {
-
-          endSelection();
-          subject.on(`touchmove.${id}`, null).on(`touchend.${id}`, null);
-        });
-    };
-
-    canvas.addEventListener('touchstart', touchstart, { passive: false });
-    return () => canvas.removeEventListener('touchstart', touchstart);
-  }, [data]);
+  canvas.addEventListener('touchstart', touchstart, { passive: false });
+  return () => canvas.removeEventListener('touchstart', touchstart);
+}, [data, startSelection, moveSelection, endSelection]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (isRectSelect) return;

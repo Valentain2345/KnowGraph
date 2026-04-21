@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef,useMemo } from "react";
 import {  useLocation } from "react-router-dom";
 
 interface Node {
@@ -26,12 +26,13 @@ const ForceGraph3d: React.FC<ForceGraphProps> = ({ graphData }) => {
   const graphRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
 
- const effectiveGraphData: GraphData =
-  graphData ||
-  (location.state as { graphData?: GraphData })?.graphData || {
-    nodes: [],
-    links: [],
-  };
+ const effectiveGraphData = useMemo(() => {
+    return graphData ||
+      (location.state as { graphData?: GraphData })?.graphData || {
+        nodes: [],
+        links: [],
+      };
+  }, [graphData, location.state]);
 
   // Validate graphData
   if (!effectiveGraphData.nodes.length || !effectiveGraphData.links.length) {

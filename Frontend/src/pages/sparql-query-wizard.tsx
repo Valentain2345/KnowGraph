@@ -445,6 +445,7 @@ export function SparqlQueryWizard({ setQuery, setMessage }: SparqlQueryWizardPro
         {}
       )
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows.length, prefixes, datasets]);
 
   // Limit, Offset, and Row Count controls
