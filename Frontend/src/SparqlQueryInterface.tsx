@@ -19,7 +19,6 @@ export function SparqlQueryInterface() {
     text: "Ready to execute queries",
     type: "info",
   });
-  const [queryResponseRaw,setQueryResponseRaw]=useState<string>("")
   const [variables,setVariables]=useState<string[]>([]);
   const [queryResults,setQueryResults]=useState<Array<Record<string, string>>>([]);
   const navigate = useNavigate();
@@ -39,7 +38,7 @@ export function SparqlQueryInterface() {
       setVariables={setVariables}
       queryResults={queryResults}
       setQueryResults={setQueryResults}
-      setQueryResponseRaw={setQueryResponseRaw}
+
     />
   </PageTransition>
 );
@@ -54,7 +53,7 @@ export function SparqlQueryInterface() {
         setQuery={setQuery}
         variables={variables}
         queryResults={queryResults}
-        queryResponseRaw={queryResponseRaw}
+
       />
          {!isNonQueryView && (
         <StyledNavbar>

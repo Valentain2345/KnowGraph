@@ -55,12 +55,7 @@ const handleRun = async () => {
   setIsRunning(true);
 
   try {
-    if (selectedVariables.length === variables.length) {
-      await onRun([], dims, method, true);
-    } else {
-      await onRun(selectedVariables, dims, method, false);
-    }
-
+    await onRun(selectedVariables, dims, method, false);
     onCancel(); // Close only after success
   } catch (err) {
     setError("Something went wrong while running dimensionality reduction.");

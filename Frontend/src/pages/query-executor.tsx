@@ -1,10 +1,9 @@
-import React, { useState,useEffect,useRef } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { ResultsTable } from "../components/results-table"
 import { QueryEditor } from "../components/query-editor"
 import { QueryActions } from "../components/query-actions"
 import { ExecuteButton } from "../components/execute-button"
-import Papa from "papaparse"
-
+import { useSparql } from '../SparqlContext'
 import {
   Card,
   CardContent,
@@ -13,16 +12,17 @@ import {
   CardDescription,
 } from "../components/ui/card"
 import styled from "styled-components"
+import { executeSparqlQuery } from "../lib/sparqlExecutor";
+import { ChevronDown } from "lucide-react";
 
 interface QueryExecutorProps {
   setMessage: React.Dispatch<React.SetStateAction<{ text: string; type: "info" | "success" | "error" }>>;
   query: string;
   setQuery: React.Dispatch<React.SetStateAction<string>>;
-  variables: string[];                    // current columns
+  variables: string[];
   setVariables: React.Dispatch<React.SetStateAction<string[]>>;
-  queryResults: Array<Record<string, string>>;  // current results
+  queryResults: Array<Record<string, string>>;
   setQueryResults: React.Dispatch<React.SetStateAction<Array<Record<string, string>>>>;
-  setQueryResponseRaw: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export const QueryExecutor: React.FC<QueryExecutorProps> = ({
@@ -33,135 +33,124 @@ export const QueryExecutor: React.FC<QueryExecutorProps> = ({
   setVariables,
   queryResults,
   setQueryResults,
-  setQueryResponseRaw,
+
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showChat, setShowChat] = useState(false);
-  const sparqlUrl = import.meta.env.VITE_SPARQL_BACKEND_URL;
+  const [currentPage, setCurrentPage] = useState(1);
+  const { currentProvider } = useSparql();
+  const [pageSize,setPageSize]=useState(50)
 
-
+  // Compute pagination values
+  const totalPages = Math.ceil(queryResults.length / pageSize);
+  const startIdx = (currentPage - 1) * pageSize;
+  const displayedResults = queryResults.slice(startIdx, startIdx + pageSize);
 
   // ---- EXECUTE QUERY ----
   const handleExecuteQuery = async () => {
-    setIsLoading(true)
-    setMessage({ text: "Fetching and parsing results of query...", type: "info" })
+  setIsLoading(true);
+  setMessage({ text: "Fetching and parsing results of query...", type: "info" });
 
-    try {
-      const response = await fetch(`${sparqlUrl}/sparql/runQuery`, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: query,
-      })
+  try {
+    const { variables: cols, results: data } = await executeSparqlQuery(
+      currentProvider,
+      query
+    );
 
-      if (!response.ok)
-        throw new Error("Failed to fetch query results from the server")
-      const csvText = await response.text()
-      setQueryResponseRaw(csvText)
-      Papa.parse(csvText, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (result) => {
-          const parsedData = result.data as Array<Record<string, string>>
 
-          const parsedColumns = result.meta.fields || []
-
-          setVariables(parsedColumns)
-          setQueryResults(parsedData)
-          setMessage({
-            text: `Query executed successfully. ${parsedData.length} results found.`,
-            type: "success",
-          })
-        },
-        error: (error:any) => {
-          setMessage({ text: `Error parsing CSV data: ${error.message}`, type: "error" })
-        },
-      })
-    } catch (error:any) {
-      setMessage({ text: `Error fetching data: ${(error as Error).message}`, type: "error" })
-    } finally {
-      setIsLoading(false)
-    }
+    setVariables(cols);
+    setQueryResults(data);
+    setCurrentPage(1);
+    setMessage({
+      text: `Query executed successfully. ${data.length} results found.`,
+      type: "success",
+    });
+  } catch (error: any) {
+    setMessage({
+      text: `Error fetching data: ${error.message}`,
+      type: "error",
+    });
+  } finally {
+    setIsLoading(false);
   }
-
+};
   // ---- FILE HANDLERS ----
   const handleLoadQuery = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    const reader = new FileReader()
+    const reader = new FileReader();
     reader.onload = () => {
-      const fileContent = reader.result as string
-      handleChangeQuery(fileContent)
-      setMessage({ text: "Query loaded successfully!", type: "success" })
-    }
+      const fileContent = reader.result as string;
+      handleChangeQuery(fileContent);
+      setMessage({ text: "Query loaded successfully!", type: "success" });
+    };
     reader.onerror = () => {
-      setMessage({ text: "Error loading file.", type: "error" })
-    }
-    reader.readAsText(file)
-  }
+      setMessage({ text: "Error loading file.", type: "error" });
+    };
+    reader.readAsText(file);
+  };
 
   const handleSaveQuery = () => {
     if (!query.trim()) {
-      setMessage({ text: "Query is empty, nothing to save.", type: "error" })
-      return
+      setMessage({ text: "Query is empty, nothing to save.", type: "error" });
+      return;
     }
-    const blob = new Blob([query], { type: "text/plain" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = "query.txt"
-    link.click()
-    URL.revokeObjectURL(url)
-    setMessage({ text: "Query saved successfully!", type: "success" })
-  }
+    const blob = new Blob([query], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "query.txt";
+    link.click();
+    URL.revokeObjectURL(url);
+    setMessage({ text: "Query saved successfully!", type: "success" });
+  };
 
   // ---- RESULTS HANDLERS ----
   const handleClearResults = () => {
     setQueryResults([]);
     setVariables([]);
+    setCurrentPage(1);
     setMessage({ text: "Results cleared", type: "info" });
   };
 
- const handleSaveResults = (format: "json" | "csv") => {
-  if (format === "json") {
-    const dataStr = JSON.stringify(queryResults, null, 2);
-    const dataBlob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `sparql-results-${Date.now()}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-    setMessage({ text: "Results saved as JSON successfully", type: "success" });
-  } else if (format === "csv") {
-    const csvHeader = variables.join(",");
-    const csvRows = queryResults.map((row) =>
-      variables
-        .map((col) => {
-          const value = row[col] || "";
-          // Escape if needed
-          if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-            return `"${value.replace(/"/g, '""')}"`;
-          }
-          return value;
-        })
-        .join(",")
-    );
-    const csvContent = [csvHeader, ...csvRows].join("\n");
-    const dataBlob = new Blob([csvContent], { type: "text/csv" });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `sparql-results-${Date.now()}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-    setMessage({ text: "Results saved as CSV successfully", type: "success" });
-  }
-};
+  const handleSaveResults = (format: "json" | "csv") => {
+    if (format === "json") {
+      const dataStr = JSON.stringify(queryResults, null, 2);
+      const dataBlob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `sparql-results-${Date.now()}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setMessage({ text: "Results saved as JSON successfully", type: "success" });
+    } else if (format === "csv") {
+      const csvHeader = variables.join(",");
+      const csvRows = queryResults.map((row) =>
+        variables
+          .map((col) => {
+            const value = row[col] || "";
+            if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+              return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+          })
+          .join(",")
+      );
+      const csvContent = [csvHeader, ...csvRows].join("\n");
+      const dataBlob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `sparql-results-${Date.now()}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setMessage({ text: "Results saved as CSV successfully", type: "success" });
+    }
+  };
 
   const handleChangeQuery = (newQuery: string) => setQuery(newQuery);
-
-
 
   return (
     <div className="max-w-4xl mx-auto bg-white p-6 space-y-6 relative rounded-lg shadow-lg">
@@ -186,7 +175,7 @@ export const QueryExecutor: React.FC<QueryExecutorProps> = ({
           </div>
 
           <ResultsTable
-            results={queryResults}
+            results={displayedResults}   // only current page
             columns={variables.map((col) => ({
               id: col,
               label: col.charAt(0).toUpperCase() + col.slice(1),
@@ -195,6 +184,49 @@ export const QueryExecutor: React.FC<QueryExecutorProps> = ({
             onClear={handleClearResults}
             onSave={handleSaveResults}
           />
+
+          {/* Pagination controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3 mt-4">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-sm rounded border border-zinc-300 bg-white hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-zinc-700">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 text-sm rounded border border-zinc-300 bg-white hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+              <div className="flex items-center gap-2">
+          <span className="text-sm text-zinc-700">Show</span>
+          <div className="relative">
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1); // Reset to first page when changing page size
+              }}
+              className="appearance-none px-3 py-1 pr-8 text-sm rounded border border-zinc-300 bg-white hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer"
+            >
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={250}>250</option>
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-500 pointer-events-none" />
+          </div>
+          <span className="text-sm text-zinc-700">per page</span>
+        </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

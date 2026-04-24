@@ -1,10 +1,12 @@
 import {SparqlQueryInterface} from "./SparqlQueryInterface"
 import { BrowserRouter as Router } from "react-router-dom";
-
+import {SparqlProvider} from "./SparqlContext"
 function App() {
   return (
    <Router>
-      <SparqlQueryInterface />
+      <SparqlProvider>
+        <SparqlQueryInterface />
+      </SparqlProvider>
     </Router>
   )
 }

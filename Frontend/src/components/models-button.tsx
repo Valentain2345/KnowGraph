@@ -10,7 +10,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
-
+import {useSparql} from '../SparqlContext'
 interface ReasoningButtonProps {
   onMenuAction: (action: string) => void
   open?: boolean
@@ -20,12 +20,12 @@ interface ReasoningButtonProps {
 export function ModelsButton({ onMenuAction, open, onOpenChange }: ReasoningButtonProps) {
   const [showDialog, setShowDialog] = useState(false)
   const [rules, setRules] = useState("")
-  const sparqlUrl = import.meta.env.VITE_SPARQL_BACKEND_URL
+    const { currentProvider } = useSparql();
 
   // --- Handlers ---
   const handleCreateOntModel = async (ontType: string) => {
     try {
-      const response = await fetch(`${sparqlUrl}/ontmodel/createModel?type=${ontType}`, {
+      const response = await fetch(`${currentProvider}/ontmodel/createModel?type=${ontType}`, {
         method: "GET",
       })
       if (!response.ok) throw new Error(`Failed to create ontology model: ${response.statusText}`)
@@ -39,7 +39,7 @@ export function ModelsButton({ onMenuAction, open, onOpenChange }: ReasoningButt
 
   const handleCreateInfModel = async (infType: string) => {
     try {
-      const response = await fetch(`${sparqlUrl}/infmodel/createModel?type=${infType}`, {
+      const response = await fetch(`${currentProvider}/infmodel/createModel?type=${infType}`, {
         method: "GET",
       })
       if (!response.ok) throw new Error(`Failed to create inference model: ${response.statusText}`)
@@ -59,7 +59,7 @@ export function ModelsButton({ onMenuAction, open, onOpenChange }: ReasoningButt
   // Submit dialog
   const handleSubmitRules = async () => {
     try {
-      const response = await fetch(`${sparqlUrl}/infmodel/createGenericModel`, {
+      const response = await fetch(`${currentProvider}/infmodel/createGenericModel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rules }),
@@ -100,7 +100,8 @@ export function ModelsButton({ onMenuAction, open, onOpenChange }: ReasoningButt
 
         <DropdownMenuContent>
           {/* Ontology Models */}
-          <DropdownMenuSub>
+         {currentProvider.id === 'knowgraph' ? (
+           <DropdownMenuSub>
             <DropdownMenuSubTrigger>New Ontology Model</DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               <DropdownMenuItem onClick={() => handleCreateOntModel("OWL2_FULL_MEM_RULES_INF")}>Create OWL 2 Full model</DropdownMenuItem>
@@ -110,10 +111,10 @@ export function ModelsButton({ onMenuAction, open, onOpenChange }: ReasoningButt
               <DropdownMenuItem onClick={() => handleCreateOntModel("OWL2_QL_MEM_RULES_INF")}>Create OWL 2 QL model</DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleCreateOntModel("RDFS_MEM_RDFS_INF")}>Create RDFS model</DropdownMenuItem>
             </DropdownMenuSubContent>
-          </DropdownMenuSub>
+          </DropdownMenuSub> ):( <DropdownMenuItem className="text-gray-400 cursor-not-allowed opacity-50">New Ontology Model</DropdownMenuItem>)}
 
           {/* Inference Models */}
-          <DropdownMenuSub>
+        {currentProvider.id === 'knowgraph' ? (  <DropdownMenuSub>
             <DropdownMenuSubTrigger>New Inference Model</DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               <DropdownMenuItem onClick={() => handleCreateInfModel("RDFS")}>RDFS Reasoner</DropdownMenuItem>
@@ -124,9 +125,9 @@ export function ModelsButton({ onMenuAction, open, onOpenChange }: ReasoningButt
               <DropdownMenuItem onClick={handleCreateGenericInfModel}>Generic Reasoner</DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
-        </DropdownMenuContent>
+     ):(<DropdownMenuItem className="text-gray-400 cursor-not-allowed opacity-50">New Ontology Model</DropdownMenuItem>)}
+      </DropdownMenuContent>
       </DropdownMenu>
-
       {/* Minimal dialog for Generic Reasoner */}
       {showDialog && (
       <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50 h-screen">

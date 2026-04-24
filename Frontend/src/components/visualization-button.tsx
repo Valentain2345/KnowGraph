@@ -19,7 +19,7 @@ interface VisualizationButtonProps {
   onOpenChange?: (open: boolean) => void;
   variables: string[];
   queryResults: Array<Record<string, string>>;
-  queryResponseRaw:string
+
 }
 interface GraphOutput {
   nodes: Array<{
@@ -48,7 +48,6 @@ export function VisualizationButton({
   onOpenChange,
   variables,
   queryResults,
-  queryResponseRaw,
 }: VisualizationButtonProps) {
   const navigate = useNavigate();
   const visualizerUrl = import.meta.env.VITE_VISUALIZER_URL
@@ -63,7 +62,6 @@ export function VisualizationButton({
   const [showVisualSelector,setShowVisualSelector]=useState(false);
   const [selectedMethod,setSelectedMethod]=useState<'umap'| 'tsne' | 'pca' >('umap')
   const [jobId,setJobId]=useState<string>('')
-  const [oldVariables,setOldVariables]=useState<string[]>()
   // ---------- Selector callbacks ----------
   const handleComplete = (config: GraphOutput) => {
     setGraphData(config);
@@ -109,142 +107,100 @@ export function VisualizationButton({
     navigate("/graph2d", { state: { graphData } });
   };
 
-const uploadResultsToServer = async ():Promise<string> => {
+// ---------- Upload: always expects a CSV string ----------
+const uploadCsvData = async (csvString: string): Promise<string> => {
   try {
-    // Ensure there's valid raw CSV data to upload
-    if (!queryResponseRaw || queryResponseRaw.trim() === '') {
+    if (!csvString || csvString.trim() === '') {
       onMenuAction('No data to upload');
       return '';
     }
 
-  // Create a FormData object to send the raw CSV as a file
     const formData = new FormData();
-    const blob = new Blob([queryResponseRaw], { type: 'text/csv' });
+    const blob = new Blob([csvString], { type: 'text/csv' });
     formData.append('csv', blob, 'data.csv');
 
-    // Send the FormData object to the server
     const response = await fetch(`${visualizerUrl}/upload`, {
       method: 'POST',
       body: formData,
     });
 
-    // Check if the response is successful
+
     if (response.ok) {
       const jsonResponse = await response.json();
 
-      const newJobId = jsonResponse.job_id as string;
-      return newJobId;
+      return jsonResponse.job_id as string;
+
     } else {
-      onMenuAction("Upload failed")
+      onMenuAction('Upload failed');
       return '';
     }
   } catch (error) {
-    onMenuAction('Error uploading the data')
+    onMenuAction('Error uploading the data');
+    return '';
   }
-  return '';
 };
 
-const uploadResultsToServerCustom = async (newCsvData: string):Promise<string> => {
-  try {
-    // Ensure there's valid raw CSV data to upload
-    if (typeof newCsvData !== 'string' || newCsvData.trim() === '') {
-      onMenuAction('No data to upload');
-      return '';
-    }
-
-    // Create a FormData object to send the raw CSV as a file
-    const formData = new FormData();
-    const blob = new Blob([newCsvData], { type: 'text/csv' });
-    formData.append('csv', blob, 'data.csv');
-
-    // Send the FormData object to the server
-    const response = await fetch(`${visualizerUrl}/upload`, {
-      method: 'POST',
-      body: formData,
-    });
-
-    // Check if the response is successful
-    if (response.ok) {
-      const jsonResponse = await response.json();
-      const newJobId = jsonResponse.job_id as string;
-      return newJobId;
-    } else {
-      onMenuAction('Upload failed')
-      return '';
-    }
-  } catch (error) {
-     onMenuAction('Error uploading the data')
-  }
-  return '';
-};
-
-
-
+// ---------- Helper: convert queryResults + selected variables to CSV ----------
 const arrayToCSV = (array: Record<string, string>[], selectedVariables: string[]): string => {
-  // Create header row based on selectedVariables
   const header = selectedVariables.join(',');
-
-  // Create data rows based on the selectedVariables and object keys
   const rows = array.map((row) =>
     selectedVariables
-      .map((varName) => `"${row[varName]}"`)
+      .map((varName) => {
+        const value = row[varName] || '';
+        // Escape quotes and wrap in double quotes if needed
+        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+          return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value;
+      })
       .join(',')
   );
-
   return [header, ...rows].join('\n');
 };
 
-  // Callback to handle running the dimensionality reduction
-  const handleDimReductionRun = async (
-    selectedVariables: string[],
-    dims: number,
-    method: "umap" | "tsne" | "pca",
-    isUpload: boolean
-  ) => {
-    let newJobId=jobId;
-    if(!jobId || selectedVariables!==oldVariables ){
-      if (isUpload) {
-        newJobId= await uploadResultsToServer();
-      } else {
-          // Step 1: Filter the data based on selected variables
-      const parsedData = parseCSV(queryResults, selectedVariables); // Filtered query results
-
-      // Step 2: Convert the filtered data into CSV string
-      const csvData = arrayToCSV(parsedData, selectedVariables);
-
-      // Step 3: Upload the CSV data
-       newJobId= await uploadResultsToServerCustom(csvData);
-      }
-
-
-    setJobId(newJobId);
-    setOldVariables(selectedVariables);
-    }
-    const visualsParams: VisualsParamsOut = { jobId:newJobId, method };
-
-
-     if (dims === 2) {
-        navigate("/visuals2d", { state: visualsParams });
-
-      } else {
-        navigate("/visuals3d", { state: visualsParams });
-      }
-
-
-  };
-
-  // Function to parse CSV using selected variables
+// ---------- Parse/filter queryResults based on selected variables ----------
 const parseCSV = (queryResults: any[], selectedVariables: string[]): Record<string, string>[] => {
   return queryResults.map((row) => {
     const filteredRow: Record<string, string> = {};
     selectedVariables.forEach((varName) => {
-      if (row[varName]) {
-        filteredRow[varName] = row[varName];
+      if (row[varName] !== undefined && row[varName] !== null) {
+        filteredRow[varName] = String(row[varName]);
       }
     });
     return filteredRow;
   });
 };
+
+// ---------- Handle dimensionality reduction (UMAP, t‑SNE, PCA) ----------
+const handleDimReductionRun = async (
+  selectedVariables: string[],
+  dims: number,
+  method: "umap" | "tsne" | "pca",
+) => {
+
+  // Step 1: Filter the data to only selected variables
+  const filteredData = parseCSV(queryResults, selectedVariables);
+
+
+  // Step 2: Convert filtered data to CSV string
+  const csvData = arrayToCSV(filteredData, selectedVariables);
+
+  // Step 3: Upload only if no jobId yet or variables have changed
+  let newJobId = jobId;
+  newJobId = await uploadCsvData(csvData);
+  setJobId(newJobId);
+
+
+  // Step 4: Navigate to the appropriate visualisation view
+  const visualsParams: VisualsParamsOut = { jobId: newJobId, method };
+  if (dims === 2) {
+    navigate("/visuals2d", { state: visualsParams });
+  } else {
+    navigate("/visuals3d", { state: visualsParams });
+  }
+};
+
+
   const handleShowVisualSelector = (method: 'umap' | 'tsne' | 'pca' ) => {
     setSelectedMethod(method)
     setShowVisualSelector(true)

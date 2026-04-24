@@ -173,7 +173,7 @@ def upload():
         X_z, label_series, idx = load_and_preprocess(df, label_col, text_cols, max_onehot_card)
         if X_z.shape[1] == 0:
             return jsonify({"error": "No features after preprocessing"}), 400
-
+        RESULTS.clear()
         job_id = str(uuid.uuid4())
         RESULTS[job_id] = {
             "X_z": X_z,

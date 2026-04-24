@@ -14,6 +14,8 @@ interface DataButtonProps {
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
+import {useSparql} from '../SparqlContext'
+
 
 export function DataButton({ onMenuAction, open, onOpenChange }: DataButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -25,8 +27,7 @@ export function DataButton({ onMenuAction, open, onOpenChange }: DataButtonProps
   const [isUploading, setIsUploading] = useState(false)
   const [fileRows, setFileRows] = useState<number[]>([0])
   const navigate = useNavigate();
-  const sparqlUrl = import.meta.env.VITE_SPARQL_BACKEND_URL
-
+   const { currentProvider } = useSparql();
   const handleOpenDatasetFile = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click()
@@ -43,7 +44,7 @@ export function DataButton({ onMenuAction, open, onOpenChange }: DataButtonProps
       formData.append('file', file)
 
       try {
-        const response = await fetch(`${sparqlUrl}/sparql/loadDatasetFromFile`, {
+        const response = await fetch(`${currentProvider}/sparql/loadDatasetFromFile`, {
           method: 'POST',
           body: formData,
         })
@@ -71,7 +72,7 @@ export function DataButton({ onMenuAction, open, onOpenChange }: DataButtonProps
     }
 
     try {
-      const response = await fetch(`${sparqlUrl}/sparql/loadDatasetFromUrl`, {
+      const response = await fetch(`${currentProvider}/sparql/loadDatasetFromUrl`, {
         method: 'POST',
         body: datasetURL,
         headers: { 'Content-Type': 'application/json' },
@@ -90,7 +91,7 @@ export function DataButton({ onMenuAction, open, onOpenChange }: DataButtonProps
 
   const handleCloseDataset = async () => {
     try {
-      const response = await fetch(`${sparqlUrl}/sparql/clearDataset`, {
+      const response = await fetch(`${currentProvider}/sparql/clearDataset`, {
         method: 'DELETE'
       })
 
@@ -107,7 +108,7 @@ export function DataButton({ onMenuAction, open, onOpenChange }: DataButtonProps
 
   const handleExportDataset = async (format: string) => {
     try {
-      const response = await fetch(`${sparqlUrl}/sparql/getExport?format=${encodeURIComponent(format)}`,
+      const response = await fetch(`${currentProvider}/sparql/getExport?format=${encodeURIComponent(format)}`,
         { method: 'GET' }
       )
 
@@ -181,7 +182,7 @@ export function DataButton({ onMenuAction, open, onOpenChange }: DataButtonProps
 
     try {
       setIsUploading(true)
-      const response = await fetch(`${sparqlUrl}/sparql/addDataToDataset`, {
+      const response = await fetch(`${currentProvider}/sparql/addDataToDataset`, {
         method: 'POST',
         body: formData,
       })
@@ -236,26 +237,38 @@ const handleRemoveFile = (index: number) => {
         </DropdownMenuTrigger>
 
         <DropdownMenuContent>
-          <DropdownMenuItem onClick={handleOpenDatasetFile}>Open Local File</DropdownMenuItem>
-          <DropdownMenuItem onClick={openRemoteFileModal}>Open Remote File</DropdownMenuItem>
-          <DropdownMenuItem onClick={handleOpenMany}>Open Many</DropdownMenuItem>
+           {currentProvider.id === 'knowgraph' ? (
+             <DropdownMenuItem onClick={handleOpenDatasetFile}>Open Local File</DropdownMenuItem>
+           ): (
+             <DropdownMenuItem  className="text-gray-400 cursor-not-allowed opacity-50">Open Local File</DropdownMenuItem>
+           )
+
+          }
+
+        {currentProvider.id === 'knowgraph' ? (  <DropdownMenuItem onClick={openRemoteFileModal}>Open Remote File</DropdownMenuItem>):(<DropdownMenuItem  className="text-gray-400 cursor-not-allowed opacity-50">Open Remote File</DropdownMenuItem>)}
+         {currentProvider.id === 'knowgraph' ? ( <DropdownMenuItem onClick={handleOpenMany}>Open Many</DropdownMenuItem>):(<DropdownMenuItem  className="text-gray-400 cursor-not-allowed opacity-50">Open Many</DropdownMenuItem>)}
           <DropdownMenuItem onClick={() => navigate("/importer")}>Import</DropdownMenuItem>
 
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Export</DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuItem onClick={() => handleExportDataset("RDF/XML")}>RDF/XML</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExportDataset("TTL")}>Turtle</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExportDataset("N-TRIPLE")}>N-Triples</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExportDataset("N3")}>N3</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExportDataset("RDF/JSON")}>RDF/JSON</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExportDataset("JSON-LD")}>JSONLD</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExportDataset("TRIX")}>TRIX</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExportDataset("N-QUADS")}>N-QUADS</DropdownMenuItem>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-
-          <DropdownMenuItem onClick={handleCloseDataset}>Close Dataset</DropdownMenuItem>
+          {currentProvider.id === 'knowgraph' ? (
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Export</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={() => handleExportDataset("RDF/XML")}>RDF/XML</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExportDataset("TTL")}>Turtle</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExportDataset("N-TRIPLE")}>N-Triples</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExportDataset("N3")}>N3</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExportDataset("RDF/JSON")}>RDF/JSON</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExportDataset("JSON-LD")}>JSONLD</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExportDataset("TRIX")}>TRIX</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExportDataset("N-QUADS")}>N-QUADS</DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          ) : (
+            <DropdownMenuItem  className="text-gray-400 cursor-not-allowed opacity-50">
+              Export
+            </DropdownMenuItem>
+          )}
+      {currentProvider.id === 'knowgraph' ? (    <DropdownMenuItem onClick={handleCloseDataset}>Close Dataset</DropdownMenuItem>):(<DropdownMenuItem className="text-gray-400 cursor-not-allowed opacity-50">Close Dataset</DropdownMenuItem>)}
         </DropdownMenuContent>
 
         <input

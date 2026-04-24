@@ -37,7 +37,6 @@ export function ResultsTable({ results, columns, onClear, onSave }: ResultsTable
           </Button>
         </DropdownMenuTrigger>
 
-        {/* Remove `asChild` and wrap `DropdownMenuContent` with a div to handle alignment */}
         <DropdownMenuContent className="w-40">
           <div className="flex flex-col items-end">
             <DropdownMenuItem onClick={() => onSave("json")}>Save as JSON</DropdownMenuItem>

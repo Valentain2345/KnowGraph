@@ -12,12 +12,12 @@ interface MenuBarProps {
   zIndex: number;
   variables: string[];
   queryResults: Array<Record<string, string>>;
-  queryResponseRaw:string;
+
   setQuery:React.Dispatch<React.SetStateAction<string>>;
    onMenuAction: (action: string) => void;
 }
 
-export function MenuBar({ onMenuAction, zIndex,variables,queryResults,queryResponseRaw  ,setQuery }: MenuBarProps) {
+export function MenuBar({ onMenuAction, zIndex,variables,queryResults  ,setQuery }: MenuBarProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
    const navigate = useNavigate();
 
@@ -50,7 +50,7 @@ export function MenuBar({ onMenuAction, zIndex,variables,queryResults,queryRespo
 
           variables={variables}
           queryResults={queryResults}
-          queryResponseRaw={queryResponseRaw}
+
         />
         <DataButton
           onMenuAction={onMenuAction}
