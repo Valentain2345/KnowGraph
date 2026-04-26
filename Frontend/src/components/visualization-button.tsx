@@ -90,8 +90,8 @@ export function VisualizationButton({
 
   // ---------- Helper: ensure a graph exists ----------
   const ensureGraph = (next: () => void, actionType: PendingGraphAction) => {
-    if (!isGraphDataEmpty) {
-      next(); // graph already built → go straight to the view
+    if (!isGraphDataEmpty()) {
+      next();
     } else {
       setPendingAction(actionType);
       openGraphBuilder();

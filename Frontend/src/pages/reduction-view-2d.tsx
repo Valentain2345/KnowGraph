@@ -309,7 +309,7 @@ const endSelection = useCallback(() => {
   const x1 = Math.min(start[0], end[0]);
   const y1 = Math.min(start[1], end[1]);
   const x2 = Math.max(start[0], end[0]);
-  const y2 = Math.max(start[0], end[0]);
+  const y2 = Math.max(start[0], end[1]);
 
   const canvas = canvasRef.current!;
   const scales = (canvas as any).__scales__;
