@@ -108,7 +108,10 @@ export function VisualizationButton({
   };
 
 // ---------- Upload: always expects a CSV string ----------
-const uploadCsvData = async (csvString: string): Promise<string> => {
+const uploadCsvData = async (
+  csvString: string,
+  labelCol?: string | null
+): Promise<string> => {
   try {
     if (!csvString || csvString.trim() === '') {
       onMenuAction('No data to upload');
@@ -118,18 +121,17 @@ const uploadCsvData = async (csvString: string): Promise<string> => {
     const formData = new FormData();
     const blob = new Blob([csvString], { type: 'text/csv' });
     formData.append('csv', blob, 'data.csv');
-
+    if (labelCol) {
+      formData.append('label_col', labelCol);
+    }
     const response = await fetch(`${visualizerUrl}/upload`, {
       method: 'POST',
       body: formData,
     });
 
-
     if (response.ok) {
       const jsonResponse = await response.json();
-
       return jsonResponse.job_id as string;
-
     } else {
       onMenuAction('Upload failed');
       return '';
@@ -139,15 +141,13 @@ const uploadCsvData = async (csvString: string): Promise<string> => {
     return '';
   }
 };
-
 // ---------- Helper: convert queryResults + selected variables to CSV ----------
-const arrayToCSV = (array: Record<string, string>[], selectedVariables: string[]): string => {
-  const header = selectedVariables.join(',');
+const arrayToCSV = (array: Record<string, string>[], columns: string[]): string => {
+  const header = columns.join(',');
   const rows = array.map((row) =>
-    selectedVariables
-      .map((varName) => {
-        const value = row[varName] || '';
-        // Escape quotes and wrap in double quotes if needed
+    columns
+      .map((col) => {
+        const value = row[col] || '';
         if (value.includes(',') || value.includes('"') || value.includes('\n')) {
           return `"${value.replace(/"/g, '""')}"`;
         }
@@ -159,7 +159,11 @@ const arrayToCSV = (array: Record<string, string>[], selectedVariables: string[]
 };
 
 // ---------- Parse/filter queryResults based on selected variables ----------
-const parseCSV = (queryResults: any[], selectedVariables: string[]): Record<string, string>[] => {
+const parseCSV = (
+  queryResults: any[],
+  selectedVariables: string[],
+  labelCol?: string | null
+): Record<string, string>[] => {
   return queryResults.map((row) => {
     const filteredRow: Record<string, string> = {};
     selectedVariables.forEach((varName) => {
@@ -167,6 +171,9 @@ const parseCSV = (queryResults: any[], selectedVariables: string[]): Record<stri
         filteredRow[varName] = String(row[varName]);
       }
     });
+    if (labelCol && row[labelCol] !== undefined && row[labelCol] !== null) {
+      filteredRow[labelCol] = String(row[labelCol]);
+    }
     return filteredRow;
   });
 };
@@ -176,30 +183,24 @@ const handleDimReductionRun = async (
   selectedVariables: string[],
   dims: number,
   method: "umap" | "tsne" | "pca",
+  labelCol: string | null
 ) => {
+  // Build the full list of columns to include in the CSV:
+  const columnsForCsv = labelCol && !selectedVariables.includes(labelCol)
+    ? [...selectedVariables, labelCol]
+    : selectedVariables;
 
-  // Step 1: Filter the data to only selected variables
-  const filteredData = parseCSV(queryResults, selectedVariables);
+  const filteredData = parseCSV(queryResults, selectedVariables, labelCol);
+  const csvData = arrayToCSV(filteredData, columnsForCsv);
 
-
-  // Step 2: Convert filtered data to CSV string
-  const csvData = arrayToCSV(filteredData, selectedVariables);
-
-  // Step 3: Upload only if no jobId yet or variables have changed
+  // Upload the CSV, now with the label_col parameter
   let newJobId = jobId;
-  newJobId = await uploadCsvData(csvData);
+  newJobId = await uploadCsvData(csvData, labelCol);
   setJobId(newJobId);
 
-
-  // Step 4: Navigate to the appropriate visualisation view
   const visualsParams: VisualsParamsOut = { jobId: newJobId, method };
-  if (dims === 2) {
-    navigate("/visuals2d", { state: visualsParams });
-  } else {
-    navigate("/visuals3d", { state: visualsParams });
-  }
+  navigate(dims === 2 ? "/visuals2d" : "/visuals3d", { state: visualsParams });
 };
-
 
   const handleShowVisualSelector = (method: 'umap' | 'tsne' | 'pca' ) => {
     setSelectedMethod(method)

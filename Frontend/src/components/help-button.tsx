@@ -12,12 +12,46 @@ import {
 } from "./ui/dropdown-menu";
 import { useSparql } from "../SparqlContext";
 import { Check } from "lucide-react";
+
 interface HelpButtonProps {
   onMenuAction: (action: string) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   setQuery: React.Dispatch<React.SetStateAction<string>>;
 }
+
+// Static example queries for Wikidata and DBpedia (taken from the provided files)
+const WIKIDATA_HORSES_QUERY = `
+SELECT DISTINCT ?horse ?horseLabel ?mother ?motherLabel ?father ?fatherLabel (year(?birthdate) as ?birthyear) (year(?deathdate) as ?deathyear) ?genderLabel
+WHERE
+{
+  ?horse wdt:P31/wdt:P279* wd:Q726 .
+
+  OPTIONAL{?horse wdt:P25 ?mother .}
+  OPTIONAL{?horse wdt:P22 ?father .}
+  OPTIONAL{?horse wdt:P569 ?birthdate .}
+  OPTIONAL{?horse wdt:P570 ?deathdate .}
+  OPTIONAL{?horse wdt:P21 ?gender .}
+
+  SERVICE wikibase:label { #BabelRainbow
+    bd:serviceParam wikibase:language "[AUTO_LANGUAGE],mul,fr,ar,be,bg,bn,ca,cs,da,de,el,en,es,et,fa,fi,he,hi,hu,hy,id,it,ja,jv,ko,nb,nl,eo,pa,pl,pt,ro,ru,sh,sk,sr,sv,sw,te,th,tr,uk,yue,vec,vi,zh"
+  }
+}
+ORDER BY ?horse
+LIMIT 1000
+OFFSET 3000
+`;
+
+const DBPEDIA_CAPITALS_QUERY = `PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?countryLabel ?capitalLabel
+WHERE {
+  ?country a dbo:Country .
+  ?country dbo:capital ?capital .
+  ?country rdfs:label ?countryLabel .
+  ?capital rdfs:label ?capitalLabel .
+}`;
 
 export function HelpButton({
   onMenuAction,
@@ -130,6 +164,41 @@ export function HelpButton({
     }
   };
 
+  // Determine which example items to show based on the current provider
+  const exampleItems: { label: string; action: () => void }[] = (() => {
+    switch (currentProvider.id) {
+      case "knowgraph":
+        return [
+          { label: "Person Heavy", action: () => handleLoadExample("example1") },
+          { label: "Person Heavy extended", action: () => handleLoadExample("example2") },
+        ];
+      case "wikidata":
+        return [
+          {
+            label: "Horses",
+            action: () => {
+              setQuery(WIKIDATA_HORSES_QUERY);
+              onMenuAction("Horses example query loaded");
+            },
+          },
+        ];
+      case "dbpedia":
+        return [
+          {
+            label: "Capitals",
+            action: () => {
+              setQuery(DBPEDIA_CAPITALS_QUERY);
+              onMenuAction("Capitals example query loaded");
+            },
+          },
+        ];
+      default:
+        return []; // custom or unknown -> no examples
+    }
+  })();
+
+  const showExamples = exampleItems.length > 0;
+
   return (
     <>
       <DropdownMenu open={open} onOpenChange={onOpenChange}>
@@ -145,21 +214,22 @@ export function HelpButton({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          {canLoadExamples ? (
+          {showExamples ? (
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>Examples</DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
-                <DropdownMenuItem onClick={() => handleLoadExample("example1")}>
-                  Person Heavy
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleLoadExample("example2")}>
-                  Person Heavy extended
-                </DropdownMenuItem>
+                {exampleItems.map((item) => (
+                  <DropdownMenuItem key={item.label} onClick={item.action}>
+                    {item.label}
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuSubContent>
             </DropdownMenuSub>
-          ) :( <DropdownMenuItem className="text-gray-400 cursor-not-allowed opacity-50" >
-                  Examples
-                </DropdownMenuItem>)}
+          ) : (
+            <DropdownMenuItem className="text-gray-400 cursor-not-allowed opacity-50" >
+              Examples
+            </DropdownMenuItem>
+          )}
 
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>SPARQL Provider</DropdownMenuSubTrigger>

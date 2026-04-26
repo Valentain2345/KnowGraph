@@ -9,7 +9,7 @@ type DimReductionProps = {
   variables: string[];
   method: "umap" | "tsne" | "pca";
   onCancel: () => void;
-  onRun: (selectedVariables: string[], dims: number, method: "umap" | "tsne" | "pca",isUpload:boolean) => Promise<void>;
+  onRun: (selectedVariables: string[], dims: number, method: "umap" | "tsne" | "pca",labelCol: string | null) => Promise<void>;
 };
 
 export const DimReductionSelector: React.FC<DimReductionProps> = ({
@@ -22,6 +22,8 @@ export const DimReductionSelector: React.FC<DimReductionProps> = ({
   const [dims, setDims] = useState<number>(2); // Default to 2D
   const [error, setError] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
+
   const toggleVariable = (variable: string) => {
     setSelectedVariables((prev) =>
       prev.includes(variable)
@@ -55,7 +57,7 @@ const handleRun = async () => {
   setIsRunning(true);
 
   try {
-    await onRun(selectedVariables, dims, method, false);
+    await onRun(selectedVariables, dims, method, selectedLabel);
     onCancel(); // Close only after success
   } catch (err) {
     setError("Something went wrong while running dimensionality reduction.");
@@ -107,7 +109,25 @@ const handleRun = async () => {
             <option value={3}>3</option>
           </select>
         </div>
-
+        <div className="flex items-center justify-between mb-4">
+          <Label className="text-lg font-semibold text-purple-400">
+            Point Label (optional)
+          </Label>
+          <select
+            value={selectedLabel ?? ''}
+            onChange={(e) =>
+              setSelectedLabel(e.target.value === '' ? null : e.target.value)
+            }
+            className="rounded-lg bg-gray-100 text-gray-900 px-3 py-2 border border-gray-200"
+          >
+            <option value="">Auto-detect (backend)</option>
+            {variables.map((v) => (
+              <option key={v} value={v}>
+                {v}
+              </option>
+            ))}
+          </select>
+        </div>
         {/* Variable Selection */}
         <div className="space-y-6">
           <div className="flex items-center justify-between mb-2">
