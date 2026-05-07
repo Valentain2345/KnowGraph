@@ -245,7 +245,11 @@ const handleDimReductionRun = async (
                 {isGraphDataEmpty() && <span className="ml-2 text-xs text-zinc-600">(build first)</span>}
               </DropdownMenuItem>
 
-              <DropdownMenuItem className=" text-zinc-700" onClick={openGraphBuilder}>
+              <DropdownMenuItem className=" text-zinc-700"
+              onClick={() => {
+                setPendingAction("graph2d");
+                openGraphBuilder();
+              }}>
                 Build Custom Graph
               </DropdownMenuItem>
         </DropdownMenuSubContent>

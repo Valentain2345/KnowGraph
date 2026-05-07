@@ -335,8 +335,7 @@ const endSelection = useCallback(() => {
 
   rectStartRef.current = null;
   rectCurrentRef.current = null;
-}, []); // Dependencies: setSelectedIndices is stable, canvasRef is stable, __scales__/__data__ are updated via render
-
+}, []);
  useEffect(() => {
   const canvas = canvasRef.current;
   if (!canvas) return;
@@ -663,3 +662,4 @@ useEffect(() => {
 };
 
 export default Visualization2d;
+
