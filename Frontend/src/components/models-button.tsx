@@ -20,12 +20,13 @@ interface ReasoningButtonProps {
 export function ModelsButton({ onMenuAction, open, onOpenChange }: ReasoningButtonProps) {
   const [showDialog, setShowDialog] = useState(false)
   const [rules, setRules] = useState("")
-    const { currentProvider } = useSparql();
+  const { currentProvider } = useSparql();
 
   // --- Handlers ---
   const handleCreateOntModel = async (ontType: string) => {
     try {
-      const response = await fetch(`${currentProvider}/ontmodel/createModel?type=${ontType}`, {
+      console.log(currentProvider)
+      const response = await fetch(`${currentProvider.sparqlUrl}/ontmodel/createModel?type=${ontType}`, {
         method: "GET",
       })
       if (!response.ok) throw new Error(`Failed to create ontology model: ${response.statusText}`)
@@ -39,7 +40,7 @@ export function ModelsButton({ onMenuAction, open, onOpenChange }: ReasoningButt
 
   const handleCreateInfModel = async (infType: string) => {
     try {
-      const response = await fetch(`${currentProvider}/infmodel/createModel?type=${infType}`, {
+      const response = await fetch(`${currentProvider.sparqlUrl}/infmodel/createModel?type=${infType}`, {
         method: "GET",
       })
       if (!response.ok) throw new Error(`Failed to create inference model: ${response.statusText}`)

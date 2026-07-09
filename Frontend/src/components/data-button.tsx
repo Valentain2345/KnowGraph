@@ -72,7 +72,7 @@ export function DataButton({ onMenuAction, open, onOpenChange }: DataButtonProps
     }
 
     try {
-      const response = await fetch(`${currentProvider}/sparql/loadDatasetFromUrl`, {
+      const response = await fetch(`${currentProvider.sparqlUrl}/sparql/loadDatasetFromUrl`, {
         method: 'POST',
         body: datasetURL,
         headers: { 'Content-Type': 'application/json' },
@@ -91,7 +91,7 @@ export function DataButton({ onMenuAction, open, onOpenChange }: DataButtonProps
 
   const handleCloseDataset = async () => {
     try {
-      const response = await fetch(`${currentProvider}/sparql/clearDataset`, {
+      const response = await fetch(`${currentProvider.sparqlUrl}/sparql/clearDataset`, {
         method: 'DELETE'
       })
 
@@ -108,7 +108,7 @@ export function DataButton({ onMenuAction, open, onOpenChange }: DataButtonProps
 
   const handleExportDataset = async (format: string) => {
     try {
-      const response = await fetch(`${currentProvider}/sparql/getExport?format=${encodeURIComponent(format)}`,
+      const response = await fetch(`${currentProvider.sparqlUrl}/sparql/getExport?format=${encodeURIComponent(format)}`,
         { method: 'GET' }
       )
 
@@ -182,7 +182,7 @@ export function DataButton({ onMenuAction, open, onOpenChange }: DataButtonProps
 
     try {
       setIsUploading(true)
-      const response = await fetch(`${currentProvider}/sparql/addDataToDataset`, {
+      const response = await fetch(`${currentProvider.sparqlUrl}/sparql/addDataToDataset`, {
         method: 'POST',
         body: formData,
       })

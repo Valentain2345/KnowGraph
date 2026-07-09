@@ -6,6 +6,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.jena.riot.Lang;
 import org.springframework.core.io.ResourceLoader;
@@ -30,16 +32,14 @@ import java.nio.charset.StandardCharsets;
 @RequestMapping("/sparql")
 public class SparqlController {
 	private final static String loggerName="SparqlController";
-   
+   private final SparqlService sparqlService;
 
-	private final SparqlService sparqlService;
-	
 	public SparqlController(SparqlService sp){
         sparqlService=sp;
 	}
 
 
-	
+
     @PostMapping(value = "/runQuery", produces = "text/plain")
     public ResponseEntity<String> runQuery(@RequestBody(required=false) String queryString) {
     	if (queryString == null || queryString.trim().isEmpty()) {
@@ -47,13 +47,20 @@ public class SparqlController {
                 .status(HttpStatus.BAD_REQUEST)
                 .body("Error: The SPARQL query cannot be empty or missing.");
         }
+        Chrono timer = new Chrono();
+        timer.startTimer();
     	try {
             String result=this.sparqlService.runSparqlQuery(queryString);
+            timer.stopTimer();
             if(result.isEmpty())
-                return ResponseEntity.ok("No hay resultados para esa query");
-            return ResponseEntity.ok(result);
+                return ResponseEntity.ok("No results for this query");
+
+
+            return ResponseEntity.ok()
+            .header("X-Elapsed-Time", String.valueOf(timer.getElapsedTime()) + " ms")
+            .body(result);
         } catch (Exception e) {
-            Logger.getLogger(loggerName).log(Level.parse("ERROR"), e.getMessage());
+            Logger.getLogger(loggerName).log(Level.SEVERE, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error executing query "+e.getMessage());
         }
     }
@@ -67,7 +74,7 @@ public class SparqlController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please use POST method to run the query.");
     }
 
-    
+
     @PostMapping(value="/loadDatasetFromUrl", produces = "text/plain")
     public ResponseEntity<String> loadDatasetFromUrl(@RequestBody(required=false) String urlPath) {
     	if (urlPath == null || urlPath.trim().isEmpty()) {
@@ -75,13 +82,16 @@ public class SparqlController {
                 .status(HttpStatus.BAD_REQUEST)
                 .body("Error: The url cannot be empty or missing.");
         }
-    	
+
         if (urlPath == null || urlPath.trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: File path cannot be empty or missing.");
         }
+        Chrono timer = new Chrono();
+        timer.startTimer();
         try {
             sparqlService.loadFromSource(urlPath);
-            return ResponseEntity.ok("Dataset loaded successfully from url: " + urlPath);
+            timer.stopTimer();
+            return ResponseEntity.ok("Dataset loaded successfully from url: " + urlPath+ " In "+ timer.getElapsedTime() + " ms");
         } catch (Exception e) {
             Logger.getLogger(loggerName).log(Level.SEVERE, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error loading dataset from file.");
@@ -96,22 +106,26 @@ public class SparqlController {
     public ResponseEntity<String> loadDatasetFromUrlMethodNotAllowed() {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please use POST method to load dataset from URL.");
     }
-    
+
     /*
      * Contains a vulnerability with the file extension. No worries tho,it does not access anything important
-     * 
+     *
      */
     @PostMapping(value="/loadDatasetFromFile", consumes = "multipart/form-data", produces = "text/plain")
     public ResponseEntity<String> loadDatasetFromFile(@RequestParam("file") MultipartFile file) {
         if (file == null || file.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: No file uploaded.");
         }
+
+        Chrono timer = new Chrono();
+        timer.startTimer();
         File tempFile = null;
         try {
             tempFile = File.createTempFile("uploaded_dataset_", file.getOriginalFilename());
             file.transferTo(tempFile);
             sparqlService.loadFromSource(tempFile.getAbsolutePath());
-            return ResponseEntity.ok("Dataset uploaded and loaded successfully.");
+             timer.stopTimer();
+            return ResponseEntity.ok("Dataset uploaded and loaded successfully." +" In "+ timer.getElapsedTime() + " ms");
         } catch (Exception e) {
             Logger.getLogger(loggerName).log(Level.SEVERE,"Error loading dataset"+ e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing uploaded file.");
@@ -123,7 +137,7 @@ public class SparqlController {
                 }else {
                 	Logger.getLogger(loggerName).log(Level.SEVERE,"Error deleteng tempfiles");
                 }
-                	
+
             }
         }
     }
@@ -138,6 +152,8 @@ public class SparqlController {
     Logger logger = Logger.getLogger("DatasetUploadLogger");
     List<File> tempFiles = new ArrayList<>();
 
+        Chrono timer = new Chrono();
+        timer.startTimer();
     try {
         // Handle uploaded files
         if (files != null && files.length > 0) {
@@ -167,8 +183,8 @@ public class SparqlController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Error: No files or URLs provided.");
         }
-
-        return ResponseEntity.ok("Datasets uploaded and loaded successfully.");
+         timer.stopTimer();
+        return ResponseEntity.ok("Datasets uploaded and loaded successfully." +" In "+ timer.getElapsedTime() + " ms");
 
     } catch (Exception e) {
         logger.log(Level.SEVERE, "Error loading dataset: " + e.getMessage(), e);
@@ -199,17 +215,21 @@ public class SparqlController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please use POST method to upload a dataset file.");
     }
 
-    
+
    @GetMapping(value="/getExport")
     public ResponseEntity<byte[]> exportGraph(@RequestParam String format) {
         try {
         if (format == null || format.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
+        Chrono timer = new Chrono();
+        timer.startTimer();
         byte[] fileData = sparqlService.exportGraphToAnotherFormat(format);
+        timer.stopTimer();
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=exported_graph." + format);
         headers.add(HttpHeaders.CONTENT_TYPE, "application/octet-stream");
+        headers.add("X-Elapsed-Time", String.valueOf(timer.getElapsedTime()) + " ms");
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(fileData);
@@ -229,8 +249,8 @@ public class SparqlController {
     public ResponseEntity<String> getExportMethodNotAllowed() {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please use POST method to export the graph.");
     }
-    
-    
+
+
     @GetMapping("/clearDataset")
     @PostMapping("/clearDataset")
     @PutMapping("/clearDataset")
@@ -238,15 +258,17 @@ public class SparqlController {
     public ResponseEntity<String> clearDatasetError() {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please use DELETE method to clear the dataset.");
 	}
-    
-    
+
+
     @DeleteMapping(value="/clearDataset", produces = "text/plain")
     public ResponseEntity<String> clearDataset() {
+     Chrono timer = new Chrono();
+        timer.startTimer();
         try {
             sparqlService.clearDataset();
+            timer.stopTimer();
             Logger.getLogger(loggerName).log(Level.FINE, "dataset cleared successfully");
-            System.out.println("Hiii");
-            return ResponseEntity.ok("Dataset cleared successfully.");
+            return ResponseEntity.ok("Dataset cleared successfully."+ " In "+timer.getElapsedTime()+ " ms");
         } catch (Exception e) {
             Logger.getLogger(loggerName).log(Level.SEVERE, "Error clearing dataset: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error clearing dataset.");
@@ -255,13 +277,16 @@ public class SparqlController {
 
     @GetMapping("/loadExample1")
     public ResponseEntity<String> loadExample1(){
+        Chrono timer = new Chrono();
+        timer.startTimer();
         try(InputStream is = ResourceLoader.class.getResourceAsStream("/PersonPhoneHeavy.owl.xml")){
-        	
+
 			if(is==null){
 				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Example 1 file not found");
 			}
 			sparqlService.loadFromSource(is, Lang.RDFXML);
-			return ResponseEntity.ok("Example 1 loaded successfully");
+			timer.stopTimer();
+			return ResponseEntity.ok("Example 1 loaded successfully."+" In "+timer.getElapsedTime() + " ms");
         }catch (Exception e){
         Logger.getLogger(loggerName).log(Level.SEVERE, "Error loading example 1: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error loading example 1");
@@ -270,12 +295,15 @@ public class SparqlController {
 
     @GetMapping("/loadExample2")
     public ResponseEntity<String> loadExample2(){
+        Chrono timer = new Chrono();
+        timer.startTimer();
         try(InputStream is = ResourceLoader.class.getResourceAsStream("/PersonHeavyExtended.ttl")){
         	if(is==null){
 				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Example 2 file not found");
 			}
 			sparqlService.loadFromSource(is, Lang.TTL);
-			return ResponseEntity.ok("Example 2 loaded successfully");
+			timer.stopTimer();
+			return ResponseEntity.ok("Example 2 loaded successfully"+" In "+timer.getElapsedTime() + " ms");
         }catch (Exception e){
         Logger.getLogger(loggerName).log(Level.SEVERE, "Error loading example 2: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error loading example 2");
@@ -285,13 +313,18 @@ public class SparqlController {
 
     @GetMapping("/loadExampleQuery1")
     public ResponseEntity<String> loadExampleQuery1(){
+        Chrono timer = new Chrono();
+        timer.startTimer();
         try(InputStream is = ResourceLoader.class.getResourceAsStream("/queryexample1.txt")){
 
 			if(is==null){
 				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Example Query 1 file not found");
 			}
             String content = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-            return ResponseEntity.ok(content);
+            timer.stopTimer();
+            return ResponseEntity.ok()
+            .header("X-Elapsed-Time", String.valueOf(timer.getElapsedTime()) + " ms")
+            .body(content);
         }catch (Exception e){
         Logger.getLogger(loggerName).log(Level.SEVERE, "Error loading example query 1: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error loading example query 1");
@@ -300,13 +333,19 @@ public class SparqlController {
 
      @GetMapping("/loadExampleQuery2")
     public ResponseEntity<String> loadExampleQuery2(){
+        Chrono timer = new Chrono();
+        timer.startTimer();
         try(InputStream is = ResourceLoader.class.getResourceAsStream("/queryexample2.txt")){
 
 			if(is==null){
 				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Example Query 2 file not found");
 			}
             String content = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-            return ResponseEntity.ok(content);
+            timer.stopTimer();
+
+            return ResponseEntity.ok()
+            .header("X-Elapsed-Time", String.valueOf(timer.getElapsedTime()) + " ms")
+            .body(content);
         }catch (Exception e){
         Logger.getLogger(loggerName).log(Level.SEVERE, "Error loading example query 2: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error loading example query 2");
@@ -315,5 +354,34 @@ public class SparqlController {
 
 
 
-    
+
+
+private class Chrono{
+	private long startTime,endTime;
+
+	public Chrono(){
+		startTime=endTime=0;
+	}
+
+	public void startTimer(){
+		startTime=System.nanoTime();
+	}
+
+	public void stopTimer(){
+		endTime=System.nanoTime();
+	}
+
+	public void reset(){
+		startTime=endTime=0;
+	}
+
+	/*
+	In milliseconds
+	*/
+	public long getElapsedTime(){
+		return (endTime-startTime)/1000000;
+
+	}
+
+}
 }
