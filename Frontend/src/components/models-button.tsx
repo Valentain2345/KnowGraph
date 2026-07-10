@@ -60,7 +60,7 @@ export function ModelsButton({ onMenuAction, open, onOpenChange }: ReasoningButt
   // Submit dialog
   const handleSubmitRules = async () => {
     try {
-      const response = await fetch(`${currentProvider}/infmodel/createGenericModel`, {
+      const response = await fetch(`${currentProvider.sparqlUrl}/infmodel/createGenericModel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rules }),

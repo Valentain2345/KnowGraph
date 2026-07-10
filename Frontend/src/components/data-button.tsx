@@ -44,7 +44,7 @@ export function DataButton({ onMenuAction, open, onOpenChange }: DataButtonProps
       formData.append('file', file)
 
       try {
-        const response = await fetch(`${currentProvider}/sparql/loadDatasetFromFile`, {
+        const response = await fetch(`${currentProvider.sparqlUrl}/sparql/loadDatasetFromFile`, {
           method: 'POST',
           body: formData,
         })

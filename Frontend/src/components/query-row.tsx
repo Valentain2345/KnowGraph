@@ -25,6 +25,7 @@ interface QueryRowType {
   function: string;
   operator: string;
   value: string;
+  filterLogic: "AND" | "OR";
   optional: boolean;
   result: string;
   graphPattern: string;
@@ -363,6 +364,20 @@ export const QueryRow: React.FC<QueryRowProps> = ({
         </StyledSelect>
       </StyledTd>
 
+      <StyledTd style={{ width: "80px" }}>
+        <StyledSelect
+          value={row.filterLogic || "AND"}
+          onValueChange={(value) => onUpdate(row.id, "filterLogic", value)}
+        >
+          <SelectTriggerStyled>
+            <SelectValue placeholder="AND" />
+          </SelectTriggerStyled>
+          <SelectContent className="bg-zinc-100 border-zinc-400 text-xs">
+            <SelectItem value="AND" className="text-zinc-800 hover:bg-zinc-300">AND</SelectItem>
+            <SelectItem value="OR" className="text-zinc-800 hover:bg-zinc-300">OR</SelectItem>
+          </SelectContent>
+        </StyledSelect>
+      </StyledTd>
       <StyledTd style={{ width: "130px" }}>
         <StyledSelect
           value={row.operator}

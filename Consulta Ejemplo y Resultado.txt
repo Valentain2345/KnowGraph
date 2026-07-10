@@ -1,0 +1,51 @@
+[
+  {
+    "id": "1",
+    "subject": "person",
+    "conceptPrefix": "foaf",
+    "concept": "Person",
+    "propertyPrefix": "foaf",
+    "property": "name",
+    "alias": "name",
+    "order": "ascending",
+    "visible": true,
+    "function": "none",
+    "operator": "none",
+    "value": "",
+    "optional": false,
+    "graphPattern": "Basic",
+    "propertyPath": "none"
+  },
+  {
+    "id": "2",
+    "subject": "person",
+    "conceptPrefix": "none",
+    "concept": "none",
+    "propertyPrefix": "foaf",
+    "property": "age",
+    "alias": "age",
+    "order": "none",
+    "visible": true,
+    "function": "none",
+    "operator": ">",
+    "value": "18",
+    "optional": true,
+    "graphPattern": "Optional",
+    "propertyPath": "none"
+  }
+]
+
+
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT ?name ?age
+WHERE
+{
+  ?person a foaf:Person .
+  ?person foaf:name ?name .
+  OPTIONAL {
+      ?person foaf:age ?age .
+    }
+  FILTER (?age > "18"^^xsd:integer)
+}
+ORDER BY ?name

@@ -15,6 +15,7 @@ interface QueryRowType {
   function: string;
   operator: string;
   value: string;
+  filterLogic: "AND" | "OR";
   optional: boolean;
   result: string;
   graphPattern: string;
@@ -144,6 +145,7 @@ export const QueryTable: React.FC<QueryTableProps> = ({
             <th style={{ width: "125px" }}>Order</th>
             <th style={{ width: "125px",paddingRight: "0.25rem" }}>Visible</th>
             <th style={{ width: "100px" }}>Function</th>
+            <th style={{ width: "80px" }}>Logic</th>
             <th style={{ width: "100px" }}>Operator</th>
             <th style={{ width: "100px" }}>Value</th>
             <th style={{ width: "130px" }}>Optional</th>

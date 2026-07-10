@@ -25,6 +25,7 @@ interface QueryRow {
   function: string;
   operator: string;
   value: string;
+  filterLogic: "AND" | "OR";
   optional: boolean;
   result: string;
   graphPattern: string;
@@ -121,6 +122,7 @@ export function SparqlQueryWizard({ setQuery, setMessage }: SparqlQueryWizardPro
       function: "none",
       operator: "",
       value: "",
+      filterLogic: "AND",
       optional: false,
       result: "",
       graphPattern: "Basic",
@@ -152,7 +154,6 @@ export function SparqlQueryWizard({ setQuery, setMessage }: SparqlQueryWizardPro
   const [newRowCount, setNewRowCount] = useState(1);
   const [isQueryBuilderCollapsed, setIsQueryBuilderCollapsed] = useState(false);
 
-  // Force Select components to re-render when prefixes/datasets change
   const [selectResetKey, setSelectResetKey] = useState(0);
   useEffect(() => {
     setSelectResetKey((prev) => prev + 1);
@@ -176,6 +177,7 @@ export function SparqlQueryWizard({ setQuery, setMessage }: SparqlQueryWizardPro
       function: "none",
       operator: "",
       value: "",
+      filterLogic: "AND",
       optional: false,
       result: "",
       graphPattern: "Basic",
@@ -201,6 +203,7 @@ export function SparqlQueryWizard({ setQuery, setMessage }: SparqlQueryWizardPro
       function: "none",
       operator: "",
       value: "",
+      filterLogic: "AND",
       optional: false,
       result: "",
       graphPattern: "Basic",
@@ -235,13 +238,15 @@ export function SparqlQueryWizard({ setQuery, setMessage }: SparqlQueryWizardPro
     }
   };
 
-  const formatValue = (value: string): string => {
-    if (value.startsWith("<") && value.endsWith(">")) return value;
-    if (value.includes(":")) return value;
-    if (value.match(/^\d+$/)) return `"${value}"^^xsd:integer`;
-    if (value.match(/^\d+\.\d+$/)) return `"${value}"^^xsd:decimal`;
-    if (value === "true" || value === "false") return `"${value}"^^xsd:boolean`;
-    return `"${value}"`;
+ const formatValue = (value: string): string => {
+    const trimmed = value.trim();
+    if (trimmed.startsWith("<") && trimmed.endsWith(">")) return trimmed;
+    if (trimmed.match(/^\d+$/)) return `"${trimmed}"^^xsd:integer`;
+    if (trimmed.match(/^\d+\.\d+$/)) return `"${trimmed}"^^xsd:decimal`;
+    if (trimmed === "true" || trimmed === "false") return `"${trimmed}"^^xsd:boolean`;
+    if (trimmed.match(/^[a-zA-Z][a-zA-Z0-9_-]*:[a-zA-Z0-9_-]+$/)) return trimmed;
+    if (trimmed.startsWith('"') || trimmed.startsWith("'")) return trimmed;
+    return `"${trimmed}"`;
   };
 
   const buildFilterExpression = (row: QueryRow, variable: string) => {
@@ -258,14 +263,28 @@ export function SparqlQueryWizard({ setQuery, setMessage }: SparqlQueryWizardPro
     return `${variable} ${operator} ${formatValue(value)}`;
   };
 
+
+  const invalidRowError = rows.map((row) => {
+    if (row.operator && row.operator !== "none" && !row.value.trim()) {
+      return `Row ${row.id}: Missing value for the selected operator.`;
+    }
+    if (row.propertyPath !== "none" && !row.propertyPath.includes("uri") && !row.property.trim()) {
+      return `Row ${row.id}: A property path requires a property.`;
+    }
+    return null;
+  }).find(Boolean);
+  const hasErrors = !!invalidRowError;
+
+
   const generateQuery = () => {
     let query = "";
-    const variablesInResult: string[] = [];
+    const variablesInResult: Set<string> = new Set();
     const triplesInWhere: string[] = [];
-    const filterConditions: string[] = [];
+
+    const filterConditions: { condition: string; logic: "AND" | "OR" }[] = [];
     const orderList: string[] = [];
-    const groupByList: string[] = [];
-    const havingConditions: string[] = [];
+    const groupByList: Set<string> = new Set();
+    const havingConditions: { condition: string; logic: "AND" | "OR" }[] = [];
 
     if (queryDescription) query += `# ${queryDescription}\n\n`;
 
@@ -287,60 +306,76 @@ export function SparqlQueryWizard({ setQuery, setMessage }: SparqlQueryWizardPro
     rows.forEach((row, rowIndex) => {
       const subjectVar = row.subject.startsWith("?") ? row.subject : row.subject ? `?${row.subject}` : `?s${rowIndex + 1}`;
       const aliasVar = row.alias.startsWith("?") ? row.alias : row.alias ? `?${row.alias}` : `?o${rowIndex + 1}`;
-      const concept = row.conceptPrefix ? `${row.conceptPrefix}:${row.concept}` : row.concept;
-      let property = row.propertyPrefix ? `${row.propertyPrefix}:${row.property}` : row.property;
 
-      if (row.propertyPath === "!uri") property = `!<${property}>`;
-      else if (row.propertyPath === "!^uri") property = `!^<${property}>`;
-      else if (row.propertyPath !== "none") property = `${property}${row.propertyPath}`;
+      const cPrefix = row.conceptPrefix && row.conceptPrefix !== "none" ? `${row.conceptPrefix}:` : "";
+      const concept = row.concept && row.concept !== "none" ? `${cPrefix}${row.concept}` : "";
 
-      if (row.subject && row.property && row.alias) {
-        let triplePattern = "";
-        if (row.concept) {
-          triplePattern = `${subjectVar} rdf:type ${concept} .\n    ${subjectVar} ${property} ${aliasVar} .`;
-        } else {
-          triplePattern = `${subjectVar} ${property} ${aliasVar} .`;
+      const pPrefix = row.propertyPrefix && row.propertyPrefix !== "none" ? `${row.propertyPrefix}:` : "";
+      let property = row.property && row.property !== "none" ? `${pPrefix}${row.property}` : "";
+
+      if (property) {
+        if (row.propertyPath === "!uri") property = `!${property}`;
+        else if (row.propertyPath === "!^uri") property = `!^${property}`;
+        else if (row.propertyPath !== "none") property = `${property}${row.propertyPath}`;
+      }
+
+      let triplePatterns: string[] = [];
+
+      if (concept) {
+        triplePatterns.push(`${subjectVar} a ${concept} .`);
+      }
+
+      if (property && row.alias) {
+        triplePatterns.push(`${subjectVar} ${property} ${aliasVar} .`);
+      }
+
+      if (triplePatterns.length > 0) {
+        let block = triplePatterns.join("\n    ");
+
+        if (row.graphPattern === "Union") {
+          block = `{ ${block} } UNION { /* add alternative pattern here */ }`;
         }
 
-        let wrappedPattern = triplePattern;
-        if (row.service) {
-          wrappedPattern = `SERVICE <${row.service}> {\n    ${triplePattern}\n  }`;
-        } else if (row.graph) {
-          wrappedPattern = `GRAPH <${row.graph}> {\n    ${triplePattern}\n  }`;
-        } else if (row.graphPattern === "Optional") {
-          wrappedPattern = `OPTIONAL {\n    ${triplePattern}\n  }`;
-        } else if (row.graphPattern === "Union") {
-          wrappedPattern = `{ ${subjectVar} ${property} ${aliasVar} . } UNION { ${subjectVar} ${property} ${aliasVar} . }`;
+        if (row.service && row.service.trim() !== "") {
+          block = `SERVICE <${row.service}> {\n      ${block}\n    }`;
+        }
+        if (row.graph && row.graph !== "none") {
+          block = `GRAPH <${row.graph}> {\n      ${block}\n    }`;
+        }
+
+        if (row.optional || row.graphPattern === "Optional") {
+          block = `OPTIONAL {\n      ${block}\n    }`;
         } else if (row.graphPattern === "Minus") {
-          wrappedPattern = `MINUS {\n    ${triplePattern}\n  }`;
+          block = `MINUS {\n      ${block}\n    }`;
         }
 
-        triplesInWhere.push(wrappedPattern);
+        triplesInWhere.push(block);
       }
 
       if (row.visible) {
         if (row.function === "none") {
-          if (row.alias) variablesInResult.push(aliasVar);
+          if (row.alias) variablesInResult.add(aliasVar);
         } else if (row.function === "Group by") {
           if (row.alias) {
-            variablesInResult.push(aliasVar);
-            groupByList.push(aliasVar);
+            variablesInResult.add(aliasVar);
+            groupByList.add(aliasVar);
           }
         } else {
-          const resultVar = row.result ? `?${row.result}` : `?result${rowIndex + 1}`;
+          const resultVar = row.result ? (row.result.startsWith("?") ? row.result : `?${row.result}`) : `?result${rowIndex + 1}`;
           const funcName = functionTranslated(row.function);
           const aggregateExpr = `(${funcName}(${aliasVar}) AS ${resultVar})`;
-          variablesInResult.push(aggregateExpr);
-          if (row.operator && row.value) {
+          variablesInResult.add(aggregateExpr);
+
+          if (row.operator && row.operator !== "none" && row.value) {
             const havingCondition = buildFilterExpression(row, resultVar);
-            if (havingCondition) havingConditions.push(havingCondition);
+            if (havingCondition) havingConditions.push({ condition: havingCondition, logic: row.filterLogic });
           }
         }
       }
 
-      if (row.operator && row.value && row.function === "none") {
+      if (row.operator && row.operator !== "none" && row.value && row.function === "none") {
         const filterCondition = buildFilterExpression(row, aliasVar);
-        if (filterCondition) filterConditions.push(filterCondition);
+        if (filterCondition) filterConditions.push({ condition: filterCondition, logic: row.filterLogic });
       }
 
       if (row.order !== "none" && row.alias) {
@@ -350,18 +385,36 @@ export function SparqlQueryWizard({ setQuery, setMessage }: SparqlQueryWizardPro
     });
 
     query += `SELECT${distinct ? " DISTINCT" : ""} `;
-    query += variablesInResult.length > 0 ? variablesInResult.join(" ") : "*";
+    query += variablesInResult.size > 0 ? Array.from(variablesInResult).join(" ") : "*";
     query += "\n";
 
     if (triplesInWhere.length > 0 || filterConditions.length > 0) {
       query += "WHERE\n{\n";
       triplesInWhere.forEach((triple) => (query += `  ${triple}\n`));
-      if (filterConditions.length > 0) query += `  FILTER (${filterConditions.join(" && ")})\n`;
+
+      if (filterConditions.length > 0) {
+        let filterStr = filterConditions[0].condition;
+        for (let i = 1; i < filterConditions.length; i++) {
+          const logicOp = filterConditions[i].logic === "OR" ? "||" : "&&";
+          filterStr = `(${filterStr}) ${logicOp} (${filterConditions[i].condition})`;
+        }
+        query += `  FILTER (${filterStr})\n`;
+      }
+
       query += "}\n";
     }
 
-    if (groupByList.length > 0) query += `GROUP BY ${groupByList.join(" ")}\n`;
-    if (havingConditions.length > 0) query += `HAVING (${havingConditions.join(" && ")})\n`;
+    if (groupByList.size > 0) query += `GROUP BY ${Array.from(groupByList).join(" ")}\n`;
+
+    if (havingConditions.length > 0) {
+      let havingStr = havingConditions[0].condition;
+      for (let i = 1; i < havingConditions.length; i++) {
+        const logicOp = havingConditions[i].logic === "OR" ? "||" : "&&";
+        havingStr = `(${havingStr}) ${logicOp} (${havingConditions[i].condition})`;
+      }
+      query += `HAVING (${havingStr})\n`;
+    }
+
     if (orderList.length > 0) query += `ORDER BY ${orderList.join(" ")}\n`;
     if (isLimitEnabled && limit > 0) query += `LIMIT ${limit}\n`;
     if (isOffsetEnabled && offset > 0) query += `OFFSET ${offset}\n`;
@@ -371,6 +424,7 @@ export function SparqlQueryWizard({ setQuery, setMessage }: SparqlQueryWizardPro
     setQuery(finalQuery);
     setMessage({ text: "Query generated successfully", type: "success" });
   };
+
 
   return (
     <Container>
@@ -440,9 +494,14 @@ export function SparqlQueryWizard({ setQuery, setMessage }: SparqlQueryWizardPro
               offset={offset}
               setOffset={setOffset}
             />
-            <GenerateButton onClick={generateQuery}>
-              Generate SPARQL Query <Code className="ml-2 w-4 h-4" />
+            <GenerateButton
+              onClick={generateQuery}
+              disabled={hasErrors}
+              className={hasErrors ? "opacity-50 cursor-not-allowed" : ""}
+            >
+              {hasErrors ? "Fix Errors to Generate" : "Generate SPARQL Query"} <Code className="ml-2 w-4 h-4" />
             </GenerateButton>
+            {invalidRowError && <p className="text-red-500 text-sm mt-2">{invalidRowError}</p>}
             <GeneratedQueryDisplay query={generatedQuery} />
           </QueryContent>
         )}
