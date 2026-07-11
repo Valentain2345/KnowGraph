@@ -49,7 +49,7 @@ services:
         context: ./Frontend
         dockerfile: Dockerfile
         args:
-            VITE_SPARQL_BACKEND_URL: /api/sparql
+            VITE_SPARQL_BACKEND_URL: /api/sparql-backend
             VITE_IMPORTER_URL: /api/importer
             VITE_VISUALIZER_URL: /api/visualizer
     container_name: frontend-service

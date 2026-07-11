@@ -91,7 +91,9 @@ public class SparqlController {
         try {
             sparqlService.loadFromSource(urlPath);
             timer.stopTimer();
-            return ResponseEntity.ok("Dataset loaded successfully from url: " + urlPath+ " In "+ timer.getElapsedTime() + " ms");
+            return ResponseEntity.ok()
+            .header("X-Elapsed-Time", String.valueOf(timer.getElapsedTime()) + " ms")
+            .body("Dataset loaded successfully from url: " + urlPath+ " In "+ timer.getElapsedTime() + " ms");
         } catch (Exception e) {
             Logger.getLogger(loggerName).log(Level.SEVERE, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error loading dataset from file.");
@@ -125,7 +127,9 @@ public class SparqlController {
             file.transferTo(tempFile);
             sparqlService.loadFromSource(tempFile.getAbsolutePath());
              timer.stopTimer();
-            return ResponseEntity.ok("Dataset uploaded and loaded successfully." +" In "+ timer.getElapsedTime() + " ms");
+            return ResponseEntity.ok()
+            .header("X-Elapsed-Time", String.valueOf(timer.getElapsedTime()) + " ms")
+            .body("Dataset uploaded and loaded successfully." +" In "+ timer.getElapsedTime() + " ms");
         } catch (Exception e) {
             Logger.getLogger(loggerName).log(Level.SEVERE,"Error loading dataset"+ e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing uploaded file.");
@@ -184,7 +188,9 @@ public class SparqlController {
                     .body("Error: No files or URLs provided.");
         }
          timer.stopTimer();
-        return ResponseEntity.ok("Datasets uploaded and loaded successfully." +" In "+ timer.getElapsedTime() + " ms");
+        return ResponseEntity.ok()
+        .header("X-Elapsed-Time", String.valueOf(timer.getElapsedTime()) + " ms")
+        .body("Datasets uploaded and loaded successfully." +" In "+ timer.getElapsedTime() + " ms");
 
     } catch (Exception e) {
         logger.log(Level.SEVERE, "Error loading dataset: " + e.getMessage(), e);
@@ -268,7 +274,9 @@ public class SparqlController {
             sparqlService.clearDataset();
             timer.stopTimer();
             Logger.getLogger(loggerName).log(Level.FINE, "dataset cleared successfully");
-            return ResponseEntity.ok("Dataset cleared successfully."+ " In "+timer.getElapsedTime()+ " ms");
+            return ResponseEntity.ok()
+            .header("X-Elapsed-Time", String.valueOf(timer.getElapsedTime()) + " ms")
+            .body("Dataset cleared successfully."+ " In "+timer.getElapsedTime()+ " ms");
         } catch (Exception e) {
             Logger.getLogger(loggerName).log(Level.SEVERE, "Error clearing dataset: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error clearing dataset.");
@@ -286,7 +294,9 @@ public class SparqlController {
 			}
 			sparqlService.loadFromSource(is, Lang.RDFXML);
 			timer.stopTimer();
-			return ResponseEntity.ok("Example 1 loaded successfully."+" In "+timer.getElapsedTime() + " ms");
+			return ResponseEntity.ok()
+			.header("X-Elapsed-Time", String.valueOf(timer.getElapsedTime()) + " ms")
+			.body("Example 1 loaded successfully."+" In "+timer.getElapsedTime() + " ms");
         }catch (Exception e){
         Logger.getLogger(loggerName).log(Level.SEVERE, "Error loading example 1: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error loading example 1");
@@ -303,7 +313,9 @@ public class SparqlController {
 			}
 			sparqlService.loadFromSource(is, Lang.TTL);
 			timer.stopTimer();
-			return ResponseEntity.ok("Example 2 loaded successfully"+" In "+timer.getElapsedTime() + " ms");
+			return ResponseEntity.ok()
+			.header("X-Elapsed-Time", String.valueOf(timer.getElapsedTime()) + " ms")
+			.body("Example 2 loaded successfully"+" In "+timer.getElapsedTime() + " ms");
         }catch (Exception e){
         Logger.getLogger(loggerName).log(Level.SEVERE, "Error loading example 2: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error loading example 2");

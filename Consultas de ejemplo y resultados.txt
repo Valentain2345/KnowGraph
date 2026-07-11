@@ -1,0 +1,256 @@
+#Consulta 1 personas mayores de 18
+
+[
+  {
+    "id": "1",
+    "subject": "person",
+    "conceptPrefix": "foaf",
+    "concept": "Person",
+    "propertyPrefix": "foaf",
+    "property": "name",
+    "alias": "name",
+    "order": "ascending",
+    "visible": true,
+    "function": "none",
+    "operator": "none",
+    "value": "",
+    "optional": false,
+    "graphPattern": "Basic",
+    "propertyPath": "none"
+  },
+  {
+    "id": "2",
+    "subject": "person",
+    "conceptPrefix": "none",
+    "concept": "none",
+    "propertyPrefix": "foaf",
+    "property": "age",
+    "alias": "age",
+    "order": "none",
+    "visible": true,
+    "function": "none",
+    "operator": ">",
+    "value": "18",
+    "optional": true,
+    "graphPattern": "Optional",
+    "propertyPath": "none"
+  }
+]
+#Resultado 1
+
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT ?name ?age
+WHERE
+{
+  ?person a foaf:Person .
+  ?person foaf:name ?name .
+  OPTIONAL {
+      ?person foaf:age ?age .
+    }
+  FILTER (?age > "18"^^xsd:integer)
+}
+ORDER BY ?name
+
+
+#Consulta 2 Obtiene conocidos de la persona en 2 pasos
+
+[
+  {
+    "id": "1",
+    "subject": "p",
+    "conceptPrefix": "foaf",
+    "concept": "Person",
+    "propertyPrefix": "foaf",
+    "property": "knows",
+    "alias": "friend",
+    "order": "none",
+    "visible": true,
+    "function": "none",
+    "operator": "none",
+    "value": "",
+    "optional": false,
+    "graphPattern": "Basic",
+    "propertyPath": "+"
+  }
+]
+
+#Resultado 2
+
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT ?friend
+WHERE
+{
+  ?p a foaf:Person .
+  ?p foaf:knows+ ?friend .
+}
+
+#Consulta 3 Selecionar de personas mayores de 18 su edad nombre y opcionalmente el email ordenando por nombre de manera ascendente
+
+[
+  {
+    "id": "1",
+    "subject": "p",
+    "conceptPrefix": "foaf",
+    "concept": "Person",
+    "propertyPrefix": "foaf",
+    "property": "name",
+    "alias": "name",
+    "order": "ascending",
+    "visible": true,
+    "function": "none",
+    "operator": "none",
+    "value": "",
+    "optional": false,
+    "graphPattern": "Basic",
+    "propertyPath": "none"
+  },
+  {
+    "id": "2",
+    "subject": "p",
+    "conceptPrefix": "none",
+    "concept": "none",
+    "propertyPrefix": "foaf",
+    "property": "age",
+    "alias": "age",
+    "order": "none",
+    "visible": true,
+    "function": "none",
+    "operator": ">",
+    "value": "18",
+    "optional": false,
+    "graphPattern": "Basic",
+    "propertyPath": "none"
+  },
+  {
+    "id": "3",
+    "subject": "p",
+    "conceptPrefix": "none",
+    "concept": "none",
+    "propertyPrefix": "foaf",
+    "property": "mbox",
+    "alias": "email",
+    "order": "none",
+    "visible": true,
+    "function": "none",
+    "operator": "none",
+    "value": "",
+    "optional": true,
+    "graphPattern": "Optional",
+    "propertyPath": "none"
+  }
+]
+
+#Resultado 3
+
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT ?name ?age ?email
+WHERE
+{
+  ?p a foaf:Person .
+  ?p foaf:name ?name .
+  ?p foaf:age ?age .
+  OPTIONAL {
+      ?p foaf:mbox ?email .
+    }
+  FILTER (?age > "18"^^xsd:integer)
+}
+ORDER BY ?name
+
+
+#Consulta 4
+Selecciona personas que tengan nombre opcionalmente una edad y opcionalmente tambien obtener su email, excluyendo las que tengan un apodo ("nick") y ordenando por nombre de manera descendiente
+
+[
+  {
+    "id": "1",
+    "subject": "p",
+    "conceptPrefix": "foaf",
+    "concept": "Person",
+    "propertyPrefix": "foaf",
+    "property": "name",
+    "alias": "name",
+    "order": "descending",
+    "visible": true,
+    "function": "none",
+    "operator": "none",
+    "value": "",
+    "optional": false,
+    "graphPattern": "Basic",
+    "propertyPath": "none"
+  },
+  {
+    "id": "2",
+    "subject": "p",
+    "conceptPrefix": "none",
+    "concept": "none",
+    "propertyPrefix": "foaf",
+    "property": "age",
+    "alias": "age",
+    "order": "none",
+    "visible": true,
+    "function": "none",
+    "operator": "none",
+    "value": "",
+    "optional": true,
+    "graphPattern": "Optional",
+    "propertyPath": "none"
+  },
+  {
+    "id": "3",
+    "subject": "p",
+    "conceptPrefix": "none",
+    "concept": "none",
+    "propertyPrefix": "foaf",
+    "property": "mbox",
+    "alias": "email",
+    "order": "none",
+    "visible": true,
+    "function": "none",
+    "operator": "none",
+    "value": "",
+    "optional": true,
+    "graphPattern": "Optional",
+    "propertyPath": "none"
+  },
+  {
+    "id": "4",
+    "subject": "p",
+    "conceptPrefix": "none",
+    "concept": "none",
+    "propertyPrefix": "foaf",
+    "property": "nick",
+    "alias": "nick",
+    "order": "none",
+    "visible": false,
+    "function": "none",
+    "operator": "none",
+    "value": "",
+    "optional": false,
+    "graphPattern": "Minus",
+    "propertyPath": "none"
+  }
+]
+
+
+#Resultado 4
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT ?name ?age ?email
+WHERE
+{
+  ?p a foaf:Person .
+  ?p foaf:name ?name .
+  OPTIONAL {
+      ?p foaf:age ?age .
+    }
+  OPTIONAL {
+      ?p foaf:mbox ?email .
+    }
+  MINUS {
+      ?p foaf:nick ?nick .
+    }
+}
+ORDER BY DESC(?name)
