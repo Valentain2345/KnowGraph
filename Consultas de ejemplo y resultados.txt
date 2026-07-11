@@ -1,3 +1,6 @@
+
+Como generar una consulta con est formato, cada objeto del arreglo es una fila en el constructor, despues solo hay que completar con las opciones que dicen ahi 
+
 #Consulta 1 personas mayores de 18
 
 [
