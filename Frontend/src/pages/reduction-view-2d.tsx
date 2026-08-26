@@ -44,7 +44,10 @@ const Visualization2d: React.FC = () => {
   const fetchData = async () => {
     try {
       const resp = await fetch(`${visualizerUrl}/embeddings/${jobId}/${method}/2d`);
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      if (!resp.ok) {
+        const errorBody = await resp.json();
+        throw new Error(errorBody.error || `HTTP ${resp.status}`);
+      }
       const payload = await resp.json();
       if (isMounted) {
         setData(payload.data);
@@ -52,7 +55,7 @@ const Visualization2d: React.FC = () => {
       }
     } catch (e: any) {
       if (isMounted) {
-        setError(e.message ?? 'Unknown error');
+        setError(e instanceof Error ? e.message : 'Unknown error');
         setLoading(false);
 
       }
